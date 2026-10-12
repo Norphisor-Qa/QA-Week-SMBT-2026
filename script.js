@@ -7,7 +7,7 @@ const configuration = { logo: "", contact: "" };
 // Laissez duree vide si elle n'est pas connue. Les jeux ne sont pas inclus.
 const jeux = [
   { id: "match3", titre: "Quality Crush", description: "Un jeu de type Candy Crush : associez les symboles et relevez le d\u00e9fi !", icone: "\u25c6", duree: "", lien: "", disponible: false },
-  { id: "jump", titre: "Quality Jump", description: "Un jeu de type Doodle Jump : sautez de plateforme en plateforme et visez toujours plus haut !", icone: "\u2191", duree: "", lien: "", disponible: false },
+  { id: "jump", titre: "Quality Jump", description: "Un jeu de type Doodle Jump : sautez de plateforme en plateforme et visez toujours plus haut !", icone: "\u2191", duree: "", lien: "./Game/Quality Jump/index.html", disponible: true },
   { id: "escape", titre: "Escape game interactif", description: "Explorez, trouvez les indices et r\u00e9solvez les \u00e9nigmes pour accomplir votre mission.", icone: "\u2315", duree: "", lien: "", disponible: false },
   { id: "scenarios", titre: "10 sc\u00e9narios qualit\u00e9", description: "Face \u00e0 10 situations, choisissez les bonnes r\u00e9ponses et les actions adapt\u00e9es.", icone: "?", duree: "", lien: "", disponible: false }
 ];
