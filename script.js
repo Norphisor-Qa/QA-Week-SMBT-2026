@@ -1,31 +1,23 @@
 "use strict";
 
-// PERSONNALISATION : renseigner un fichier de logo autorise et un contact.
-// Laisser vide pour masquer ces elements. Aucun logo officiel n'est fourni.
-const configuration = {
-  logo: "", // Exemple : "./assets/logo-stryker.png"
-  contact: "" // Adresse e-mail de l'organisation, facultative.
-};
+// Facultatif : chemin du logo autorise et adresse e-mail de l'organisation.
+const configuration = { logo: "", contact: "" };
 
-// Ajouter ou supprimer un objet pour changer le nombre de jeux.
-// Pour activer un jeu : renseigner son lien ET passer disponible a true.
-// duree est un texte facultatif : laisser vide si elle n'est pas connue.
+// Pour activer un jeu, renseignez lien et passez disponible a true.
+// Laissez duree vide si elle n'est pas connue. Les jeux ne sont pas inclus.
 const jeux = [
-  { id: "quiz", titre: "Quiz qualit\u00e9", description: "Explorez les bons r\u00e9flexes qualit\u00e9 avec un quiz interactif.", icone: "?", duree: "5 min", lien: "./jeux/quiz/index.html", disponible: true },
-  { id: "anomalie", titre: "Cherche l'anomalie", description: "Observez les d\u00e9tails et rep\u00e9rez ce qui sort de l'ordinaire.", icone: "\u2315", duree: "", lien: "", disponible: false },
-  { id: "tracabilite", titre: "D\u00e9fi tra\u00e7abilit\u00e9", description: "Suivez les indices et reconstituez le parcours d'un produit.", icone: "\u21c4", duree: "", lien: "", disponible: false },
-  { id: "amelioration", titre: "Mission am\u00e9lioration continue", description: "Identifiez des pistes pour rendre le quotidien plus simple et plus fiable.", icone: "\u2197", duree: "", lien: "", disponible: false }
+  { id: "match3", titre: "Quality Crush", description: "Un jeu de type Candy Crush : associez les symboles et relevez le d\u00e9fi !", icone: "\u25c6", duree: "", lien: "", disponible: false },
+  { id: "jump", titre: "Quality Jump", description: "Un jeu de type Doodle Jump : sautez de plateforme en plateforme et visez toujours plus haut !", icone: "\u2191", duree: "", lien: "", disponible: false },
+  { id: "escape", titre: "Escape game interactif", description: "Explorez, trouvez les indices et r\u00e9solvez les \u00e9nigmes pour accomplir votre mission.", icone: "\u2315", duree: "", lien: "", disponible: false },
+  { id: "scenarios", titre: "10 sc\u00e9narios qualit\u00e9", description: "Face \u00e0 10 situations, choisissez les bonnes r\u00e9ponses et les actions adapt\u00e9es.", icone: "?", duree: "", lien: "", disponible: false }
 ];
 
-// Autorise uniquement les liens relatifs et les adresses HTTP(S).
-// Les protocoles executables, les ancres seules et les liens vides sont refuses.
 function lienValide(valeur) {
   if (typeof valeur !== "string" || !valeur.trim() || valeur.trim().startsWith("#")) return null;
   try {
     const brut = valeur.trim();
     const url = new URL(brut, window.location.href);
     if (["http:", "https:"].includes(url.protocol)) return brut;
-    // Permet l'ouverture locale des fichiers HTML pour les essais.
     if (window.location.protocol === "file:" && url.protocol === "file:" && !/^[a-z][a-z0-9+.-]*:/i.test(brut)) return brut;
   } catch { return null; }
   return null;
