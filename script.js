@@ -11,7 +11,7 @@ const configuration = {
 // Pour activer un jeu : renseigner son lien ET passer disponible a true.
 // duree est un texte facultatif : laisser vide si elle n'est pas connue.
 const jeux = [
-  { id: "quiz", titre: "Quiz qualit\u00e9", description: "Explorez les bons r\u00e9flexes qualit\u00e9 avec un quiz interactif.", icone: "?", duree: "", lien: "", disponible: false },
+  { id: "quiz", titre: "Quiz qualit\u00e9", description: "Explorez les bons r\u00e9flexes qualit\u00e9 avec un quiz interactif.", icone: "?", duree: "5 min", lien: "./jeux/quiz/index.html", disponible: true },
   { id: "anomalie", titre: "Cherche l'anomalie", description: "Observez les d\u00e9tails et rep\u00e9rez ce qui sort de l'ordinaire.", icone: "\u2315", duree: "", lien: "", disponible: false },
   { id: "tracabilite", titre: "D\u00e9fi tra\u00e7abilit\u00e9", description: "Suivez les indices et reconstituez le parcours d'un produit.", icone: "\u21c4", duree: "", lien: "", disponible: false },
   { id: "amelioration", titre: "Mission am\u00e9lioration continue", description: "Identifiez des pistes pour rendre le quotidien plus simple et plus fiable.", icone: "\u2197", duree: "", lien: "", disponible: false }
