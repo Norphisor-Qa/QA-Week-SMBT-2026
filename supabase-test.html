@@ -19,18 +19,22 @@ const supabaseClient = window.supabase.createClient(
 async function test() {
 
     const { data, error } = await supabaseClient
-        .from('games')
-        .select('*');
+        .from('profiles')
+        .insert({
+            username: 'test001',
+            password_hash: 'abc123',
+            firstname: 'Andre',
+            lastname: 'Guyon'
+        })
+        .select();
 
     console.log("DATA", data);
     console.log("ERROR", error);
 
-    if(data){
-        document.body.insertAdjacentHTML(
-            "beforeend",
-            `<pre>${JSON.stringify(data, null, 2)}</pre>`
-        );
-    }
+    document.body.insertAdjacentHTML(
+        "beforeend",
+        `<pre>${JSON.stringify({data,error}, null, 2)}</pre>`
+    );
 }
 
 test();
