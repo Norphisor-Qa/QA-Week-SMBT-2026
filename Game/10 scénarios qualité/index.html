@@ -1,1 +1,930 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#09090b">
+<title>SHOULDER QA — Medical Device Bug Hunter</title>
+<style>
+:root {
+  color-scheme: dark;
+  --bg: #09090b;
+  --panel: #18181b;
+  --border: #3f3f46;
+  --text: #f4f4f5;
+  --muted: #a1a1aa;
+  --yellow: #fde047;
+}
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 16px/1.55 system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+main { max-width: 740px; margin: auto; padding: 24px 18px 40px; }
+h1 { font-size: clamp(38px, 9vw, 64px); line-height: 1; letter-spacing: -.055em; margin: 28px 0 14px; }
+h2 { font-size: 23px; line-height: 1.3; margin: 0 0 14px; }
+h3 { margin: 0 0 12px; }
+p { margin: 0 0 14px; }
+button, select, input { font: inherit; }
+button {
+  min-height: 48px;
+  border: 1px solid #52525b;
+  border-radius: 12px;
+  background: transparent;
+  color: var(--text);
+  padding: 12px 16px;
+  cursor: pointer;
+  text-align: left;
+}
+button:hover { background: #27272a; }
+button:active { transform: scale(.985); }
+button:focus-visible, select:focus-visible, input:focus-visible {
+  outline: 3px solid var(--yellow);
+  outline-offset: 4px;
+}
+.primary {
+  background: var(--yellow);
+  border-color: var(--yellow);
+  color: #111;
+  font-weight: 800;
+}
+.primary:hover { background: #fef08a; }
+.full { width: 100%; text-align: center; }
+.row { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.between { justify-content: space-between; }
+.stack > * + * { margin-top: 16px; }
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  padding: 22px;
+}
+.brand { color: var(--yellow); font-size: 11px; letter-spacing: .15em; font-weight: 800; }
+.subtitle { color: var(--yellow); letter-spacing: .15em; font-size: 13px; }
+.muted { color: var(--muted); }
+.small { font-size: 13px; }
+.tag {
+  background: #27272a;
+  border-radius: 99px;
+  padding: 7px 12px;
+  font-size: 13px;
+}
+.objective {
+  border: 1px solid #fde04780;
+  background: #fde04709;
+  border-radius: 16px;
+  padding: 16px;
+}
+.objective strong {
+  display: block;
+  color: var(--yellow);
+  font-size: 11px;
+  letter-spacing: .1em;
+  margin-bottom: 8px;
+}
+.objective p, .panel p:last-child { margin-bottom: 0; }
+.document {
+  background: #e7e5e4;
+  color: #18181b;
+  border-radius: 12px;
+  padding: 20px;
+}
+.document small { display: block; font-weight: 800; margin-bottom: 10px; }
+.choices { display: grid; grid-template-columns: 1fr 1fr; gap: 9px; margin-top: 15px; }
+.selected {
+  background: var(--yellow);
+  color: #111;
+  border-color: var(--yellow);
+  font-weight: 800;
+}
+.selected:hover { background: #fef08a; }
+select {
+  display: block;
+  width: 100%;
+  background: #27272a;
+  color: var(--text);
+  border: 1px solid #52525b;
+  border-radius: 12px;
+  padding: 12px;
+  margin-top: 8px;
+  min-height: 48px;
+}
+fieldset {
+  min-width: 0;
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  padding: 16px;
+  background: var(--panel);
+  margin: 0;
+}
+legend { padding: 0 8px; font-weight: 800; }
+.radio {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  cursor: pointer;
+}
+.radio + .radio { margin-top: 10px; }
+.radio:has(input:checked) { border-color: var(--yellow); background: #fde04709; }
+.radio input { margin-top: 6px; accent-color: var(--yellow); width: 18px; height: 18px; flex-shrink: 0; }
+.notice { border-left: 2px solid var(--yellow); padding-left: 13px; font-size: 12px; color: var(--muted); margin-top: 28px; }
+.error { color: #fda4af; border: 1px solid #fda4af; border-radius: 12px; padding: 12px; }
+.stars { color: var(--yellow); font-size: 42px; letter-spacing: 5px; }
+.score { font-size: 34px; font-weight: 850; }
+.center { text-align: center; }
+.correction { color: var(--yellow); margin-top: 12px; }
+.help { border-color: var(--yellow); background: #27272a; }
+.actionbar {
+  position: sticky;
+  bottom: 0;
+  padding: 12px 0 calc(12px + env(safe-area-inset-bottom));
+  background: #09090bf5;
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+  z-index: 2;
+}
+.actionbar .primary { flex: 1; text-align: center; }
+.skip {
+  position: absolute;
+  top: -100px;
+  left: 12px;
+  background: var(--yellow);
+  color: #111;
+  padding: 12px;
+  z-index: 10;
+}
+.skip:focus { top: 12px; }
+.sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0,0,0,0);
+}
+[hidden] { display: none !important; }
+@media(max-width: 480px) {
+  main { padding: 18px 14px 30px; }
+  .panel { padding: 17px; }
+  .brand { max-width: 130px; }
+  header button { font-size: 12px; padding: 10px; }
+}
+@media(prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
+}
+</style>
+</head>
+<body>
+<a class="skip" href="#content">Aller au jeu</a>
+<main>
+  <header class="row between">
+    <span class="brand">MEDTECH QA LAB</span>
+    <button id="helpButton" type="button" aria-expanded="false">COMMENT JOUER</button>
+  </header>
 
+  <h1>SHOULDER QA<span style="color:var(--yellow)">.</span></h1>
+  <p class="subtitle">MEDICAL DEVICE BUG HUNTER</p>
+
+  <section id="helpPanel" class="panel help" hidden aria-labelledby="helpTitle">
+    <h2 id="helpTitle">Inspect. Investigate. Decide.</h2>
+    <p>Lis le dossier, qualifie les 3 preuves, puis choisis le risque, la décision et sa justification.</p>
+    <p>Le chronomètre est indicatif dans cet aperçu. Il se met en pause pendant cette aide.</p>
+    <p><strong>Anomalie :</strong> écart établi.<br>
+    <strong>À vérifier :</strong> information insuffisante.<br>
+    <strong>Cohérent :</strong> fait compatible avec le dossier.<br>
+    <strong>Non applicable :</strong> hors périmètre.</p>
+    <p><strong>QT :</strong> ticket de quarantaine.<br>
+    <strong>RC :</strong> rapport de contrôle.<br>
+    <strong>FMER :</strong> feuille de mise en route.<br>
+    <strong>MOP :</strong> mode opératoire.<br>
+    <strong>NUE :</strong> notice d’utilisation d’un équipement.<br>
+    <strong>OF :</strong> ordre de fabrication. Dans OF0023FZ et OF0066FZ, il s’agit ici d’identifiants d’outils.<br>
+    <strong>AQL :</strong> méthode d’échantillonnage définie par le plan du scénario, pas un pourcentage du lot à contrôler.<br>
+    <strong>FAI :</strong> contrôle de première pièce dans ce jeu.</p>
+    <p class="small muted">Définitions pédagogiques propres au jeu, non réglementaires.</p>
+    <button class="primary" id="closeHelp" type="button">COMPRIS</button>
+  </section>
+
+  <div id="content" class="stack" style="margin-top:22px" tabindex="-1"></div>
+  <div id="status" class="sr" role="status" aria-live="polite"></div>
+
+  <p class="notice">Simulation pédagogique. Produits, lots, documents, mesures et décisions fictifs. Ne pas utiliser pour décider de la conformité ou de la sécurité d’un dispositif médical réel.</p>
+</main>
+
+<script>
+"use strict";
+
+(() => {
+  // Ne jamais charger un logo officiel depuis Internet.
+
+  const cases = [
+    {
+      doc: "QT-25A349-01",
+      family: "Tige RY",
+      lot: "25A349",
+      facts: [
+        "4 pièces signalées sur 36 ; seules 07, 12 et 19 sont identifiées.",
+        "Photos sans numéro ; retouche sans liste des pièces traitées.",
+        "PFX17315 et commande A75843 concordent."
+      ],
+      answers: ["Anomalie", "Anomalie", "Cohérent"],
+      risk: "Traçabilité des pièces et de la retouche non démontrée.",
+      decision: "Maintenir sous statut contrôlé et demander un complément traçable.",
+      why: "Sans lien entre défaut, pièce et retouche, la clôture est prématurée."
+    },
+    {
+      doc: "RC-2098 AC",
+      family: "Tige TR",
+      lot: "5390BC",
+      facts: [
+        "Plan : AQL 2,5 et contrôle final à 100 %. RC : échantillon, 5/40.",
+        "Résolution 0,01 mm ; résultat recopié 8,1234 mm.",
+        "Lot, matière et version de formulaire concordent."
+      ],
+      answers: ["Anomalie", "Anomalie", "Cohérent"],
+      risk: "Contrôle différent de la stratégie prévue.",
+      decision: "Ne pas approuver le RC avant alignement.",
+      why: "Un rapport rempli ne démontre pas que la bonne stratégie a été appliquée."
+    },
+    {
+      doc: "FMER-00968-FR AB",
+      family: "Tige TR 2+",
+      lot: "25C284",
+      facts: [
+        "Programme attendu 27260 ; page principale 27250.",
+        "Kit attendu 00968 ; kit enregistré 00966.",
+        "INT-7 et pression 18 bar pour une plage 16–20 bar concordent."
+      ],
+      answers: ["Anomalie", "Anomalie", "Cohérent"],
+      risk: "Démarrage avec une configuration non maîtrisée.",
+      decision: "Arrêter la mise en route et clarifier la configuration.",
+      why: "Aucune pièce n’est encore usinée : prévenir le démarrage, sans inventer un défaut produit."
+    },
+    {
+      doc: "MOP-0014",
+      family: "Tige RB",
+      lot: "5387BC",
+      facts: [
+        "QT ouvert le 29/09 ; première signature le 27/09.",
+        "Même opération signée à nouveau le 30/09, sans correction ni justification.",
+        "Contrôle post-retouche présent ; opérateurs qualifiés."
+      ],
+      answers: ["Anomalie", "Anomalie", "Cohérent"],
+      risk: "Historique réel des opérations non démontré.",
+      decision: "Maintenir en attente et obtenir une correction traçable.",
+      why: "Ne pas effacer ni antidater. Établir si une ou deux opérations ont réellement eu lieu."
+    },
+    {
+      doc: "NUE-EC094 C",
+      family: "Tige TR",
+      lot: "3176BD",
+      facts: [
+        "Copie B au poste : chanfrein uniquement. C ajoute la profondeur L19.",
+        "Moyen déclaré EC094-02 ; moyen réel EC094-01, statut indisponible.",
+        "Valeur 6,04 mm pour des limites fictives 5,96–6,16 mm."
+      ],
+      answers: ["Anomalie", "À vérifier", "Cohérent"],
+      risk: "Fiabilité du résultat non démontrée.",
+      decision: "Suspendre l’acceptation et vérifier moyen et instruction.",
+      why: "La valeur est dans les limites, mais cela ne démontre pas une méthode applicable. Un statut inconnu n’est pas une preuve d’invalidité."
+    },
+    {
+      doc: "QT-26A142-02",
+      family: "Ancillaire RY",
+      lot: "26A142",
+      facts: [
+        "Pièce 01 : engagement incomplet confirmé avec deux moyens applicables.",
+        "9 autres pièces non contrôlées : étendue inconnue.",
+        "Les deux moyens EC117-03 et EC117-04 sont valides."
+      ],
+      answers: ["Anomalie", "À vérifier", "Cohérent"],
+      risk: "Défaut fonctionnel confirmé, étendue inconnue.",
+      decision: "Isoler les 10 pièces et étendre le contrôle individuellement.",
+      why: "Une pièce défaillante ne prouve pas que les dix le sont. Le confinement précède la disposition."
+    },
+    {
+      doc: "RC FAI-2114",
+      family: "Tige TR 2+",
+      lot: "6842BD",
+      facts: [
+        "L10 : 3,15 ±0,05 mm. A6 : 3,22 ; 3,21 ; 3,22 mm.",
+        "CAN : 3,17 mm, mais méthode absente du RC et adéquation non démontrée.",
+        "Les rapports portent le même lot et des valeurs en mm."
+      ],
+      answers: ["Anomalie", "À vérifier", "Cohérent"],
+      risk: "Acceptation injustifiée sur la seule mesure favorable.",
+      decision: "Maintenir en investigation et démontrer l’adéquation des méthodes.",
+      why: "La limite haute est 3,20 mm. La mesure CAN ne supprime pas les dépassements A6."
+    },
+    {
+      doc: "FMER-00921-FR",
+      family: "Tige TR taille 2",
+      lot: "25B517",
+      facts: [
+        "Nouvel outil OF0023FZ prévu ; ancien OF0066FZ installé.",
+        "Cinq valeurs : 2,03 ; 2,05 ; 2,06 ; 2,08 ; 2,09 mm, limites 2,00–2,10.",
+        "Aucune valeur disponible ne dépasse les limites."
+      ],
+      answers: ["Anomalie", "À vérifier", "Cohérent"],
+      risk: "Dérive potentielle et impact de configuration non évalué.",
+      decision: "Arrêter, sécuriser les 5 pièces et évaluer la configuration.",
+      why: "La tendance appelle une évaluation ; elle ne prouve pas que les cinq pièces sont dimensionnellement non conformes."
+    },
+    {
+      doc: "MOP-2049-FIN",
+      family: "Tige TR",
+      lot: "5390BC",
+      facts: [
+        "MOP historique : raccord zone A. Nouveau flux : zone B.",
+        "Première pièce : variation de forme sans mesure complémentaire.",
+        "La MOP mentionne bien la famille Tige TR."
+      ],
+      answers: ["Anomalie", "À vérifier", "Cohérent"],
+      risk: "Altération potentielle par une finition non adaptée.",
+      decision: "Suspendre, adapter l’instruction et évaluer la première pièce.",
+      why: "La bonne famille ne démontre pas l’applicabilité au nouveau flux."
+    },
+    {
+      doc: "NUE-EC102",
+      family: "Tige TR",
+      lot: "25C317",
+      facts: [
+        "12 pièces contrôlées avec EC102-01 ; EC102-02 applicable.",
+        "Butées : 5,90 et 5,96 mm ; limite basse fictive 5,96 mm.",
+        "Les deux gabarits sont valides et la gestuelle correcte."
+      ],
+      answers: ["Anomalie", "Anomalie", "Cohérent"],
+      risk: "Résultats potentiellement inexploitables avec le mauvais gabarit.",
+      decision: "Isoler les 12 pièces et recontrôler avec EC102-02.",
+      why: "Un moyen étalonné peut être inadapté. Les pièces ne sont pas automatiquement non conformes."
+    }
+  ];
+
+  const STORAGE_KEY = "shoulder-qa-html-simple-v1";
+  const labels = ["Cohérent", "Anomalie", "À vérifier", "Non applicable"];
+  const steps = ["Briefing", "Examiner", "Analyser", "Décider", "Débriefing"];
+
+  const content = document.getElementById("content");
+  const helpPanel = document.getElementById("helpPanel");
+  const helpButton = document.getElementById("helpButton");
+  const status = document.getElementById("status");
+
+  const state = {
+    index: null,
+    lastIndex: null,
+    step: 0,
+    qualifications: {},
+    risk: "",
+    decision: "",
+    reason: "",
+    seconds: 0,
+    error: "",
+    help: false,
+    mode: "accompagne",
+    finished: false,
+    saved: { count: 0, best: 0 },
+    storageAvailable: true
+  };
+
+  try {
+    const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
+    if (raw && typeof raw === "object") {
+      state.saved.count = Number.isFinite(raw.count) && raw.count >= 0 ? raw.count : 0;
+      state.saved.best = Number.isFinite(raw.best) && raw.best >= 0 ? raw.best : 0;
+      state.mode = raw.mode === "expert" ? "expert" : "accompagne";
+      if (Number.isInteger(raw.lastIndex) && raw.lastIndex >= 0 && raw.lastIndex < cases.length) {
+        state.lastIndex = raw.lastIndex;
+      }
+    }
+  } catch {
+    state.storageAvailable = false;
+  }
+
+  function save() {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify({
+        ...state.saved,
+        mode: state.mode,
+        lastIndex: state.lastIndex
+      }));
+    } catch {
+      state.storageAvailable = false;
+    }
+  }
+
+  function escapeHTML(value) {
+    return String(value).replace(/[&<>"']/g, character => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;"
+    }[character]));
+  }
+
+  function currentCase() {
+    return state.index === null ? null : cases[state.index];
+  }
+
+  function announce(message) {
+    status.textContent = message;
+  }
+
+  function timeLabel() {
+    return Math.floor(state.seconds / 60) + ":" +
+      String(state.seconds % 60).padStart(2, "0");
+  }
+
+  function setHelp(open) {
+    state.help = open;
+    helpPanel.hidden = !open;
+    helpButton.setAttribute("aria-expanded", String(open));
+    if (open) {
+      document.getElementById("closeHelp").focus();
+    } else {
+      helpButton.focus();
+    }
+  }
+
+  function start(replay = false) {
+    let next = state.index;
+
+    if (!replay || next === null) {
+      const category = Math.random() < .5 ? 0 : 5;
+      const pool = [0, 1, 2, 3, 4]
+        .map(number => number + category)
+        .filter(number => number !== state.lastIndex);
+      next = pool[Math.floor(Math.random() * pool.length)];
+    }
+
+    state.index = next;
+    state.lastIndex = next;
+    state.step = 0;
+    state.qualifications = {};
+    state.risk = "";
+    state.decision = "";
+    state.reason = "";
+    state.seconds = 0;
+    state.error = "";
+    state.finished = false;
+    save();
+    render();
+    focusContent();
+  }
+
+  function focusContent() {
+    content.focus({ preventScroll: true });
+    content.scrollIntoView({ block: "start", behavior: "instant" });
+  }
+
+  function changeStep(step) {
+    state.step = step;
+    state.error = "";
+    render();
+    focusContent();
+  }
+
+  function getResult() {
+    const scenario = currentCase();
+    const hits = scenario.answers.filter(
+      (answer, index) => state.qualifications[index] === answer
+    ).length;
+
+    const falseFlags = scenario.answers.filter(
+      (answer, index) =>
+        state.qualifications[index] === "Anomalie" &&
+        answer !== "Anomalie"
+    ).length;
+
+    const score = Math.max(0,
+      hits * 100 +
+      (state.risk === "expected" ? 40 : 0) +
+      (state.decision === "expected" ? 50 : 0) +
+      (state.reason === "expected" ? 30 : 0) +
+      (falseFlags === 0 ? 25 : 0) -
+      falseFlags * 40 -
+      (state.decision === "scrap" ? 50 : 0)
+    );
+
+    const stars =
+      hits === 3 &&
+      state.risk === "expected" &&
+      state.decision === "expected" &&
+      state.reason === "expected"
+        ? 3
+        : hits >= 2 && state.decision === "expected" ? 2 : 1;
+
+    return { hits, falseFlags, score, stars };
+  }
+
+  function validate() {
+    if (!state.risk || !state.decision || !state.reason) {
+      state.error = !state.risk
+        ? "Choisis un risque principal."
+        : !state.decision
+          ? "Choisis une décision qualité."
+          : "Choisis une justification.";
+
+      render();
+      const error = document.getElementById("error");
+      error.focus();
+      error.scrollIntoView({ block: "center" });
+      return;
+    }
+
+    if (state.finished) return;
+
+    const result = getResult();
+    state.saved.count += 1;
+    state.saved.best = Math.max(state.saved.best, result.score);
+    state.finished = true;
+    save();
+    changeStep(4);
+    announce("Enquête terminée. Le débriefing est disponible.");
+  }
+
+  function homeHTML() {
+    return `
+      <p class="muted">Une enquête courte. Des preuves fictives. Une décision proportionnée.</p>
+      <section class="panel stack">
+        <p>10 dossiers aléatoires · 5 documentaires · 5 techniques</p>
+        <label for="mode">Accompagnement</label>
+        <select id="mode">
+          <option value="accompagne" ${state.mode === "accompagne" ? "selected" : ""}>
+            Mode accompagné
+          </option>
+          <option value="expert" ${state.mode === "expert" ? "selected" : ""}>
+            Mode expert
+          </option>
+        </select>
+        <button class="primary full" data-action="play">▶ ESSAYER LE JEU</button>
+        <p class="small muted">
+          ${state.saved.count} enquêtes terminées · meilleur score : ${state.saved.best}
+        </p>
+        ${!state.storageAvailable ? `
+          <p class="small muted">
+            Stockage local indisponible : progression conservée pour cette session seulement.
+          </p>` : ""}
+      </section>
+      <p class="small muted">
+        Version simplifiée : 3 preuves par dossier, chronomètre indicatif et score pédagogique.
+      </p>
+    `;
+  }
+
+  function briefingHTML(scenario) {
+    return `
+      <section class="panel stack">
+        <h2>${escapeHTML(scenario.family)} · lot ${escapeHTML(scenario.lot)}</h2>
+        <p>
+          Le dossier attend ta revue qualité. Aucun élément ne permet à lui seul
+          de conclure à un danger patient.
+        </p>
+        <button class="primary" data-action="begin">COMMENCER L’ENQUÊTE</button>
+      </section>
+    `;
+  }
+
+  function documentsHTML(scenario) {
+    return `
+      <section class="stack">
+        ${scenario.facts.map((fact, index) => `
+          <article class="document">
+            <small>PREUVE ${index + 1} · ${escapeHTML(scenario.doc)}</small>
+            <p>${escapeHTML(fact)}</p>
+          </article>
+        `).join("")}
+      </section>
+      ${actionBar("PASSER À L’ANALYSE", "analyse")}
+    `;
+  }
+
+  function analysisHTML(scenario) {
+    const remaining = 3 - Object.keys(state.qualifications).length;
+    return `
+      <section class="stack">
+        ${state.mode === "accompagne" ? `
+          <p class="muted">
+            ${remaining} carte(s) à qualifier.
+            Un manque de preuve n’est pas automatiquement une anomalie produit.
+          </p>` : ""}
+        ${scenario.facts.map((fact, index) => `
+          <article class="panel">
+            <p>${escapeHTML(fact)}</p>
+            <div class="choices" role="group" aria-label="Qualifier la preuve ${index + 1}">
+              ${labels.map((label, labelIndexbutton
+                  class="${state.qualifications[index] === label ? "selected" : ""}"
+                  data-action="qualify"
+                  data-index="${index}"
+                  data-label="${labelIndex}"
+                  aria-pressed="${state.qualifications[index] === label}">
+                  ${state.qualifications[index] === label ? "✓ " : ""}${label}
+                </button>
+              `).join("")}
+            </div>
+          </article>
+        `).join("")}
+      </section>
+      ${errorHTML()}
+      ${actionBar("PRENDRE UNE DÉCISION", "decide")}
+    `;
+  }
+
+  function fieldsetHTML(title, name, value, options) {
+    return `
+      <fieldset>
+        <legend>${escapeHTML(title)}</legend>
+        ${options.map(([id, text]) => `
+          <label class="radio">
+            <input type="radio" name="${name}" value="${id}" ${value === id ? "checked" : ""}>
+            <span>${escapeHTML(text)}</span>
+          </label>
+        `).join("")}
+      </fieldset>
+    `;
+  }
+
+  function decisionHTML(scenario) {
+    return `
+      <section class="stack">
+        ${fieldsetHTML("Risque principal", "risk", state.risk, [
+          ["none", "Aucun risque : poursuivre le flux."],
+          ["expected", scenario.risk],
+          ["patient", "Danger patient démontré."]
+        ])}
+        ${state.risk ? fieldsetHTML("Décision immédiate", "decision", state.decision, [
+          ["release", "Libérer immédiatement."],
+          ["scrap", "Rebuter tout le lot sans investigation."],
+          ["expected", scenario.decision]
+        ]) : `<p class="muted">Choisis un risque pour afficher les décisions.</p>`}
+        ${state.decision ? fieldsetHTML("Justification", "reason", state.reason, [
+          ["signed", "Une signature ou un moyen valide suffit."],
+          ["expected", "Les preuves imposent une action maîtrisée avant de conclure au-delà des faits."],
+          ["assume", "Une hypothèse probable remplace les preuves."]
+        ]) : ""}
+      </section>
+      ${errorHTML()}
+      ${actionBar("VALIDER MON ANALYSE", "validate")}
+    `;
+  }
+
+  function debriefHTML(scenario) {
+    const result = getResult();
+    return `
+      <section class="stack">
+        <div class="panel center">
+          <p class="stars" aria-label="${result.stars} étoiles sur 3">
+            ${"★".repeat(result.stars)}${"☆".repeat(3 - result.stars)}
+          </p>
+          <h2 class="score">${result.score} points</h2>
+          <p>${result.hits}/3 qualifications correctes · ${result.falseFlags} faux signalement(s)</p>
+          <p class="small muted">Temps indicatif : ${timeLabel()}</p>
+        </div>
+
+        ${scenario.facts.map((fact, index) => `
+          <article class="panel">
+            <p>${escapeHTML(fact)}</p>
+            <p class="correction">
+              Ton choix : ${escapeHTML(state.qualifications[index] || "Non renseigné")}
+              · Attendu : ${escapeHTML(scenario.answers[index])}
+            </p>
+          </article>
+        `).join("")}
+
+        <section class="panel" style="border-color:#fde04780">
+          <h3>Raisonnement qualité</h3>
+          <p>${escapeHTML(scenario.why)}</p>
+          <p><strong>Risque attendu :</strong> ${escapeHTML(scenario.risk)}</p>
+          <p><strong>Décision attendue :</strong> ${escapeHTML(scenario.decision)}</p>
+          <p>
+            <strong>Tes choix :</strong>
+            risque ${state.risk === "expected" ? "correct" : "à revoir"} ;
+            décision ${state.decision === "expected" ? "correcte" : "à revoir"} ;
+            justification ${state.reason === "expected" ? "correcte" : "à revoir"}.
+          </p>
+          <p class="muted">
+            Avant une décision réelle : vérifier les documents applicables,
+            l’étendue concernée et les preuves traçables.
+            Le confinement n’est pas la disposition finale.
+          </p>
+        </section>
+
+        <details class="panel">
+          <summary>Comprendre le score de cette version simplifiée</summary>
+          <p style="margin-top:12px">
+            +100 par qualification correcte ; +40 pour le risque ;
+            +50 pour la décision ; +30 pour la justification ;
+            +25 sans faux signalement ; −40 par faux signalement ;
+            −50 pour un rebut sans investigation. Score minimum : 0.
+          </p>
+          <p>
+            3 étoiles : toutes les qualifications et les trois choix corrects.
+            2 étoiles : au moins deux qualifications correctes et décision correcte.
+            Sinon : 1 étoile.
+          </p>
+          <p class="muted">Aucun bonus de vitesse dans cette version.</p>
+        </details>
+
+        <div class="row">
+          <button class="primary" data-action="play">NOUVEAU DOSSIER ALÉATOIRE</button>
+          <button data-action="replay">REJOUER CE DOSSIER</button>
+        </div>
+      </section>
+    `;
+  }
+
+  function errorHTML() {
+    return state.error
+      ? `<p id="error" class="error" role="alert" tabindex="-1">${escapeHTML(state.error)}</p>`
+      : "";
+  }
+
+  function actionBar(label, action) {
+    return `
+      <footer class="actionbar row">
+        <button data-action="back">← Retour</button>
+        <button class="primary" data-action="${action}">${label}</button>
+      </footer>
+    `;
+  }
+
+  function render() {
+    const scenario = currentCase();
+
+    if (!scenario) {
+      content.innerHTML = homeHTML();
+      return;
+    }
+
+    let body = "";
+    if (state.step === 0) body = briefingHTML(scenario);
+    if (state.step === 1) body = documentsHTML(scenario);
+    if (state.step === 2) body = analysisHTML(scenario);
+    if (state.step === 3) body = decisionHTML(scenario);
+    if (state.step === 4) body = debriefHTML(scenario);
+
+    content.innerHTML = `
+      <div class="row">
+        <span class="tag">${state.index < 5 ? "ÉCART DOCUMENTAIRE" : "ÉCART TECHNIQUE"}</span>
+        <span class="tag">${escapeHTML(scenario.doc)}</span>
+        <span class="tag" id="timer">${timeLabel()} / 2:00</span>
+      </div>
+      <section class="objective">
+        <strong>OBJECTIF DE LA MISSION</strong>
+        <p>Établis ce que les preuves démontrent et choisis une action proportionnée.</p>
+      </section>
+      <p class="small muted">Étape ${state.step + 1} sur 5 : ${steps[state.step]}</p>
+      ${body}
+      <div class="row">
+        <button data-action="home">ACCUEIL</button>
+      </div>
+    `;
+  }
+
+  content.addEventListener("click", event => {
+    const button = event.target.closest("button[data-action]");
+    if (!button) return;
+
+    switch (button.dataset.action) {
+      case "play":
+        start();
+        break;
+
+      case "replay":
+        start(true);
+        break;
+
+      case "begin":
+        changeStep(1);
+        break;
+
+      case "analyse":
+        changeStep(2);
+        break;
+
+      case "qualify": {
+        const index = Number(button.dataset.index);
+        const label = labels[Number(button.dataset.label)];
+        if (!Number.isInteger(index) || index < 0 || index > 2 || !label) return;
+        state.qualifications[index] = label;
+        state.error = "";
+        render();
+        const replacement = content.querySelector(
+          `[data-action="qualify"][data-index="${index}"][data-label="${labels.indexOf(label)}"]`
+        );
+        if (replacement) replacement.focus({ preventScroll: true });
+        announce("Qualification enregistrée. Tu peux la modifier.");
+        break;
+      }
+
+      case "decide":
+        if (Object.keys(state.qualifications).length < 3) {
+          state.error = "Qualifie les trois cartes avant de continuer.";
+          render();
+          document.getElementById("error").focus();
+        } else {
+          changeStep(3);
+        }
+        break;
+
+      case "validate":
+        validate();
+        break;
+
+      case "back":
+        changeStep(Math.max(0, state.step - 1));
+        break;
+
+      case "home":
+        if (state.finished || window.confirm("Abandonner cette enquête ?")) {
+          state.index = null;
+          state.step = 0;
+          state.error = "";
+          render();
+          focusContent();
+        }
+        break;
+    }
+  });
+
+  content.addEventListener("change", event => {
+    const target = event.target;
+
+    if (target.id === "mode") {
+      state.mode = target.value === "expert" ? "expert" : "accompagne";
+      save();
+      return;
+    }
+
+    if (["risk", "decision", "reason"].includes(target.name)) {
+      state[target.name] = target.value;
+      state.error = "";
+      const name = target.name;
+      const value = target.value;
+      render();
+      const selected = content.querySelector(
+        `input[name="${name}"][value="${value}"]`
+      );
+      if (selected) selected.focus({ preventScroll: true });
+    }
+  });
+
+  helpButton.addEventListener("click", () => setHelp(!state.help));
+  document.getElementById("closeHelp").addEventListener("click", () => setHelp(false));
+
+  document.addEventListener("keydown", event => {
+    if (event.key === "Escape" && state.help) setHelp(false);
+  });
+
+  window.addEventListener("beforeunload", event => {
+    if (state.index !== null && !state.finished) {
+      event.preventDefault();
+      event.returnValue = "";
+    }
+  });
+
+  setInterval(() => {
+    if (
+      state.index === null ||
+      state.step === 0 ||
+      state.finished ||
+      state.help
+    ) return;
+
+    state.seconds = Math.min(120, state.seconds + 1);
+    const timer = document.getElementById("timer");
+    if (timer) {
+      timer.textContent = timeLabel() + " / 2:00" +
+        (state.seconds === 120 ? " · temps indicatif atteint" : "");
+    }
+  }, 1000);
+
+  try {
+    if (cases.length !== 10) throw new Error("Configuration");
+    cases.forEach(scenario => {
+      if (
+        scenario.facts.length !== 3 ||
+        scenario.answers.length !== 3 ||
+        !scenario.risk ||
+        !scenario.decision ||
+        !scenario.why ||
+        scenario.answers.some(answer => !labels.includes(answer))
+      ) throw new Error("Configuration");
+    });
+    render();
+  } catch {
+    content.innerHTML = `
+      <section class="panel">
+        <h2>Le dossier pédagogique n’a pas pu être chargé correctement.</h2>
+        <p>Vérifie que le code a été copié intégralement.</p>
+      </section>
+    `;
+  }
+})();
+</script>
+</body>
+</html>
