@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Test Supabase</title>
+</head>
+<body>
+
+<h1>Test connexion Supabase</h1>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const supabase = window.supabase.createClient(
+    "https://pglstqfawauvxvezyigc.supabase.co/rest/v1/",
+    "sb_publishable_YaLtd-n5jALpGOUYSJriQA_h_9X_OLY"
+);
+
+async function test() {
+
+    const { data, error } =
+    await supabase
+        .from('games')
+        .select('*');
+
+    console.log("DATA :", data);
+    console.log("ERROR :", error);
+}
+
+test();
+</script>
+
+</body>
+</html>
