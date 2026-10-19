@@ -11,14 +11,14 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-const supabase = window.supabase.createClient(
+const supabaseClient = window.supabase.createClient(
     "https://pglstqfawauvxvezyigc.supabase.co",
     "sb_publishable_YaLtd-n5jALpGOUYSJriQA_h_9X_OLY"
 );
 
 async function test() {
 
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
         .from('games')
         .select('*');
 
