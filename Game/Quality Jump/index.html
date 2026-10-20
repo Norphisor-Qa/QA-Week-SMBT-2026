@@ -2,7 +2,7 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>Quality Jump RB</title>
 
   <style>
@@ -10,76 +10,109 @@
       --or: #FFB500;
       --bleu: #1C5687;
       --gris: #B2B4AE;
-      --noir: #000000;
+      --noir: #090b0d;
       --blanc: #FFFFFF;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
-      background: var(--blanc);
+      background: #f4f4f1;
       color: var(--noir);
       font-family: Arial, sans-serif;
     }
 
     main {
-      max-width: 720px;
+      max-width: 760px;
       margin: auto;
-      padding: 16px;
+      padding: 14px;
     }
 
     header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      gap: 16px;
-    }
-
-    h1 {
-      margin: 6px 0;
-      font-size: 30px;
+      gap: 12px;
     }
 
     .eyebrow {
-      font-size: 12px;
-      font-weight: bold;
+      font-size: 11px;
+      font-weight: 900;
       letter-spacing: 2px;
+      color: var(--bleu);
+    }
+
+    h1 {
+      margin: 3px 0;
+      font-size: clamp(25px, 6vw, 34px);
     }
 
     button {
       min-height: 48px;
-      padding: 12px 20px;
-      border: 2px solid var(--noir);
+      padding: 10px 17px;
+      border: 2px solid #000;
       border-radius: 12px;
       background: var(--or);
-      color: var(--noir);
       font: inherit;
-      font-weight: bold;
+      font-weight: 900;
       cursor: pointer;
     }
 
+    button.secondary,
+    button.sound {
+      background: #fff;
+    }
+
     button:disabled {
-      background: var(--blanc);
-      border-color: var(--gris);
+      opacity: 0.45;
       cursor: default;
     }
 
     button:focus-visible,
-    a:focus-visible,
     canvas:focus-visible {
       outline: 3px solid var(--bleu);
-      outline-offset: 4px;
+      outline-offset: 3px;
     }
 
-    .stats {
+    .hud {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+      margin: 12px 0;
+    }
+
+    .stat {
+      border: 2px solid #111;
+      border-radius: 11px;
+      background: #fff;
+      padding: 7px;
+      text-align: center;
+    }
+
+    .stat b {
+      display: block;
+      font-size: 18px;
+    }
+
+    .stat small {
+      font-size: 9px;
+      font-weight: 900;
+      letter-spacing: 0.7px;
+    }
+
+    .progress {
+      margin: 8px 0 12px;
+    }
+
+    .progrow {
       display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
+      justify-content: space-between;
       gap: 12px;
-      margin: 18px 0;
-      font-size: 14px;
-      font-weight: bold;
+      font-weight: 900;
+      font-size: 12px;
     }
 
     .arena {
@@ -87,15 +120,16 @@
       max-width: 400px;
       margin: auto;
       overflow: hidden;
-      border: 2px solid var(--noir);
-      border-radius: 16px;
+      border: 3px solid #111;
+      border-radius: 17px;
+      background: #fff;
+      box-shadow: 0 12px 30px #0002;
     }
 
     canvas {
       display: block;
       width: 100%;
       height: auto;
-      background: var(--blanc);
       touch-action: none;
     }
 
@@ -105,873 +139,1505 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 28px;
-      background: var(--blanc);
+      padding: 26px;
+      background: #fffffff2;
       text-align: center;
+      z-index: 3;
     }
 
-    [hidden] { display: none !important; }
+    .overlay h2 {
+      font-size: 30px;
+      margin: 0.2em;
+    }
 
-    .overlay h2 { font-size: 28px; }
-    .overlay p { line-height: 1.6; }
+    .overlay p {
+      line-height: 1.5;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
 
     .controls {
       display: flex;
       justify-content: center;
-      gap: 20px;
-      margin: 16px 0;
+      gap: 18px;
+      margin: 12px;
     }
 
     .controls button {
-      width: 100px;
-      font-size: 24px;
+      width: 120px;
+      font-size: 25px;
       touch-action: none;
       user-select: none;
+      -webkit-user-select: none;
     }
 
-    #jet,
-    #status {
-      min-height: 26px;
+    .status {
+      min-height: 24px;
       text-align: center;
-      font-weight: bold;
+      font-weight: 900;
+      color: var(--bleu);
     }
 
-    #jet { color: var(--bleu); }
+    .toast {
+      position: absolute;
+      z-index: 2;
+      left: 50%;
+      top: 38%;
+      transform: translate(-50%, -50%);
+      font-size: 27px;
+      font-weight: 900;
+      color: var(--bleu);
+      pointer-events: none;
+      opacity: 0;
+      white-space: nowrap;
+    }
+
+    .toast.pop {
+      animation: pop 0.65s;
+    }
+
+    .shake {
+      animation: shake 0.25s;
+    }
+
+    @keyframes pop {
+      0% {
+        opacity: 0;
+        transform: translate(-50%, 0) scale(0.5);
+      }
+
+      35% {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1.2);
+      }
+
+      100% {
+        opacity: 0;
+        transform: translate(-50%, -100%) scale(1);
+      }
+    }
+
+    @keyframes shake {
+      30% {
+        transform: translateX(-5px);
+      }
+
+      70% {
+        transform: translateX(5px);
+      }
+    }
 
     .legend {
       max-width: 440px;
-      margin: 20px auto;
-      font-size: 14px;
-      line-height: 1.6;
+      margin: 14px auto;
+      font-size: 13px;
+      line-height: 1.55;
     }
 
-    .legend p { margin: 8px 0; }
-
-    .coin {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      width: 24px;
-      height: 24px;
-      border: 2px solid var(--noir);
-      border-radius: 50%;
-      background: var(--bleu);
-      color: var(--blanc);
-      font-weight: bold;
-    }
-
-    .platform {
-      display: inline-block;
-      padding: 0 8px;
-      border: 2px solid var(--noir);
-      background: var(--or);
-      line-height: 16px;
+    .legend details {
+      background: #fff;
+      border: 1px solid #bbb;
+      padding: 10px;
+      border-radius: 10px;
     }
 
     footer {
       text-align: center;
-      font-size: 12px;
-      line-height: 1.6;
+      font-size: 11px;
+      color: #555;
+      line-height: 1.5;
     }
 
-    a {
-      color: var(--noir);
-      text-underline-offset: 4px;
+    @media (max-width: 520px) {
+      .hud {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      main {
+        padding: 8px;
+      }
+
+      .controls {
+        position: sticky;
+        bottom: 6px;
+        z-index: 5;
+      }
+
+      .controls button {
+        background: #ffb500ee;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
     }
   </style>
 </head>
 
 <body>
-<main>
-  <header>
-    <div>
-      <span class="eyebrow">QUALITY WEEK</span>
-      <h1>Quality Jump RB</h1>
-    </div>
-    <button id="pause" disabled>Pause</button>
-  </header>
-
-  <div class="stats">
-    <span>Score : <b id="score">0</b></span>
-    <span>Record : <b id="best">0</b></span>
-    <span>Jetons : <b id="tokens">0</b></span>
-    <span>Hauteur : <b id="height">0</b></span>
-    <span>Difficulté : <b id="difficulty">1</b>/5</span>
-    <span>Vitesse : ×<b id="speed">1</b></span>
-  </div>
-
-  <div id="jet"></div>
-
-  <div class="arena">
-    <canvas
-      id="game"
-      width="400"
-      height="600"
-      tabindex="0"
-      aria-label="Quality Jump RB. Utilisez les flèches gauche et droite pour jouer."
-    >
-      Votre navigateur doit prendre en charge Canvas.
-    </canvas>
-
-    <div class="overlay" id="overlay">
+  <main>
+    <header>
       <div>
-        <h2 id="title">Visez plus haut !</h2>
-        <p id="message">
-          Pilotez la tige RB stylisée. Le saut est automatique.
-          Utilisez les flèches, Q/D ou A/D.
-          Sur mobile, maintenez les boutons.
-        </p>
-        <button id="start">Jouer</button>
+        <span class="eyebrow">QUALITY WEEK · ARCADE</span>
+        <h1>Quality Jump RB</h1>
+      </div>
+
+      <div>
+        <button
+          id="sound"
+          class="sound"
+          aria-label="Activer ou désactiver le son"
+        >🔊</button>
+
+        <button id="pause" class="secondary" disabled>
+          Pause
+        </button>
+      </div>
+    </header>
+
+    <div class="hud">
+      <div class="stat">
+        <b id="score">0</b>
+        <small>SCORE</small>
+      </div>
+
+      <div class="stat">
+        <b id="best">0</b>
+        <small>RECORD</small>
+      </div>
+
+      <div class="stat">
+        <b id="tokens">0</b>
+        <small>JETONS</small>
+      </div>
+
+      <div class="stat">
+        <b id="height">0</b>
+        <small>PROGRESSION</small>
       </div>
     </div>
-  </div>
 
-  <div class="controls">
-    <button id="left" aria-label="Aller à gauche">←</button>
-    <button id="right" aria-label="Aller à droite">→</button>
-  </div>
+    <div class="progress">
+      <div class="progrow">
+        <span id="zone">ASCENSION INFINIE</span>
+        <span id="next">PLATEFORMES ×1,00</span>
+      </div>
+    </div>
 
-  <p id="status" role="status" aria-live="polite"></p>
+    <div class="status" id="jet"></div>
 
-  <section class="legend" aria-label="Règles du jeu">
-    <p><span class="coin">+</span> Jeton bleu : +50 points.</p>
-    <p>
-      <span class="platform">↔</span>
-      Plateforme or. La double flèche indique une plateforme mobile.
-    </p>
-    <p><strong>Ressort en zigzag :</strong> super saut.</p>
-    <p>
-      <strong>Sac marqué J :</strong>
-      jetpack, 3 secondes de vol protégé.
-    </p>
-    <p>
-      <strong>Microbes gris à piquants :</strong>
-      à éviter, sauf pendant le jetpack.
-    </p>
+    <div class="arena" id="arena">
+      <canvas
+        id="game"
+        width="400"
+        height="600"
+        tabindex="0"
+        aria-label="Quality Jump RB. Utilisez les flèches gauche et droite."
+      >
+        Votre navigateur doit prendre en charge Canvas.
+      </canvas>
 
-    <details>
-      <summary>Les cinq difficultés</summary>
-      <ul>
-        <li>0–499 : plateformes statiques et bonus.</li>
-        <li>500–999 : plateformes statiques, mobiles et bonus.</li>
-        <li>1 000–1 499 : ajout des microbes.</li>
-        <li>1 500–2 499 : même contenu, vitesse ×2.</li>
-        <li>2 500 et plus : même contenu, vitesse ×4.</li>
-      </ul>
-      <p>
-        La difficulté dépend de la hauteur maximale atteinte,
-        pas des points gagnés avec les jetons.
-      </p>
-    </details>
+      <div class="toast" id="toast" aria-hidden="true">+50</div>
 
-    <p>P ou Échap : pause. Les bords ramènent de l’autre côté.</p>
-  </section>
+      <div class="overlay" id="overlay">
+        <div>
+          <span class="eyebrow">
+            LABORATOIRE QUALITÉ · MODE INFINI
+          </span>
 
-  <footer>
-    <p>
-      Tige RB illustrative, non contractuelle.
-      Record conservé uniquement dans ce navigateur.
-      Aucun classement ni envoi de données.
-    </p>
-    <a href="./index.html">Retour au hub</a>
-  </footer>
-</main>
+          <h2 id="title">Toujours plus haut !</h2>
 
-<script>
-"use strict";
+          <p id="message">
+            Le saut est automatique.
+            Dirigez la tige RB avec ← →, Q/D ou A/D.
+            <br>
+            <b>
+              Aucune limite de score.
+              Les barres fissurées cassent après un rebond.
+            </b>
+          </p>
 
-const canvas = document.getElementById("game");
-const ctx = canvas.getContext("2d");
-const $ = id => document.getElementById(id);
+          <button id="start">JOUER</button>
+        </div>
+      </div>
+    </div>
 
-const WIDTH = 400;
-const HEIGHT = 600;
-const FIXED_STEP = 1 / 120;
+    <div class="controls">
+      <button id="left" aria-label="Aller à gauche">←</button>
+      <button id="right" aria-label="Aller à droite">→</button>
+    </div>
 
-const GRAVITY = 1500;
-const JUMP = -570;
-const SPRING_JUMP = -880;
-const MOVE_SPEED = 280;
+    <p
+      class="status"
+      id="status"
+      role="status"
+      aria-live="polite"
+    ></p>
 
-const keys = new Set();
-const touch = new Set();
+    <section class="legend">
+      <details>
+        <summary><b>Règles & progression</b></summary>
 
-let mode = "ready";
-let player;
-let platforms = [];
-let enemies = [];
+        <p>
+          🔵 Jeton : +50 · ⚡ Ressort : super saut ·
+          🎒 Jetpack : 3 secondes protégées ·
+          🦠 Microbe : impact.
+        </p>
 
-let camera = 0;
-let topY = 560;
-let serial = 0;
-let worldTime = 0;
+        <p>
+          <b>Barres jaunes :</b> stables.<br>
+          <b>Barres bleues :</b> mobiles.<br>
+          <b>Barres brunes fissurées :</b>
+          un seul rebond, puis elles cassent.
+        </p>
 
-let altitude = 0;
-let difficulty = 1;
-let score = 0;
-let tokens = 0;
-let best = 0;
+        <p>
+          Les plateformes mobiles accélèrent progressivement.
+          La tige garde une vitesse constante pendant la partie.
+          Les sauts ne sont pas accélérés.
+        </p>
 
-let lastTime = 0;
-let accumulator = 0;
-let notice = "";
-let noticeTime = 0;
-let lastStatus = "";
+        <p>
+          Les plateformes sont réparties sur toute la largeur.
+          Passe par un bord pour réapparaître de l’autre côté.
+        </p>
 
-try {
-  const stored = Number(localStorage.getItem("quality-jump-best"));
-  if (Number.isFinite(stored) && stored >= 0) best = stored;
-} catch {
-  // Le jeu fonctionne même si le stockage local est indisponible.
-}
+        <p>
+          Aucun score maximum.
+          Le score additionne la progression et les jetons.
+          Le premier impact avec un microbe est absorbé.
+          Le deuxième impact ou une chute termine la partie.
+        </p>
 
-/* Les bornes sont inclusives au début de chaque nouveau palier. */
-function difficultyForHeight(height) {
-  if (height < 500) return 1;
-  if (height < 1000) return 2;
-  if (height < 1500) return 3;
-  if (height < 2500) return 4;
-  return 5;
-}
+        <p>P ou Échap : pause.</p>
+      </details>
+    </section>
 
-function speedForDifficulty(value) {
-  if (value === 5) return 4;
-  if (value === 4) return 2;
-  return 1;
-}
+    <footer>
+      Tige RB illustrative et fictive, non contractuelle.
+      Record conservé dans ce navigateur.
+      Aucun envoi de données.
+    </footer>
+  </main>
 
-function updateHUD() {
-  $("score").textContent = score;
-  $("best").textContent = best;
-  $("tokens").textContent = tokens;
-  $("height").textContent = altitude;
-  $("difficulty").textContent = difficulty;
-  $("speed").textContent = speedForDifficulty(difficulty);
+  <script>
+    "use strict";
 
-  $("jet").textContent = player.jet > 0
-    ? `JETPACK · ${player.jet.toFixed(1)} s`
-    : "";
+    // Configuration
+    const $ = id => document.getElementById(id);
+    const canvas = $("game");
+    const ctx = canvas.getContext("2d");
 
-  // Ne pas réannoncer le même message à chaque image.
-  if (notice !== lastStatus) {
-    $("status").textContent = notice;
-    lastStatus = notice;
-  }
-}
+    const W = 400;
+    const H = 600;
+    const STEP = 1 / 120;
 
-function notify(message, duration = 2) {
-  notice = message;
-  noticeTime = duration;
-}
+    const G = 1500;
+    const J = -570;
+    const SJ = -850;
 
-/*
- * Génération selon la hauteur de la plateforme.
- * Aux difficultés 4 et 5, le contenu reste identique à la 3.
- * Seule la vitesse globale change.
- */
-function addPlatform() {
-  serial++;
-  topY -= 80;
+    // Vitesse latérale légèrement augmentée.
+    const MS = 325;
 
-  const height = Math.max(0, (510 - topY) / 10);
-  const zone = difficultyForHeight(height);
-  const previous = platforms[platforms.length - 1];
+    const keys = new Set();
+    const touch = new Set();
 
-  const width = 90;
-  const x = Math.max(
-    14,
-    Math.min(
-      WIDTH - width - 14,
-      previous.x + (Math.random() * 2 - 1) * 75
-    )
-  );
+    let mode = "ready";
+    let player;
 
-  const moving = zone >= 2 && serial % 4 === 0;
-  const bonus = serial % 17 === 0
-    ? "jet"
-    : serial % 9 === 0
-      ? "spring"
-      : null;
+    let platforms = [];
+    let enemies = [];
+    let particles = [];
 
-  platforms.push({
-    x,
-    y: topY,
-    width,
-    baseX: x,
-    moving,
-    amplitude: Math.min(25, x - 8, WIDTH - width - 8 - x),
-    phase: Math.random() * Math.PI * 2,
-    coin: serial % 3 === 1 && !bonus,
-    taken: false,
-    bonus
-  });
+    let camera = 0;
+    let topY = 560;
+    let serial = 0;
 
-  if (zone >= 3 && serial % 6 === 0) {
-    const baseX = Math.max(
-      25,
-      Math.min(
-        375,
-        x + width / 2 + (serial % 12 ? 110 : -110)
-      )
-    );
+    let worldTime = 0;
+    let platformTime = 0;
 
-    enemies.push({
-      x: baseX,
-      baseX,
-      y: topY - 35,
-      phase: Math.random() * Math.PI * 2,
-      dead: false
+    let altitude = 0;
+    let difficulty = 1;
+    let score = 0;
+    let tokens = 0;
+    let best = 0;
+
+    let lastTime = 0;
+    let acc = 0;
+
+    let notice = "";
+    let noticeT = 0;
+
+    let sound = true;
+    let audio = null;
+
+    try {
+      best = Math.max(
+        0,
+        Number(localStorage.getItem("quality-jump-best")) || 0
+      );
+
+      sound = localStorage.getItem("quality-jump-sound") !== "0";
+    } catch (error) {
+      // Le jeu reste utilisable sans stockage local.
+    }
+
+    // Ces seuils servent aux ambiances et au contenu généré.
+    // Ils ne plafonnent ni la progression ni le score.
+    const LEVELS = [
+      { n: "PRODUCTION", min: 0, max: 250 },
+      { n: "CONTRÔLE QUALITÉ", min: 250, max: 600 },
+      { n: "INVESTIGATION", min: 600, max: 1050 },
+      { n: "MRB", min: 1050, max: 1600 },
+      { n: "QA EXPERT", min: 1600, max: Infinity }
+    ];
+
+    function diff(height) {
+      if (height < 250) return 1;
+      if (height < 600) return 2;
+      if (height < 1050) return 3;
+      if (height < 1600) return 4;
+      return 5;
+    }
+
+    // Accélération réservée aux plateformes mobiles.
+    function speed() {
+      return 1 + 3 * (1 - Math.exp(-altitude / 1800));
+    }
+
+    // Sons locaux
+    function tone(frequency = 500, duration = 0.06) {
+      if (!sound) return;
+
+      try {
+        const AudioClass =
+          window.AudioContext || window.webkitAudioContext;
+
+        if (!AudioClass) return;
+
+        audio = audio || new AudioClass();
+
+        if (audio.state === "suspended") {
+          audio.resume();
+        }
+
+        const oscillator = audio.createOscillator();
+        const gain = audio.createGain();
+
+        oscillator.frequency.value = frequency;
+        oscillator.connect(gain);
+        gain.connect(audio.destination);
+
+        gain.gain.value = 0.04;
+
+        oscillator.start();
+
+        gain.gain.exponentialRampToValueAtTime(
+          0.001,
+          audio.currentTime + duration
+        );
+
+        oscillator.stop(audio.currentTime + duration);
+      } catch (error) {
+        // Les sons sont facultatifs.
+      }
+    }
+
+    function notify(text, duration = 1.5) {
+      notice = text;
+      noticeT = duration;
+      $("status").textContent = text;
+    }
+
+    function pop(text, color = "#1C5687") {
+      const element = $("toast");
+
+      element.textContent = text;
+      element.style.color = color;
+      element.classList.remove("pop");
+
+      void element.offsetWidth;
+
+      element.classList.add("pop");
+    }
+
+    function hud() {
+      $("score").textContent = score;
+      $("best").textContent = best;
+      $("tokens").textContent = tokens;
+      $("height").textContent = altitude;
+
+      $("zone").textContent = "ASCENSION INFINIE";
+
+      $("next").textContent =
+        "PLATEFORMES ×" + speed().toFixed(2);
+
+      $("jet").textContent =
+        player && player.jet > 0
+          ? "JETPACK · " + player.jet.toFixed(1) + " s"
+          : "";
+
+      $("sound").textContent = sound ? "🔊" : "🔇";
+    }
+
+    // Génération infinie
+    function addPlatform() {
+      serial++;
+
+      topY -= serial <= 3
+        ? 72
+        : 64 + Math.random() * 22;
+
+      const zone = diff(
+        Math.max(0, (510 - topY) / 8)
+      );
+
+      const previous = platforms[platforms.length - 1];
+      const width = 92;
+
+      // Début indulgent, puis répartition indépendante sur toute la largeur.
+      const x = serial <= 3
+        ? Math.max(
+            8,
+            Math.min(
+              W - width - 8,
+              previous.x + (Math.random() * 2 - 1) * 65
+            )
+          )
+        : 8 + Math.random() * (W - width - 16);
+
+      const moving = zone >= 2 && serial % 4 === 0;
+
+      const bonus = serial === 6
+        ? "spring"
+        : serial === 11
+          ? "jet"
+          : serial % 17 === 0
+            ? "jet"
+            : serial % 9 === 0
+              ? "spring"
+              : null;
+
+      const fragile =
+        serial > 3 &&
+        !bonus &&
+        !moving &&
+        serial % 5 === 0;
+
+      platforms.push({
+        x,
+        y: topY,
+        width,
+        baseX: x,
+        moving,
+        fragile,
+        broken: false,
+        amp: Math.min(
+          28,
+          x - 8,
+          W - width - 8 - x
+        ),
+        phase: Math.random() * Math.PI * 2,
+        coin: (serial % 3 === 1 || serial === 2) && !bonus,
+        taken: false,
+        bonus,
+        bounce: 0
+      });
+
+      if (zone >= 3 && serial % 7 === 0) {
+        const baseX = Math.max(
+          25,
+          Math.min(
+            375,
+            x + width / 2 + (serial % 14 ? 105 : -105)
+          )
+        );
+
+        enemies.push({
+          x: baseX,
+          baseX,
+          y: topY - 35,
+          phase: Math.random() * Math.PI * 2,
+          dead: false
+        });
+      }
+    }
+
+    function reset() {
+      player = {
+        x: 184,
+        y: 510,
+        width: 30,
+        height: 44,
+        vy: J,
+        jet: 0,
+        shield: 1
+      };
+
+      platforms = [{
+        x: 154,
+        y: 560,
+        width: 92,
+        moving: false,
+        fragile: false,
+        broken: false,
+        coin: false,
+        bonus: null,
+        bounce: 0
+      }];
+
+      enemies = [];
+      particles = [];
+
+      camera = 0;
+      topY = 560;
+      serial = 0;
+
+      worldTime = 0;
+      platformTime = 0;
+
+      altitude = 0;
+      difficulty = 1;
+      score = 0;
+      tokens = 0;
+
+      notice = "";
+      noticeT = 0;
+
+      keys.clear();
+      touch.clear();
+
+      $("status").textContent = "";
+
+      for (let i = 0; i < 12; i++) {
+        addPlatform();
+      }
+
+      hud();
+    }
+
+    function show(title, message, buttonText) {
+      $("title").textContent = title;
+      $("message").innerHTML = message;
+      $("start").textContent = buttonText;
+      $("overlay").hidden = false;
+    }
+
+    function start() {
+      reset();
+
+      mode = "playing";
+      acc = 0;
+      lastTime = performance.now();
+
+      $("overlay").hidden = true;
+      $("pause").disabled = false;
+      $("pause").textContent = "Pause";
+
+      notify("C’est parti !");
+      tone(520);
+      canvas.focus();
+    }
+
+    function pause() {
+      if (mode === "playing") {
+        mode = "paused";
+
+        keys.clear();
+        touch.clear();
+
+        $("pause").textContent = "Reprendre";
+
+        show(
+          "Pause",
+          "Votre partie est conservée.",
+          "REPRENDRE"
+        );
+      } else if (mode === "paused") {
+        mode = "playing";
+        acc = 0;
+        lastTime = performance.now();
+
+        $("overlay").hidden = true;
+        $("pause").textContent = "Pause";
+
+        canvas.focus();
+      }
+    }
+
+    function finish(message) {
+      mode = "over";
+
+      keys.clear();
+      touch.clear();
+
+      if (score > best) {
+        best = score;
+
+        try {
+          localStorage.setItem(
+            "quality-jump-best",
+            String(best)
+          );
+        } catch (error) {}
+      }
+
+      $("pause").disabled = true;
+
+      show(
+        "Bien joué !",
+        `${message}
+         <br><br>
+         <b>${score} points · ${tokens} jeton(s)</b>
+         <br>
+         Progression : ${altitude}
+         · Plateformes ×${speed().toFixed(2)}`,
+        "REJOUER"
+      );
+
+      tone(190, 0.18);
+      hud();
+    }
+
+    function spark(x, y, color, count = 8) {
+      for (let i = 0; i < count; i++) {
+        particles.push({
+          x,
+          y,
+          vx: (Math.random() - 0.5) * 130,
+          vy: -Math.random() * 120 - 20,
+          t: 0.55,
+          c: color
+        });
+      }
+    }
+
+    // Simulation à pas fixe
+    function step(dt, realDt) {
+      worldTime += dt;
+
+      // Seule cette horloge accélère.
+      platformTime += dt * speed();
+
+      noticeT = Math.max(0, noticeT - realDt);
+
+      if (!noticeT && notice) {
+        notice = "";
+        $("status").textContent = "";
+      }
+
+      const left =
+        keys.has("arrowleft") ||
+        keys.has("a") ||
+        keys.has("q") ||
+        touch.has("left");
+
+      const right =
+        keys.has("arrowright") ||
+        keys.has("d") ||
+        touch.has("right");
+
+      player.x +=
+        ((right ? 1 : 0) - (left ? 1 : 0)) *
+        MS *
+        dt;
+
+      // Passage immédiat d’un bord à l’autre.
+      if (player.x + player.width / 2 >= W) {
+        player.x -= W;
+      }
+
+      if (player.x + player.width / 2 < 0) {
+        player.x += W;
+      }
+
+      for (const platform of platforms) {
+        if (platform.moving) {
+          platform.x =
+            platform.baseX +
+            Math.sin(
+              platformTime * 1.25 + platform.phase
+            ) * platform.amp;
+        }
+
+        platform.bounce = Math.max(
+          0,
+          platform.bounce - dt * 35
+        );
+      }
+
+      for (const enemy of enemies) {
+        enemy.x = Math.max(
+          20,
+          Math.min(
+            380,
+            enemy.baseX +
+            Math.sin(worldTime * 1.4 + enemy.phase) * 27
+          )
+        );
+      }
+
+      const previousBottom = player.y + player.height;
+      const flying = player.jet > 0;
+
+      if (flying) {
+        player.jet = Math.max(0, player.jet - realDt);
+        player.vy = -610;
+      } else {
+        player.vy += G * dt;
+      }
+
+      player.y += player.vy * dt;
+
+      // Rebond uniquement en descente.
+      if (player.vy > 0) {
+        for (const platform of platforms) {
+          const crossed =
+            previousBottom <= platform.y &&
+            player.y + player.height >= platform.y;
+
+          // Les collisions tiennent compte du passage par les bords.
+          const overlaps = [-W, 0, W].some(offset =>
+            player.x + offset + player.width > platform.x &&
+            player.x + offset < platform.x + platform.width
+          );
+
+          if (!platform.broken && crossed && overlaps) {
+            player.y = platform.y - player.height;
+            player.vy = J;
+            platform.bounce = 5;
+
+            if (platform.fragile) {
+              platform.broken = true;
+
+              spark(
+                platform.x + platform.width / 2,
+                platform.y - camera,
+                "#b66c37",
+                18
+              );
+
+              tone(220, 0.09);
+
+              notify(
+                "Plateforme cassée : continue vers le haut !"
+              );
+            }
+
+            spark(
+              player.x + 15,
+              platform.y - camera,
+              "#FFB500",
+              5
+            );
+
+            if (platform.bonus === "spring") {
+              player.vy = SJ;
+
+              notify("⚡ SUPER SAUT !");
+              pop("SUPER SAUT", "#FFB500");
+              tone(760);
+            }
+
+            break;
+          }
+        }
+      }
+
+      // Jetons et jetpacks
+      for (const platform of platforms) {
+        const x = platform.x + platform.width / 2;
+        const y = platform.y - 27;
+
+        const hit =
+          player.x < x + 14 &&
+          player.x + player.width > x - 14 &&
+          player.y < y + 14 &&
+          player.y + player.height > y - 14;
+
+        if (platform.coin && !platform.taken && hit) {
+          platform.taken = true;
+          tokens++;
+
+          pop("+50");
+          spark(x, y - camera, "#1C5687", 12);
+          tone(820);
+        }
+
+        if (platform.bonus === "jet" && hit) {
+          platform.bonus = null;
+          player.jet = 3;
+
+          pop("JETPACK !", "#FFB500");
+          notify("🎒 3 secondes de vol protégé !");
+          tone(980, 0.12);
+        }
+      }
+
+      camera = Math.min(camera, player.y - 250);
+
+      altitude = Math.max(
+        altitude,
+        Math.floor(
+          Math.max(0, 510 - player.y) / 8
+        )
+      );
+
+      difficulty = diff(altitude);
+
+      // Aucun plafond de score.
+      score = altitude + tokens * 50;
+
+      // Collision avec les microbes
+      for (const enemy of enemies) {
+        const nearestX = Math.max(
+          player.x,
+          Math.min(
+            enemy.x,
+            player.x + player.width
+          )
+        );
+
+        const nearestY = Math.max(
+          player.y,
+          Math.min(
+            enemy.y,
+            player.y + player.height
+          )
+        );
+
+        const hit =
+          (nearestX - enemy.x) ** 2 +
+          (nearestY - enemy.y) ** 2 <
+          17 ** 2;
+
+        if (!hit) continue;
+
+        if (flying) {
+          enemy.dead = true;
+
+          pop("PROTÉGÉ");
+
+          spark(
+            enemy.x,
+            enemy.y - camera,
+            "#1C5687",
+            15
+          );
+
+          tone(900);
+        } else if (player.shield > 0) {
+          player.shield = 0;
+          enemy.dead = true;
+          player.vy = J;
+
+          pop("IMPACT !", "#d35b46");
+          notify("Impact absorbé · reste concentré !");
+
+          $("arena").classList.add("shake");
+
+          setTimeout(() => {
+            $("arena").classList.remove("shake");
+          }, 260);
+
+          tone(160, 0.12);
+        } else {
+          finish(
+            "Un deuxième microbe a touché la tige."
+          );
+          return;
+        }
+      }
+
+      // Génération continue au-dessus de la caméra.
+      while (topY > camera - 160) {
+        addPlatform();
+      }
+
+      platforms = platforms.filter(platform =>
+        !platform.broken &&
+        platform.y < camera + H + 80
+      );
+
+      enemies = enemies.filter(enemy =>
+        !enemy.dead &&
+        enemy.y < camera + H + 80
+      );
+
+      for (const particle of particles) {
+        particle.x += particle.vx * dt;
+        particle.y += particle.vy * dt;
+        particle.vy += 250 * dt;
+        particle.t -= realDt;
+      }
+
+      particles = particles.filter(
+        particle => particle.t > 0
+      );
+
+      if (player.y > camera + H + 45) {
+        finish(
+          "La tige est tombée entre les plateformes."
+        );
+      }
+    }
+
+    // Dessin
+    function line(x1, y1, x2, y2) {
+      ctx.beginPath();
+      ctx.moveTo(x1, y1);
+      ctx.lineTo(x2, y2);
+      ctx.stroke();
+    }
+
+    function drawPlatform(platform) {
+      if (platform.broken) return;
+
+      const y =
+        platform.y - camera + platform.bounce;
+
+      if (y < -100 || y > H + 30) return;
+
+      const x =
+        platform.x + platform.width / 2;
+
+      ctx.fillStyle = platform.fragile
+        ? "#bd7844"
+        : platform.moving
+          ? "#1C5687"
+          : "#FFB500";
+
+      ctx.fillRect(
+        platform.x,
+        y,
+        platform.width,
+        12
+      );
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2;
+
+      ctx.strokeRect(
+        platform.x,
+        y,
+        platform.width,
+        12
+      );
+
+      if (platform.fragile) {
+        ctx.strokeStyle = "#fff";
+        ctx.lineWidth = 2;
+
+        ctx.beginPath();
+        ctx.moveTo(x - 8, y);
+        ctx.lineTo(x + 2, y + 4);
+        ctx.lineTo(x - 4, y + 8);
+        ctx.lineTo(x + 7, y + 12);
+        ctx.stroke();
+
+        ctx.strokeStyle = "#111";
+      }
+
+      if (platform.moving) {
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 13px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("↔", x, y + 10);
+      }
+
+      if (platform.coin && !platform.taken) {
+        ctx.fillStyle = "#1C5687";
+
+        ctx.beginPath();
+        ctx.arc(x, y - 27, 11, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 16px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("+", x, y - 21);
+      }
+
+      if (platform.bonus === "spring") {
+        ctx.strokeStyle = "#111";
+
+        ctx.beginPath();
+        ctx.moveTo(x - 9, y);
+
+        for (let i = 0; i < 5; i++) {
+          ctx.lineTo(
+            x + (i % 2 ? 9 : -9),
+            y - 4 - i * 4
+          );
+        }
+
+        ctx.lineTo(x + 9, y - 24);
+        ctx.stroke();
+      }
+
+      if (platform.bonus === "jet") {
+        ctx.fillStyle = "#1C5687";
+        ctx.fillRect(x - 10, y - 43, 20, 28);
+        ctx.strokeRect(x - 10, y - 43, 20, 28);
+
+        ctx.fillStyle = "#fff";
+        ctx.font = "bold 12px Arial";
+        ctx.textAlign = "center";
+        ctx.fillText("J", x, y - 25);
+      }
+    }
+
+    function drawEnemy(enemy) {
+      const y = enemy.y - camera;
+
+      if (y < -40 || y > H + 40) return;
+
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2;
+
+      for (let i = 0; i < 10; i++) {
+        const angle = i * Math.PI / 5;
+
+        line(
+          enemy.x + Math.cos(angle) * 14,
+          y + Math.sin(angle) * 14,
+          enemy.x + Math.cos(angle) * 21,
+          y + Math.sin(angle) * 21
+        );
+      }
+
+      ctx.fillStyle = "#8e9491";
+
+      ctx.beginPath();
+      ctx.arc(enemy.x, y, 15, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#111";
+      ctx.fillRect(enemy.x - 7, y - 4, 4, 4);
+      ctx.fillRect(enemy.x + 3, y - 4, 4, 4);
+    }
+
+    function drawPlayer() {
+      ctx.save();
+
+      ctx.translate(
+        player.x,
+        player.y - camera
+      );
+
+      if (player.jet > 0) {
+        ctx.strokeStyle = "#1C5687";
+        ctx.lineWidth = 3;
+
+        ctx.beginPath();
+        ctx.ellipse(
+          15, 20, 27, 35, 0, 0, Math.PI * 2
+        );
+        ctx.stroke();
+
+        ctx.fillStyle = "#FFB500";
+
+        ctx.beginPath();
+        ctx.moveTo(3, 33);
+        ctx.lineTo(
+          8,
+          58 + Math.sin(worldTime * 25) * 5
+        );
+        ctx.lineTo(14, 33);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = "#b7bec3";
+      ctx.strokeStyle = "#111";
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.moveTo(7, 7);
+      ctx.quadraticCurveTo(4, -5, 14, -9);
+      ctx.quadraticCurveTo(31, -4, 27, 10);
+      ctx.lineTo(22, 19);
+      ctx.lineTo(19, 43);
+      ctx.lineTo(11, 43);
+      ctx.lineTo(8, 22);
+      ctx.lineTo(3, 14);
+      ctx.closePath();
+
+      ctx.fill();
+      ctx.stroke();
+
+      ctx.fillStyle = "#FFB500";
+
+      ctx.beginPath();
+      ctx.arc(17, 6, 5, 0, Math.PI * 2);
+      ctx.fill();
+
+      ctx.fillStyle = "#1C5687";
+      ctx.fillRect(11, 20, 10, 5);
+
+      ctx.fillStyle = "#fff";
+      ctx.font = "bold 7px Arial";
+      ctx.textAlign = "center";
+      ctx.fillText("RB", 16, 25);
+
+      ctx.restore();
+    }
+
+    // Décor laboratoire qualité
+    function drawLab() {
+      ctx.fillStyle = "#f7fafb";
+      ctx.fillRect(0, 0, W, H);
+
+      ctx.strokeStyle = "#e0e8ec";
+      ctx.lineWidth = 1;
+
+      for (
+        let y = ((-camera * 0.25) % 60 + 60) % 60;
+        y < H;
+        y += 60
+      ) {
+        line(0, y, W, y);
+      }
+
+      for (let x = 0; x < W; x += 40) {
+        line(x, 0, x, H);
+      }
+
+      ctx.save();
+      ctx.globalAlpha = 0.22;
+
+      const names = [
+        "MÉTROLOGIE",
+        "REVUE DOCUMENTAIRE",
+        "ZONE MRB",
+        "LABORATOIRE QUALITÉ"
+      ];
+
+      const offset = camera * 0.22;
+
+      for (
+        let k = Math.floor(offset / 320) - 1;
+        k <= Math.floor(offset / 320) + 3;
+        k++
+      ) {
+        const y = k * 320 - offset;
+        const index = ((k % 4) + 4) % 4;
+
+        ctx.fillStyle = "#c4d6df";
+        ctx.fillRect(18, y + 45, 364, 180);
+
+        ctx.strokeStyle = "#7592a3";
+        ctx.lineWidth = 2;
+        ctx.strokeRect(18, y + 45, 364, 180);
+
+        ctx.fillStyle = "#1C5687";
+        ctx.font = "bold 13px Arial";
+        ctx.textAlign = "left";
+        ctx.fillText(names[index], 30, y + 68);
+
+        // Établi
+        ctx.fillStyle = "#9bb1be";
+        ctx.fillRect(35, y + 187, 330, 9);
+        ctx.fillRect(42, y + 196, 9, 40);
+        ctx.fillRect(347, y + 196, 9, 40);
+
+        if (index === 0) {
+          // Station de métrologie
+          ctx.strokeStyle = "#1C5687";
+          ctx.lineWidth = 7;
+
+          line(65, y + 178, 65, y + 93);
+          line(65, y + 93, 157, y + 93);
+          line(157, y + 93, 157, y + 153);
+
+          ctx.fillStyle = "#789bad";
+          ctx.fillRect(75, y + 168, 100, 12);
+          ctx.fillRect(235, y + 111, 90, 60);
+
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(244, y + 119, 72, 42);
+
+          ctx.strokeStyle = "#1C5687";
+          ctx.lineWidth = 2;
+
+          line(252, y + 150, 268, y + 136);
+          line(268, y + 136, 282, y + 143);
+          line(282, y + 143, 304, y + 125);
+        } else if (index === 1) {
+          // Dossiers documentaires
+          for (let j = 0; j < 3; j++) {
+            ctx.fillStyle = "#fff";
+            ctx.fillRect(
+              52 + j * 98,
+              y + 93,
+              74,
+              83
+            );
+
+            ctx.strokeStyle = "#1C5687";
+            ctx.lineWidth = 2;
+
+            ctx.strokeRect(
+              52 + j * 98,
+              y + 93,
+              74,
+              83
+            );
+
+            for (let a = 0; a < 4; a++) {
+              line(
+                61 + j * 98,
+                y + 110 + a * 13,
+                115 + j * 98,
+                y + 110 + a * 13
+              );
+            }
+          }
+        } else if (index === 2) {
+          // Bacs de revue
+          for (let j = 0; j < 3; j++) {
+            ctx.fillStyle = "#ffb500";
+
+            ctx.fillRect(
+              45 + j * 106,
+              y + 120,
+              91,
+              61
+            );
+
+            ctx.strokeStyle = "#1C5687";
+
+            ctx.strokeRect(
+              45 + j * 106,
+              y + 120,
+              91,
+              61
+            );
+
+            ctx.fillStyle = "#1C5687";
+            ctx.font = "bold 12px Arial";
+
+            ctx.fillText(
+              "EN REVUE",
+              52 + j * 106,
+              y + 150
+            );
+          }
+        } else {
+          // Poste qualité
+          ctx.fillStyle = "#fff";
+          ctx.fillRect(56, y + 96, 112, 79);
+
+          ctx.strokeStyle = "#1C5687";
+          ctx.strokeRect(56, y + 96, 112, 79);
+
+          ctx.font = "bold 12px Arial";
+          ctx.fillStyle = "#1C5687";
+
+          ctx.fillText(
+            "TRAÇABILITÉ",
+            63,
+            y + 122
+          );
+
+          ctx.fillText(
+            "VÉRIFICATION",
+            63,
+            y + 146
+          );
+
+          ctx.strokeStyle = "#1C5687";
+          ctx.lineWidth = 4;
+
+          line(245, y + 168, 245, y + 105);
+          line(245, y + 105, 300, y + 105);
+          line(300, y + 105, 300, y + 157);
+        }
+      }
+
+      ctx.restore();
+
+      ctx.fillStyle = "#1c5687";
+      ctx.font = "bold 10px Arial";
+      ctx.textAlign = "left";
+
+      ctx.fillText(
+        "QUALITY LAB · " + LEVELS[difficulty - 1].n,
+        12,
+        20
+      );
+    }
+
+    function draw() {
+      drawLab();
+
+      platforms.forEach(drawPlatform);
+      enemies.forEach(drawEnemy);
+
+      for (const particle of particles) {
+        ctx.globalAlpha = Math.max(
+          0,
+          particle.t / 0.55
+        );
+
+        ctx.fillStyle = particle.c;
+
+        ctx.fillRect(
+          particle.x - 2,
+          particle.y - 2,
+          4,
+          4
+        );
+
+        ctx.globalAlpha = 1;
+      }
+
+      drawPlayer();
+
+      // Affiche aussi la partie de la tige située de l’autre côté.
+      const savedX = player.x;
+
+      if (savedX < 0) {
+        player.x = savedX + W;
+        drawPlayer();
+      } else if (savedX + player.width > W) {
+        player.x = savedX - W;
+        drawPlayer();
+      }
+
+      player.x = savedX;
+    }
+
+    function frame(now) {
+      const elapsed = Math.min(
+        (now - lastTime) / 1000,
+        0.05
+      );
+
+      lastTime = now;
+
+      if (mode === "playing") {
+        acc += elapsed;
+
+        while (
+          acc >= STEP &&
+          mode === "playing"
+        ) {
+          // Aucun multiplicateur global sur la tige.
+          step(STEP, STEP);
+          acc -= STEP;
+        }
+      }
+
+      draw();
+      hud();
+
+      requestAnimationFrame(frame);
+    }
+
+    // Commandes
+    $("start").addEventListener("click", () => {
+      if (mode === "paused") {
+        pause();
+      } else {
+        start();
+      }
     });
-  }
-}
 
-function reset() {
-  player = {
-    x: 184,
-    y: 510,
-    width: 30,
-    height: 42,
-    velocityY: JUMP,
-    jet: 0
-  };
+    $("pause").addEventListener("click", pause);
 
-  platforms = [{
-    x: 154,
-    y: 560,
-    width: 92,
-    moving: false,
-    coin: false,
-    bonus: null
-  }];
+    $("sound").addEventListener("click", () => {
+      sound = !sound;
 
-  enemies = [];
-  camera = 0;
-  topY = 560;
-  serial = 0;
-  worldTime = 0;
-  altitude = 0;
-  difficulty = 1;
-  score = 0;
-  tokens = 0;
-  notice = "";
-  noticeTime = 0;
+      try {
+        localStorage.setItem(
+          "quality-jump-sound",
+          sound ? "1" : "0"
+        );
+      } catch (error) {}
 
-  keys.clear();
-  touch.clear();
+      hud();
 
-  for (let i = 0; i < 12; i++) addPlatform();
-  updateHUD();
-}
+      if (sound) tone(600);
+    });
 
-function showOverlay(title, message, buttonText) {
-  $("title").textContent = title;
-  $("message").textContent = message;
-  $("start").textContent = buttonText;
-  $("overlay").hidden = false;
-}
+    window.addEventListener("keydown", event => {
+      const key = event.key.toLowerCase();
 
-function start() {
-  reset();
-  mode = "playing";
-  accumulator = 0;
-  lastTime = performance.now();
+      if (
+        ["arrowleft", "arrowright", "a", "q", "d"].includes(key) &&
+        mode === "playing"
+      ) {
+        event.preventDefault();
+        keys.add(key);
+      }
 
-  $("overlay").hidden = true;
-  $("pause").disabled = false;
-  $("pause").textContent = "Pause";
+      if (
+        ["p", "escape"].includes(key) &&
+        !event.repeat &&
+        ["playing", "paused"].includes(mode)
+      ) {
+        event.preventDefault();
+        pause();
+      }
+    });
 
-  notify("La partie commence !");
-  canvas.focus();
-}
+    window.addEventListener("keyup", event => {
+      keys.delete(event.key.toLowerCase());
+    });
 
-function togglePause() {
-  if (mode === "playing") {
-    mode = "paused";
-    keys.clear();
-    touch.clear();
+    for (const direction of ["left", "right"]) {
+      const button = $(direction);
 
-    $("pause").textContent = "Reprendre";
-    showOverlay(
-      "Petite pause",
-      "Votre partie est conservée.",
-      "Reprendre"
-    );
+      button.addEventListener("pointerdown", event => {
+        event.preventDefault();
 
-    notify("Partie en pause.");
-  } else if (mode === "paused") {
-    mode = "playing";
-    accumulator = 0;
+        if (mode === "playing") {
+          button.setPointerCapture(event.pointerId);
+          touch.add(direction);
+        }
+      });
+
+      for (const eventName of [
+        "pointerup",
+        "pointercancel",
+        "lostpointercapture"
+      ]) {
+        button.addEventListener(eventName, () => {
+          touch.delete(direction);
+        });
+      }
+    }
+
+    function inactive() {
+      keys.clear();
+      touch.clear();
+
+      if (mode === "playing") {
+        pause();
+      }
+    }
+
+    window.addEventListener("blur", inactive);
+
+    document.addEventListener("visibilitychange", () => {
+      if (document.hidden) {
+        inactive();
+      }
+    });
+
+    reset();
+    hud();
+
     lastTime = performance.now();
 
-    $("overlay").hidden = true;
-    $("pause").textContent = "Pause";
-
-    notify("La partie reprend.");
-    canvas.focus();
-  }
-
-  updateHUD();
-}
-
-function end(message) {
-  mode = "over";
-  keys.clear();
-  touch.clear();
-
-  if (score > best) {
-    best = score;
-    try {
-      localStorage.setItem("quality-jump-best", String(best));
-    } catch {}
-  }
-
-  $("pause").disabled = true;
-
-  showOverlay(
-    "Bien joué !",
-    `${message} Score : ${score} points. ${tokens} jeton(s).`,
-    "Rejouer"
-  );
-
-  notify(`Partie terminée. ${message}`, 10);
-  updateHUD();
-}
-
-/*
- * dt : temps du jeu, accéléré aux difficultés 4 et 5.
- * realDt : temps réel, pour conserver un jetpack de 3 secondes.
- */
-function step(dt, realDt) {
-  worldTime += dt;
-  noticeTime = Math.max(0, noticeTime - realDt);
-  if (noticeTime === 0) notice = "";
-
-  const left = keys.has("arrowleft")
-    || keys.has("a")
-    || keys.has("q")
-    || touch.has("left");
-
-  const right = keys.has("arrowright")
-    || keys.has("d")
-    || touch.has("right");
-
-  player.x += ((right ? 1 : 0) - (left ? 1 : 0))
-    * MOVE_SPEED * dt;
-
-  if (player.x > WIDTH) player.x = -player.width;
-  if (player.x + player.width < 0) player.x = WIDTH;
-
-  for (const platform of platforms) {
-    if (platform.moving) {
-      platform.x = platform.baseX
-        + Math.sin(worldTime + platform.phase)
-        * platform.amplitude;
-    }
-  }
-
-  for (const enemy of enemies) {
-    enemy.x = Math.max(
-      20,
-      Math.min(
-        380,
-        enemy.baseX + Math.sin(worldTime + enemy.phase) * 25
-      )
-    );
-  }
-
-  const previousBottom = player.y + player.height;
-  const flying = player.jet > 0;
-
-  if (flying) {
-    player.jet = Math.max(0, player.jet - realDt);
-    player.velocityY = -650;
-  } else {
-    player.velocityY += GRAVITY * dt;
-  }
-
-  player.y += player.velocityY * dt;
-
-  // Collision avec une plateforme uniquement en descente.
-  if (player.velocityY > 0) {
-    for (const platform of platforms) {
-      const crossed = previousBottom <= platform.y
-        && player.y + player.height >= platform.y;
-
-      const overlaps = player.x + player.width > platform.x
-        && player.x < platform.x + platform.width;
-
-      if (crossed && overlaps) {
-        player.y = platform.y - player.height;
-        player.velocityY = JUMP;
-
-        if (platform.bonus === "spring") {
-          player.velocityY = SPRING_JUMP;
-          notify("Ressort : super saut !");
-        }
-        break;
-      }
-    }
-  }
-
-  // Jetons et jetpacks.
-  for (const platform of platforms) {
-    const x = platform.x + platform.width / 2;
-    const y = platform.y - 27;
-
-    const hit = player.x < x + 13
-      && player.x + player.width > x - 13
-      && player.y < y + 13
-      && player.y + player.height > y - 13;
-
-    if (platform.coin && !platform.taken && hit) {
-      platform.taken = true;
-      tokens++;
-    }
-
-    if (platform.bonus === "jet" && hit) {
-      platform.bonus = null;
-      player.jet = 3;
-      notify("Jetpack : 3 secondes de vol protégé !");
-    }
-  }
-
-  camera = Math.min(camera, player.y - 250);
-  altitude = Math.max(
-    altitude,
-    Math.floor(Math.max(0, 510 - player.y) / 10)
-  );
-
-  const nextDifficulty = difficultyForHeight(altitude);
-  if (nextDifficulty !== difficulty) {
-    difficulty = nextDifficulty;
-    notify(
-      `Difficulté ${difficulty}/5 · vitesse ×${speedForDifficulty(difficulty)}`
-    );
-  }
-
-  score = altitude + tokens * 50;
-
-  // Collision cercle / rectangle avec les microbes.
-  for (const enemy of enemies) {
-    const nearestX = Math.max(
-      player.x,
-      Math.min(enemy.x, player.x + player.width)
-    );
-
-    const nearestY = Math.max(
-      player.y,
-      Math.min(enemy.y, player.y + player.height)
-    );
-
-    const collision = (nearestX - enemy.x) ** 2
-      + (nearestY - enemy.y) ** 2 < 16 ** 2;
-
-    if (collision) {
-      if (flying || player.jet > 0) {
-        enemy.dead = true;
-        notify("Jetpack : microbe neutralisé !");
-      } else {
-        end("Un microbe a touché la tige.");
-        return;
-      }
-    }
-  }
-
-  while (topY > camera - 160) addPlatform();
-
-  platforms = platforms.filter(
-    platform => platform.y < camera + HEIGHT + 80
-  );
-
-  enemies = enemies.filter(
-    enemy => !enemy.dead && enemy.y < camera + HEIGHT + 80
-  );
-
-  if (player.y > camera + HEIGHT + 45) {
-    end("La tige est tombée entre les plateformes.");
-  }
-}
-
-function line(x1, y1, x2, y2) {
-  ctx.beginPath();
-  ctx.moveTo(x1, y1);
-  ctx.lineTo(x2, y2);
-  ctx.stroke();
-}
-
-function drawPlatform(platform) {
-  const y = platform.y - camera;
-  if (y < -100 || y > HEIGHT + 30) return;
-
-  const x = platform.x + platform.width / 2;
-
-  ctx.fillStyle = "#FFB500";
-  ctx.fillRect(platform.x, y, platform.width, 12);
-  ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 2;
-  ctx.strokeRect(platform.x, y, platform.width, 12);
-
-  if (platform.moving) {
-    ctx.fillStyle = "#000000";
-    ctx.font = "bold 13px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("↔", x, y + 10);
-  }
-
-  if (platform.coin && !platform.taken) {
-    ctx.fillStyle = "#1C5687";
-    ctx.beginPath();
-    ctx.arc(x, y - 27, 11, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.stroke();
-
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 16px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("+", x, y - 21);
-  }
-
-  if (platform.bonus === "spring") {
-    ctx.strokeStyle = "#000000";
-    ctx.beginPath();
-    ctx.moveTo(x - 9, y);
-
-    for (let i = 0; i < 5; i++) {
-      ctx.lineTo(x + (i % 2 ? 9 : -9), y - 4 - i * 4);
-    }
-
-    ctx.lineTo(x + 9, y - 24);
-    ctx.stroke();
-    line(x - 12, y - 24, x + 12, y - 24);
-  }
-
-  if (platform.bonus === "jet") {
-    ctx.fillStyle = "#FFFFFF";
-    ctx.fillRect(x - 10, y - 43, 20, 29);
-    ctx.strokeStyle = "#000000";
-    ctx.strokeRect(x - 10, y - 43, 20, 29);
-
-    ctx.fillStyle = "#1C5687";
-    ctx.fillRect(x - 6, y - 38, 12, 14);
-    ctx.fillStyle = "#FFFFFF";
-    ctx.font = "bold 10px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText("J", x, y - 27);
-
-    ctx.fillStyle = "#FFB500";
-    ctx.beginPath();
-    ctx.moveTo(x - 7, y - 13);
-    ctx.lineTo(x, y - 3);
-    ctx.lineTo(x + 7, y - 13);
-    ctx.fill();
-  }
-}
-
-function drawEnemy(enemy) {
-  const y = enemy.y - camera;
-  if (y < -40 || y > HEIGHT + 40) return;
-
-  ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 2;
-
-  for (let i = 0; i < 10; i++) {
-    const angle = i * Math.PI / 5;
-    line(
-      enemy.x + Math.cos(angle) * 14,
-      y + Math.sin(angle) * 14,
-      enemy.x + Math.cos(angle) * 21,
-      y + Math.sin(angle) * 21
-    );
-  }
-
-  ctx.fillStyle = "#B2B4AE";
-  ctx.beginPath();
-  ctx.arc(enemy.x, y, 15, 0, Math.PI * 2);
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle = "#000000";
-  ctx.fillRect(enemy.x - 7, y - 4, 4, 4);
-  ctx.fillRect(enemy.x + 3, y - 4, 4, 4);
-  line(enemy.x - 6, y + 7, enemy.x + 6, y + 4);
-}
-
-function drawPlayer() {
-  ctx.save();
-  ctx.translate(player.x, player.y - camera);
-
-  if (player.jet > 0) {
-    ctx.strokeStyle = "#1C5687";
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.ellipse(15, 21, 26, 34, 0, 0, Math.PI * 2);
-    ctx.stroke();
-
-    ctx.fillStyle = "#FFB500";
-    ctx.beginPath();
-    ctx.moveTo(-3, 27);
-    ctx.lineTo(3, 55 + Math.sin(worldTime * 25) * 5);
-    ctx.lineTo(9, 27);
-    ctx.fill();
-
-    ctx.fillStyle = "#1C5687";
-    ctx.fillRect(-5, 9, 11, 22);
-    ctx.strokeStyle = "#000000";
-    ctx.strokeRect(-5, 9, 11, 22);
-  }
-
-  // Silhouette illustrative de tige RB.
-  ctx.fillStyle = "#B2B4AE";
-  ctx.strokeStyle = "#000000";
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(9, 8);
-  ctx.lineTo(4, 2);
-  ctx.lineTo(9, -3);
-  ctx.lineTo(20, 8);
-  ctx.lineTo(26, 13);
-  ctx.lineTo(21, 41);
-  ctx.lineTo(14, 41);
-  ctx.lineTo(7, 15);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
-
-  ctx.fillStyle = "#FFB500";
-  ctx.fillRect(10, 12, 13, 7);
-  ctx.fillStyle = "#000000";
-  ctx.font = "bold 8px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("RB", 17, 18);
-
-  ctx.lineWidth = 1;
-  for (let i = 0; i < 4; i++) {
-    line(12 + i, 23 + i * 4, 21, 23 + i * 4);
-  }
-
-  ctx.restore();
-}
-
-function draw() {
-  ctx.fillStyle = "#FFFFFF";
-  ctx.fillRect(0, 0, WIDTH, HEIGHT);
-
-  ctx.strokeStyle = "#B2B4AE";
-  ctx.lineWidth = 1;
-
-  for (
-    let y = ((-camera) % 60 + 60) % 60;
-    y < HEIGHT;
-    y += 60
-  ) {
-    line(12, y, WIDTH - 12, y);
-  }
-
-  platforms.forEach(drawPlatform);
-  enemies.forEach(drawEnemy);
-  drawPlayer();
-}
-
-function frame(now) {
-  const elapsed = Math.min((now - lastTime) / 1000, 0.05);
-  lastTime = now;
-
-  if (mode === "playing") {
-    accumulator += elapsed;
-
-    while (accumulator >= FIXED_STEP && mode === "playing") {
-      const multiplier = speedForDifficulty(difficulty);
-
-      /*
-       * Sous-pas pour conserver des collisions précises à ×4.
-       * Le temps réel des bonus ne subit pas l'accélération.
-       */
-      for (
-        let i = 0;
-        i < multiplier && mode === "playing";
-        i++
-      ) {
-        step(FIXED_STEP, FIXED_STEP / multiplier);
-      }
-
-      accumulator -= FIXED_STEP;
-    }
-  }
-
-  draw();
-  updateHUD();
-  requestAnimationFrame(frame);
-}
-
-$("start").addEventListener("click", () => {
-  if (mode === "paused") togglePause();
-  else start();
-});
-
-$("pause").addEventListener("click", togglePause);
-
-window.addEventListener("keydown", event => {
-  const key = event.key.toLowerCase();
-
-  if (
-    ["arrowleft", "arrowright", "a", "q", "d"].includes(key)
-    && mode === "playing"
-  ) {
-    event.preventDefault();
-    keys.add(key);
-  }
-
-  if (
-    ["p", "escape"].includes(key)
-    && !event.repeat
-    && ["playing", "paused"].includes(mode)
-  ) {
-    event.preventDefault();
-    togglePause();
-  }
-});
-
-window.addEventListener("keyup", event => {
-  keys.delete(event.key.toLowerCase());
-});
-
-for (const direction of ["left", "right"]) {
-  const button = $(direction);
-
-  button.addEventListener("pointerdown", event => {
-    event.preventDefault();
-
-    if (mode === "playing") {
-      button.setPointerCapture(event.pointerId);
-      touch.add(direction);
-    }
-  });
-
-  for (const eventName of [
-    "pointerup",
-    "pointercancel",
-    "lostpointercapture"
-  ]) {
-    button.addEventListener(eventName, () => {
-      touch.delete(direction);
-    });
-  }
-}
-
-function pauseWhenInactive() {
-  keys.clear();
-  touch.clear();
-  if (mode === "playing") togglePause();
-}
-
-window.addEventListener("blur", pauseWhenInactive);
-
-document.addEventListener("visibilitychange", () => {
-  if (document.hidden) pauseWhenInactive();
-});
-
-reset();
-requestAnimationFrame(frame);
-</script>
+    requestAnimationFrame(frame);
+  </script>
 </body>
 </html>
