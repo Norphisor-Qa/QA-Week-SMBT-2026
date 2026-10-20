@@ -1,1 +1,59 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Hub des mini-jeux de la Quality Week 2026.">
+  <title>Quality Week 2026 | Les mini-jeux</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="./hub.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand" href="#accueil">Quality Week 2026</a>
+      <nav aria-label="Navigation principale">
+        <a href="#jeux">Les jeux</a>
+        <a href="#classement">Classement</a>
+        <button id="logout-btn" class="button" type="button">Déconnexion</button>
+      </nav>
+    </div>
+  </header>
 
+  <main id="contenu">
+    <section id="accueil" class="hero container" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow">APPRENDRE. EXPLORER. JOUER.</p>
+        <h1 id="hero-title">Bonjour <span id="player-name">joueur</span></h1>
+        <p class="tagline">Votre score total : <strong id="total-score">0</strong> points</p>
+        <p class="intro">Choisissez un défi. Seul votre meilleur score est conservé pour chaque mini-jeu.</p>
+      </div>
+      <aside class="hero-note" aria-label="Résumé du joueur">
+        <span class="note-symbol" aria-hidden="true">★</span>
+        <p><strong id="player-username">…</strong><br><span id="games-played">0</span> jeu(x) avec un score</p>
+      </aside>
+    </section>
+
+    <section id="jeux" class="container section" aria-labelledby="games-title">
+      <div class="section-heading">
+        <div><p class="eyebrow">À VOUS DE JOUER</p><h2 id="games-title">Choisissez votre défi</h2></div>
+        <p>Chaque jeu, une nouvelle façon de voir la qualité.</p>
+      </div>
+      <div id="games-grid" class="games-grid"></div>
+      <p id="hub-message" class="auth-message" role="status" aria-live="polite"></p>
+    </section>
+
+    <section id="classement" class="container section" aria-labelledby="leaderboard-title">
+      <p class="eyebrow">CLASSEMENT GÉNÉRAL</p>
+      <h2 id="leaderboard-title">Les meilleurs scores cumulés</h2>
+      <div class="leaderboard-wrap">
+        <ol id="leaderboard-list" class="leaderboard-list"></ol>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer"><div class="container footer-inner"><p><strong>Quality Week 2026</strong> · La qualité se joue ensemble.</p><a href="#accueil">Retour en haut ↑</a></div></footer>
+</body>
+</html>
