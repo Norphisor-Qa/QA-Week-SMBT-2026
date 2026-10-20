@@ -75,3 +75,15 @@ a.button:hover { transform: translateY(-3px); border-color: var(--black); }
   html { scroll-behavior: auto; }
   *, *::before, *::after { transition: none !important; animation: none !important; }
 }
+.auth-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:24px; margin-top:32px; }
+.auth-card { display:flex; flex-direction:column; gap:10px; border:1px solid var(--gray); border-radius:var(--radius); padding:24px; }
+.auth-card label { margin-top:8px; font-weight:700; }
+.auth-card input { min-height:48px; padding:10px 12px; border:1px solid var(--gray); border-radius:8px; font:inherit; }
+.auth-card small { font-size:.8rem; }
+.auth-card .button { margin-top:16px; }
+.auth-message { min-height:24px; margin-top:18px; font-weight:700; }
+.auth-message[data-status="error"] { color:#a40000; }
+.auth-message[data-status="success"] { color:#267326; }
+.leaderboard-list { list-style-position:inside; padding:0; margin:24px 0 0; }
+.leaderboard-list li { display:flex; justify-content:space-between; gap:24px; padding:12px 0; border-bottom:1px solid var(--gray); }
+@media (max-width:680px) { .auth-grid { grid-template-columns:1fr; } }
