@@ -4,7 +4,7 @@ const SUPABASE_URL =
   "https://pglstqfawauvxvezyigc.supabase.co";
 
 const SUPABASE_PUBLISHABLE_KEY =
-  "VOTRE_CLE_SB_PUBLISHABLE";
+  "sb_publishable_YaLtd-n5jALpGOUYSJriQA_h_9X_OLY";
 
 const supabaseClient =
   window.supabase.createClient(
