@@ -1,7 +1,7 @@
 "use strict";
 
 const SUPABASE_URL = "https://pglstqfawauvxvezyigc.supabase.co";
-const SUPABASE_PUBLISHABLE_KEY = "REMPLACEZ_PAR_VOTRE_CLE_SB_PUBLISHABLE";
+const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_YaLtd-n5jALpGOUYSJriQA_h_9X_OLY";
 const TECHNICAL_EMAIL_DOMAIN = "qualityweek.internal";
 
 const supabaseClient = window.supabase.createClient(
