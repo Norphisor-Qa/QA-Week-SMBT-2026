@@ -2,411 +2,72 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1"
-  >
-
-  <meta
-    name="description"
-    content="Le hub des mini-jeux de la Quality Week 2026."
-  >
-
-  <title>Quality Week 2026 | Les mini-jeux</title>
-
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Connexion à la Quality Week 2026.">
+  <title>Quality Week 2026 | Connexion</title>
   <link rel="stylesheet" href="./style.css">
-
-  <!-- Bibliothèque Supabase chargée avant script.js -->
-  <script
-    src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
-    defer
-  ></script>
-
-  <script src="./script.js" defer></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="./auth.js" defer></script>
 </head>
-
 <body>
-  <a class="skip-link" href="#contenu">
-    Aller au contenu
-  </a>
-
+  <a class="skip-link" href="#contenu">Aller au contenu</a>
   <header class="header">
     <div class="container header-inner">
-      <a
-        class="brand"
-        href="#accueil"
-        aria-label="Quality Week 2026, accueil"
-      >
-        <img id="brand-logo" alt="Stryker" hidden>
-        <span id="brand-placeholder">
-          Quality Week 2026
-        </span>
+      <a class="brand" href="./index.html" aria-label="Quality Week 2026, connexion">
+        <span>Quality Week 2026</span>
       </a>
-
-      <nav aria-label="Navigation principale">
-        <a href="#accueil">Accueil</a>
-        <a href="#connexion">Connexion</a>
-        <a href="#jeux">Les jeux</a>
-        <a href="#participer">Comment participer</a>
-      </nav>
     </div>
   </header>
 
-  <main id="contenu">
-    <section
-      id="accueil"
-      class="hero container"
-      aria-labelledby="hero-title"
-    >
-      <div class="hero-copy">
-        <p class="eyebrow">
-          APPRENDRE. EXPLORER. JOUER.
-        </p>
+  <main id="contenu" class="container section">
+    <section aria-labelledby="auth-title">
+      <p class="eyebrow">APPRENDRE. EXPLORER. JOUER.</p>
+      <h1 id="auth-title">Bienvenue à la Quality Week 2026</h1>
+      <p class="intro">Créez votre accès lors de votre première visite, puis utilisez simplement votre identifiant et votre mot de passe.</p>
 
-        <h1 id="hero-title">
-          Quality Week 2026
-        </h1>
+      <div class="auth-grid">
+        <form id="register-form" class="auth-card" autocomplete="on">
+          <h2>Première connexion</h2>
 
-        <p class="tagline">
-          La qualité se joue ensemble !
-        </p>
+          <label for="register-firstname">Prénom</label>
+          <input id="register-firstname" name="firstname" type="text" maxlength="80" autocomplete="given-name" required>
 
-        <p class="intro">
-          Un regard neuf, un défi, une bonne idée :
-          explorez les mini-jeux et faites vivre la qualité
-          au quotidien.
-        </p>
+          <label for="register-lastname">Nom</label>
+          <input id="register-lastname" name="lastname" type="text" maxlength="80" autocomplete="family-name" required>
 
-        <a class="button" href="#jeux">
-          Découvrir les jeux
-          <span aria-hidden="true">↓</span>
-        </a>
+          <label for="register-username">Identifiant unique</label>
+          <input id="register-username" name="username" type="text" minlength="3" maxlength="30" pattern="[A-Za-z0-9._-]{3,30}" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+          <small>3 à 30 caractères : lettres sans accent, chiffres, point, tiret ou underscore.</small>
 
-        <p
-          id="supabase-status"
-          class="connection-status"
-          role="status"
-          aria-live="polite"
-        >
-          Vérification de la connexion…
-        </p>
+          <label for="register-password">Mot de passe</label>
+          <input id="register-password" name="password" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+
+          <label for="register-password-confirm">Confirmer le mot de passe</label>
+          <input id="register-password-confirm" name="password-confirm" type="password" minlength="8" maxlength="128" autocomplete="new-password" required>
+
+          <button id="register-btn" class="button" type="submit">Créer mon compte</button>
+        </form>
+
+        <form id="login-form" class="auth-card" autocomplete="on">
+          <h2>Déjà inscrit ?</h2>
+
+          <label for="login-username">Identifiant</label>
+          <input id="login-username" name="username" type="text" maxlength="30" autocomplete="username" autocapitalize="none" spellcheck="false" required>
+
+          <label for="login-password">Mot de passe</label>
+          <input id="login-password" name="password" type="password" maxlength="128" autocomplete="current-password" required>
+
+          <button id="login-btn" class="button" type="submit">Se connecter</button>
+        </form>
       </div>
 
-      <aside
-        class="hero-note"
-        aria-label="Esprit de la semaine"
-      >
-        <span
-          class="note-symbol"
-          aria-hidden="true"
-        >
-          ✦
-        </span>
-
-        <p>
-          Votre prochain<br>
-          <strong>défi qualité</strong><br>
-          commence ici.
-        </p>
-
-        <span class="note-caption">
-          Curiosité · Observation · Amélioration
-        </span>
-      </aside>
-    </section>
-
-    <section
-      id="connexion"
-      class="container section"
-      aria-labelledby="auth-title"
-    >
-      <p class="eyebrow">CONNEXION</p>
-
-      <h2 id="auth-title">
-        Accédez aux mini-jeux
-      </h2>
-
-      <div id="user-panel" class="auth-panel">
-        <div id="not-connected">
-          <div class="auth-grid">
-            <form
-              id="register-form"
-              class="auth-card"
-              autocomplete="on"
-            >
-              <h3>Première connexion</h3>
-
-              <p>
-                Créez votre identifiant unique.
-                Il sera utilisé pour tous les mini-jeux.
-              </p>
-
-              <label for="register-firstname">
-                Prénom
-              </label>
-
-              <input
-                id="register-firstname"
-                name="firstname"
-                type="text"
-                required
-                maxlength="80"
-                autocomplete="given-name"
-              >
-
-              <label for="register-lastname">
-                Nom
-              </label>
-
-              <input
-                id="register-lastname"
-                name="lastname"
-                type="text"
-                required
-                maxlength="80"
-                autocomplete="family-name"
-              >
-
-              <label for="register-username">
-                Identifiant
-              </label>
-
-              <input
-                id="register-username"
-                name="username"
-                type="text"
-                required
-                minlength="3"
-                maxlength="30"
-                pattern="[A-Za-z0-9._-]{3,30}"
-                autocomplete="username"
-                autocapitalize="none"
-                spellcheck="false"
-                aria-describedby="username-help"
-              >
-
-              <small id="username-help">
-                De 3 à 30 caractères : lettres sans accent,
-                chiffres, point, tiret ou underscore.
-              </small>
-
-              <label for="register-password">
-                Mot de passe
-              </label>
-
-              <input
-                id="register-password"
-                name="password"
-                type="password"
-                required
-                minlength="8"
-                maxlength="128"
-                autocomplete="new-password"
-                aria-describedby="password-help"
-              >
-
-              <small id="password-help">
-                Utilisez au moins 8 caractères.
-              </small>
-
-              <button
-                id="register-btn"
-                class="button"
-                type="submit"
-              >
-                Créer mon compte
-              </button>
-            </form>
-
-            <form
-              id="login-form"
-              class="auth-card"
-              autocomplete="on"
-            >
-              <h3>Déjà inscrit ?</h3>
-
-              <p>
-                Utilisez votre identifiant et votre mot de passe.
-              </p>
-
-              <label for="login-username">
-                Identifiant
-              </label>
-
-              <input
-                id="login-username"
-                name="username"
-                type="text"
-                required
-                maxlength="30"
-                autocomplete="username"
-                autocapitalize="none"
-                spellcheck="false"
-              >
-
-              <label for="login-password">
-                Mot de passe
-              </label>
-
-              <input
-                id="login-password"
-                name="password"
-                type="password"
-                required
-                maxlength="128"
-                autocomplete="current-password"
-              >
-
-              <button
-                id="login-btn"
-                class="button"
-                type="submit"
-              >
-                Se connecter
-              </button>
-            </form>
-          </div>
-
-          <p
-            id="auth-message"
-            class="auth-message"
-            role="status"
-            aria-live="polite"
-          ></p>
-        </div>
-
-        <div id="connected" class="connected-panel" hidden>
-          <p>
-            Connecté en tant que
-            <strong id="current-user-name"></strong>
-          </p>
-
-          <p>
-            Identifiant :
-            <strong id="current-username"></strong>
-          </p>
-
-          <button
-            id="logout-btn"
-            class="button"
-            type="button"
-          >
-            Déconnexion
-          </button>
-        </div>
-      </div>
-    </section>
-
-    <section
-      id="jeux"
-      class="container section"
-      aria-labelledby="games-title"
-    >
-      <div class="section-heading">
-        <div>
-          <p class="eyebrow">À VOUS DE JOUER</p>
-
-          <h2 id="games-title">
-            Choisissez votre défi
-          </h2>
-        </div>
-
-        <p>
-          Chaque jeu, une nouvelle façon de voir la qualité.
-        </p>
-      </div>
-
-      <p
-        id="games-auth-notice"
-        class="auth-message"
-        role="status"
-      >
-        Connectez-vous pour accéder aux jeux disponibles.
-      </p>
-
-      <div id="games-grid" class="games-grid"></div>
-
-      <noscript>
-        <p>
-          Activez JavaScript pour afficher les mini-jeux
-          et leurs liens.
-        </p>
-      </noscript>
-
-      <p id="games-empty" hidden>
-        Aucun jeu n'est encore configuré.
-      </p>
-    </section>
-
-    <section
-      id="participer"
-      class="container section"
-      aria-labelledby="steps-title"
-    >
-      <p class="eyebrow">C'EST SIMPLE</p>
-
-      <h2 id="steps-title">
-        Comment participer ?
-      </h2>
-
-      <ol class="steps">
-        <li>
-          <span class="step-number" aria-hidden="true">
-            01
-          </span>
-
-          <h3>Créez votre accès</h3>
-
-          <p>
-            Lors de votre première visite, choisissez un
-            identifiant unique et un mot de passe.
-          </p>
-        </li>
-
-        <li>
-          <span class="step-number" aria-hidden="true">
-            02
-          </span>
-
-          <h3>Choisissez un jeu</h3>
-
-          <p>
-            Connectez-vous puis sélectionnez une activité
-            disponible.
-          </p>
-        </li>
-
-        <li>
-          <span class="step-number" aria-hidden="true">
-            03
-          </span>
-
-          <h3>Relevez le défi</h3>
-
-          <p>
-            Votre meilleur score sera associé à votre compte
-            pour chaque mini-jeu.
-          </p>
-        </li>
-      </ol>
+      <p id="auth-message" class="auth-message" role="status" aria-live="polite"></p>
     </section>
   </main>
 
   <footer class="footer">
     <div class="container footer-inner">
-      <p>
-        <strong>Quality Week 2026</strong>
-        · La qualité se joue ensemble.
-      </p>
-
-      <a id="organizer-contact" hidden>
-        Contacter l'organisation
-      </a>
-
-      <a href="#accueil">
-        Retour en haut ↑
-      </a>
+      <p><strong>Quality Week 2026</strong> · La qualité se joue ensemble.</p>
     </div>
   </footer>
 </body>
