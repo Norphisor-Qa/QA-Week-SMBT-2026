@@ -2,7 +2,11 @@
 <html lang="fr">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1"
+  >
 
   <meta
     name="description"
@@ -13,13 +17,12 @@
 
   <link rel="stylesheet" href="./style.css">
 
-  <!-- Bibliothèque officielle Supabase -->
+  <!-- Bibliothèque Supabase chargée avant script.js -->
   <script
     src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"
     defer
   ></script>
 
-  <!-- Votre JavaScript doit être chargé après Supabase -->
   <script src="./script.js" defer></script>
 </head>
 
@@ -36,11 +39,14 @@
         aria-label="Quality Week 2026, accueil"
       >
         <img id="brand-logo" alt="Stryker" hidden>
-        <span id="brand-placeholder">Quality Week 2026</span>
+        <span id="brand-placeholder">
+          Quality Week 2026
+        </span>
       </a>
 
       <nav aria-label="Navigation principale">
         <a href="#accueil">Accueil</a>
+        <a href="#connexion">Connexion</a>
         <a href="#jeux">Les jeux</a>
         <a href="#participer">Comment participer</a>
       </nav>
@@ -54,9 +60,13 @@
       aria-labelledby="hero-title"
     >
       <div class="hero-copy">
-        <p class="eyebrow">APPRENDRE. EXPLORER. JOUER.</p>
+        <p class="eyebrow">
+          APPRENDRE. EXPLORER. JOUER.
+        </p>
 
-        <h1 id="hero-title">Quality Week 2026</h1>
+        <h1 id="hero-title">
+          Quality Week 2026
+        </h1>
 
         <p class="tagline">
           La qualité se joue ensemble !
@@ -73,7 +83,6 @@
           <span aria-hidden="true">↓</span>
         </a>
 
-        <!-- État de la connexion à Supabase -->
         <p
           id="supabase-status"
           class="connection-status"
@@ -84,8 +93,16 @@
         </p>
       </div>
 
-      <aside class="hero-note" aria-label="Esprit de la semaine">
-        <span class="note-symbol" aria-hidden="true">✦</span>
+      <aside
+        class="hero-note"
+        aria-label="Esprit de la semaine"
+      >
+        <span
+          class="note-symbol"
+          aria-hidden="true"
+        >
+          ✦
+        </span>
 
         <p>
           Votre prochain<br>
@@ -100,6 +117,188 @@
     </section>
 
     <section
+      id="connexion"
+      class="container section"
+      aria-labelledby="auth-title"
+    >
+      <p class="eyebrow">CONNEXION</p>
+
+      <h2 id="auth-title">
+        Accédez aux mini-jeux
+      </h2>
+
+      <div id="user-panel" class="auth-panel">
+        <div id="not-connected">
+          <div class="auth-grid">
+            <form
+              id="register-form"
+              class="auth-card"
+              autocomplete="on"
+            >
+              <h3>Première connexion</h3>
+
+              <p>
+                Créez votre identifiant unique.
+                Il sera utilisé pour tous les mini-jeux.
+              </p>
+
+              <label for="register-firstname">
+                Prénom
+              </label>
+
+              <input
+                id="register-firstname"
+                name="firstname"
+                type="text"
+                required
+                maxlength="80"
+                autocomplete="given-name"
+              >
+
+              <label for="register-lastname">
+                Nom
+              </label>
+
+              <input
+                id="register-lastname"
+                name="lastname"
+                type="text"
+                required
+                maxlength="80"
+                autocomplete="family-name"
+              >
+
+              <label for="register-username">
+                Identifiant
+              </label>
+
+              <input
+                id="register-username"
+                name="username"
+                type="text"
+                required
+                minlength="3"
+                maxlength="30"
+                pattern="[A-Za-z0-9._-]{3,30}"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+                aria-describedby="username-help"
+              >
+
+              <small id="username-help">
+                De 3 à 30 caractères : lettres sans accent,
+                chiffres, point, tiret ou underscore.
+              </small>
+
+              <label for="register-password">
+                Mot de passe
+              </label>
+
+              <input
+                id="register-password"
+                name="password"
+                type="password"
+                required
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password"
+                aria-describedby="password-help"
+              >
+
+              <small id="password-help">
+                Utilisez au moins 8 caractères.
+              </small>
+
+              <button
+                id="register-btn"
+                class="button"
+                type="submit"
+              >
+                Créer mon compte
+              </button>
+            </form>
+
+            <form
+              id="login-form"
+              class="auth-card"
+              autocomplete="on"
+            >
+              <h3>Déjà inscrit ?</h3>
+
+              <p>
+                Utilisez votre identifiant et votre mot de passe.
+              </p>
+
+              <label for="login-username">
+                Identifiant
+              </label>
+
+              <input
+                id="login-username"
+                name="username"
+                type="text"
+                required
+                maxlength="30"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+              >
+
+              <label for="login-password">
+                Mot de passe
+              </label>
+
+              <input
+                id="login-password"
+                name="password"
+                type="password"
+                required
+                maxlength="128"
+                autocomplete="current-password"
+              >
+
+              <button
+                id="login-btn"
+                class="button"
+                type="submit"
+              >
+                Se connecter
+              </button>
+            </form>
+          </div>
+
+          <p
+            id="auth-message"
+            class="auth-message"
+            role="status"
+            aria-live="polite"
+          ></p>
+        </div>
+
+        <div id="connected" class="connected-panel" hidden>
+          <p>
+            Connecté en tant que
+            <strong id="current-user-name"></strong>
+          </p>
+
+          <p>
+            Identifiant :
+            <strong id="current-username"></strong>
+          </p>
+
+          <button
+            id="logout-btn"
+            class="button"
+            type="button"
+          >
+            Déconnexion
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <section
       id="jeux"
       class="container section"
       aria-labelledby="games-title"
@@ -107,7 +306,10 @@
       <div class="section-heading">
         <div>
           <p class="eyebrow">À VOUS DE JOUER</p>
-          <h2 id="games-title">Choisissez votre défi</h2>
+
+          <h2 id="games-title">
+            Choisissez votre défi
+          </h2>
         </div>
 
         <p>
@@ -115,11 +317,20 @@
         </p>
       </div>
 
+      <p
+        id="games-auth-notice"
+        class="auth-message"
+        role="status"
+      >
+        Connectez-vous pour accéder aux jeux disponibles.
+      </p>
+
       <div id="games-grid" class="games-grid"></div>
 
       <noscript>
         <p>
-          Activez JavaScript pour afficher les mini-jeux et leurs liens.
+          Activez JavaScript pour afficher les mini-jeux
+          et leurs liens.
         </p>
       </noscript>
 
@@ -135,31 +346,47 @@
     >
       <p class="eyebrow">C'EST SIMPLE</p>
 
-      <h2 id="steps-title">Comment participer ?</h2>
+      <h2 id="steps-title">
+        Comment participer ?
+      </h2>
 
       <ol class="steps">
         <li>
-          <span class="step-number" aria-hidden="true">01</span>
+          <span class="step-number" aria-hidden="true">
+            01
+          </span>
+
+          <h3>Créez votre accès</h3>
+
+          <p>
+            Lors de votre première visite, choisissez un
+            identifiant unique et un mot de passe.
+          </p>
+        </li>
+
+        <li>
+          <span class="step-number" aria-hidden="true">
+            02
+          </span>
+
           <h3>Choisissez un jeu</h3>
+
           <p>
-            Parcourez les défis et sélectionnez une activité disponible.
+            Connectez-vous puis sélectionnez une activité
+            disponible.
           </p>
         </li>
 
         <li>
-          <span class="step-number" aria-hidden="true">02</span>
-          <h3>Consultez les règles</h3>
-          <p>
-            Prenez connaissance des consignes sur la page du jeu.
-          </p>
-        </li>
+          <span class="step-number" aria-hidden="true">
+            03
+          </span>
 
-        <li>
-          <span class="step-number" aria-hidden="true">03</span>
           <h3>Relevez le défi</h3>
+
           <p>
-            Jouez, découvrez et repartez avec un nouveau regard
-            sur la qualité.
+            Votre meilleur score sera associé à votre compte
+            pour chaque mini-jeu.
           </p>
         </li>
       </ol>
