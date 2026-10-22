@@ -1,1 +1,3185 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
 
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Quality Runner - Excellence Opérationnelle</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html,
+        body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            background:
+                radial-gradient(
+                    circle at 50% 0%,
+                    #16355f,
+                    #07101f 65%
+                );
+
+            color: white;
+
+            font-family:
+                Arial,
+                Helvetica,
+                sans-serif;
+        }
+
+        button {
+            font-family: inherit;
+        }
+
+        #game {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        /* =====================================================
+           INTERFACE
+        ===================================================== */
+
+        .hud {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+        }
+
+        .panel {
+            background: rgba(5, 15, 30, 0.86);
+            border: 1px solid #365777;
+            border-radius: 16px;
+
+            box-shadow:
+                0 12px 35px rgba(0, 0, 0, 0.25),
+                inset 0 0 18px rgba(77, 181, 255, 0.04);
+
+            backdrop-filter: blur(8px);
+        }
+
+        .logo {
+            position: absolute;
+            top: 20px;
+            left: 24px;
+
+            padding: 13px 20px;
+
+            border-color: #46ff93;
+
+            box-shadow:
+                0 0 20px rgba(70, 255, 147, 0.23),
+                inset 0 0 20px rgba(70, 255, 147, 0.05);
+        }
+
+        .logo strong {
+            color: #65ff9b;
+            font-size: 20px;
+        }
+
+        .logo span {
+            display: block;
+            color: #d9e5f5;
+            font-size: 12px;
+            margin-top: 4px;
+        }
+
+        .score-panel {
+            position: absolute;
+            top: 20px;
+            right: 24px;
+
+            min-width: 205px;
+            padding: 14px 19px;
+
+            text-align: right;
+        }
+
+        .score {
+            font-size: 32px;
+            font-weight: 900;
+            letter-spacing: 2px;
+        }
+
+        .checks {
+            margin-top: 5px;
+            color: #75ff9d;
+            font-size: 13px;
+        }
+
+        .speed-display {
+            margin-top: 6px;
+            color: #8edfff;
+            font-size: 12px;
+        }
+
+        .combo-panel {
+            position: absolute;
+            top: 142px;
+            right: 24px;
+
+            width: 235px;
+            padding: 14px;
+        }
+
+        .combo-panel h3 {
+            font-size: 14px;
+            margin-bottom: 9px;
+        }
+
+        .quality-details {
+            margin-top: 9px;
+            font-size: 11px;
+            color: #b9c9dc;
+        }
+
+        .quality-details div {
+            margin-top: 5px;
+        }
+
+        .bar {
+            width: 100%;
+            height: 9px;
+
+            background: #172a42;
+            border-radius: 20px;
+
+            overflow: hidden;
+        }
+
+        #comboBar {
+            width: 0;
+            height: 100%;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #41ff81,
+                    #c4ff55
+                );
+
+            box-shadow:
+                0 0 10px #46ff88;
+
+            transition: width 0.2s;
+        }
+
+        /* =====================================================
+           PANNEAU CLEAR
+        ===================================================== */
+
+        .clear-panel {
+            position: absolute;
+
+            top: 115px;
+            left: 24px;
+
+            width: 245px;
+            padding: 14px;
+
+            border-color: #54ff9a;
+
+            box-shadow:
+                0 0 22px rgba(84, 255, 154, 0.18),
+                inset 0 0 15px rgba(84, 255, 154, 0.04);
+        }
+
+        .clear-title {
+            color: #54ff9a;
+            font-size: 16px;
+            font-weight: 900;
+        }
+
+        .clear-subtitle {
+            margin-top: 6px;
+            color: #d5e5f5;
+            font-size: 12px;
+        }
+
+        .clear-purpose {
+            margin-top: 5px;
+            color: #94abc3;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        #clearBar {
+            width: 0;
+            height: 100%;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #36d978,
+                    #9cff58
+                );
+
+            box-shadow:
+                0 0 10px #46ff88;
+
+            transition: width 0.25s;
+        }
+
+        #clearStatus {
+            margin-top: 8px;
+            color: #d8e8f5;
+            font-size: 11px;
+        }
+
+        #clearStepName {
+            margin-top: 6px;
+            min-height: 15px;
+
+            color: #8edfff;
+            font-size: 11px;
+        }
+
+        /* =====================================================
+           MISSION ET CONTRÔLES
+        ===================================================== */
+
+        .mission {
+            position: absolute;
+
+            bottom: 24px;
+            left: 50%;
+
+            transform: translateX(-50%);
+
+            width: min(570px, 78vw);
+            padding: 12px 22px;
+
+            text-align: center;
+
+            background: rgba(3, 13, 27, 0.88);
+        }
+
+        .mission strong {
+            color: #ffd84d;
+        }
+
+        #missionScore {
+            display: inline-block;
+            margin-left: 8px;
+
+            color: #6aff9a;
+            font-weight: 900;
+        }
+
+        .controls {
+            position: absolute;
+
+            left: 24px;
+            bottom: 24px;
+
+            padding: 12px 16px;
+
+            font-size: 12px;
+            line-height: 1.55;
+
+            color: #ceedff;
+        }
+
+        .controls strong {
+            color: #ffffff;
+        }
+
+        .clear-instruction {
+            color: #58ff96;
+        }
+
+        /* =====================================================
+           MESSAGE CENTRAL
+        ===================================================== */
+
+        #message {
+            position: fixed;
+
+            top: 25%;
+            left: 50%;
+
+            z-index: 15;
+
+            max-width: 90vw;
+
+            transform:
+                translate(-50%, -50%)
+                scale(0.8);
+
+            opacity: 0;
+
+            text-align: center;
+
+            font-size: clamp(24px, 4vw, 42px);
+            font-weight: 900;
+
+            text-shadow:
+                0 0 15px currentColor,
+                0 4px 10px #000;
+
+            transition:
+                opacity 0.15s,
+                transform 0.15s;
+
+            pointer-events: none;
+        }
+
+        #subMessage {
+            display: block;
+
+            margin-top: 8px;
+
+            color: white;
+            font-size: 14px;
+            font-weight: normal;
+        }
+
+        /* =====================================================
+           GAME OVER
+        ===================================================== */
+
+        #gameOver {
+            display: none;
+
+            position: fixed;
+            inset: 0;
+
+            z-index: 30;
+
+            align-items: center;
+            justify-content: center;
+
+            padding: 20px;
+
+            background: rgba(2, 8, 18, 0.8);
+
+            text-align: center;
+
+            backdrop-filter: blur(7px);
+        }
+
+        .game-over-box {
+            width: min(460px, 92vw);
+
+            padding: 36px 45px;
+
+            border: 1px solid #ff6770;
+            border-radius: 25px;
+
+            background:
+                linear-gradient(
+                    145deg,
+                    #10243d,
+                    #071321
+                );
+
+            box-shadow:
+                0 0 50px rgba(255, 54, 70, 0.2);
+        }
+
+        .game-over-box h1 {
+            color: #ff6874;
+            margin-bottom: 12px;
+        }
+
+        .game-over-box p {
+            color: #d6e3f3;
+            margin: 8px 0;
+        }
+
+        .final-clear {
+            color: #65ff9b !important;
+        }
+
+        .game-over-box button {
+            margin-top: 20px;
+            padding: 12px 25px;
+
+            border: none;
+            border-radius: 50px;
+
+            background:
+                linear-gradient(
+                    90deg,
+                    #55ef8b,
+                    #b5ff5d
+                );
+
+            color: #062313;
+
+            font-size: 14px;
+            font-weight: bold;
+
+            cursor: pointer;
+            pointer-events: auto;
+
+            box-shadow:
+                0 0 20px rgba(85, 239, 139, 0.3);
+        }
+
+        .game-over-box button:hover {
+            filter: brightness(1.12);
+        }
+
+        /* =====================================================
+           RESPONSIVE
+        ===================================================== */
+
+        @media (max-width: 850px) {
+            .combo-panel {
+                display: none;
+            }
+
+            .clear-panel {
+                top: 105px;
+                width: 205px;
+                transform: scale(0.84);
+                transform-origin: top left;
+            }
+
+            .controls {
+                display: none;
+            }
+
+            .score-panel {
+                transform: scale(0.8);
+                transform-origin: top right;
+            }
+
+            .logo {
+                transform: scale(0.82);
+                transform-origin: top left;
+            }
+
+            .mission {
+                bottom: 12px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 520px) {
+            .clear-panel {
+                top: 88px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <canvas id="game"></canvas>
+
+    <div class="hud">
+
+        <div class="logo panel">
+            <strong>✓ QUALITY RUNNER</strong>
+            <span>Chaque action compte.</span>
+        </div>
+
+        <div class="score-panel panel">
+            <div class="score" id="score">
+                000000
+            </div>
+
+            <div class="checks">
+                ✓ Contrôles qualité :
+                <span id="checks">0</span>
+            </div>
+
+            <div class="speed-display">
+                Vitesse opérationnelle :
+                <span id="speedDisplay">1</span>
+            </div>
+        </div>
+
+        <div class="combo-panel panel">
+            <h3>
+                COMBO QUALITÉ
+                x<span id="combo">1</span>
+            </h3>
+
+            <div class="bar">
+                <div id="comboBar"></div>
+            </div>
+
+            <div class="quality-details">
+                <div>✓ Sans erreur</div>
+                <div>✓ Bonne pratique</div>
+                <div>✓ Amélioration continue</div>
+            </div>
+        </div>
+
+        <div class="clear-panel panel">
+
+            <div class="clear-title">
+                ✓ LineCLEARance
+            </div>
+
+            <div class="clear-subtitle">
+                Contrôle du vide de ligne
+            </div>
+
+            <div class="clear-purpose">
+                Éviter les mix-up et maintenir la traçabilité.
+            </div>
+
+            <div
+                class="bar"
+                style="margin-top: 11px;"
+            >
+                <div id="clearBar"></div>
+            </div>
+
+            <div id="clearStatus">
+                CLEAR : 0 / 4
+            </div>
+
+            <div id="clearStepName">
+                Prochaine étape : vide de ligne
+            </div>
+        </div>
+
+        <div class="controls panel">
+            <strong>COMMANDES</strong><br>
+            ← → Changer de voie<br>
+            ↑ / Espace : sauter<br>
+            ↓ : s'accroupir<br>
+            <span class="clear-instruction">
+                C : activer le contrôle CLEAR
+            </span>
+        </div>
+
+        <div class="mission panel">
+            ⭐ <strong>MISSION :</strong>
+            collecter 20 contrôles qualité
+
+            <span id="missionScore">
+                0 / 20
+            </span>
+        </div>
+
+    </div>
+
+    <div id="message">
+        <span id="messageText"></span>
+        <span id="subMessage"></span>
+    </div>
+
+    <div id="gameOver">
+
+        <div class="game-over-box">
+
+            <h1>ÉCART DÉTECTÉ</h1>
+
+            <p>
+                Analyser • Corriger • Améliorer
+            </p>
+
+            <p>
+                Score :
+                <strong id="finalScore">0</strong>
+            </p>
+
+            <p>
+                Contrôles qualité :
+                <strong id="finalChecks">0</strong>
+            </p>
+
+            <p
+                class="final-clear"
+                id="finalClear"
+            >
+                LineCLEARance : 0 / 4
+            </p>
+
+            <button onclick="restartGame()">
+                RECOMMENCER
+            </button>
+
+        </div>
+
+    </div>
+
+    <script>
+        /* =====================================================
+           QUALITY RUNNER
+           Runner original sur la qualité opérationnelle
+        ===================================================== */
+
+        const canvas =
+            document.getElementById("game");
+
+        const ctx =
+            canvas.getContext("2d");
+
+        let W;
+        let H;
+        let pixelRatio = 1;
+
+        function resize() {
+            pixelRatio =
+                Math.min(
+                    window.devicePixelRatio || 1,
+                    2
+                );
+
+            W = window.innerWidth;
+            H = window.innerHeight;
+
+            canvas.width =
+                W * pixelRatio;
+
+            canvas.height =
+                H * pixelRatio;
+
+            canvas.style.width =
+                W + "px";
+
+            canvas.style.height =
+                H + "px";
+
+            ctx.setTransform(
+                pixelRatio,
+                0,
+                0,
+                pixelRatio,
+                0,
+                0
+            );
+        }
+
+        window.addEventListener(
+            "resize",
+            resize
+        );
+
+        resize();
+
+        /* =====================================================
+           VARIABLES DE JEU
+        ===================================================== */
+
+        let lane = 1;
+
+        let playerY = 0;
+        let velocityY = 0;
+
+        let ducking = false;
+
+        let speed = 9;
+        let score = 0;
+        let checks = 0;
+
+        let combo = 1;
+        let comboProgress = 0;
+
+        let running = true;
+        let distance = 0;
+
+        let screenFlash = 0;
+
+        const particles = [];
+        const obstacles = [];
+        const collectibles = [];
+        const clearTokens = [];
+
+        /* =====================================================
+           LINECLEARANCE
+        ===================================================== */
+
+        let clearPoints = 0;
+        let clearSequenceComplete = false;
+
+        const clearSteps = [
+            {
+                id: "LINE",
+                shortLabel: "LIGNE",
+                title: "VIDE DE LIGNE",
+                message: "Zone de travail contrôlée"
+            },
+            {
+                id: "PRODUCT",
+                shortLabel: "PRODUIT",
+                title: "PRODUIT IDENTIFIÉ",
+                message: "Identification et statut vérifiés"
+            },
+            {
+                id: "DOCUMENT",
+                shortLabel: "DOCUMENT",
+                title: "DOCUMENT CONTRÔLÉ",
+                message: "Version en vigueur vérifiée"
+            },
+            {
+                id: "RECORD",
+                shortLabel: "DOSSIER",
+                title: "ENREGISTREMENT VÉRIFIÉ",
+                message: "Traçabilité documentaire contrôlée"
+            }
+        ];
+
+        /* =====================================================
+           COULEURS
+        ===================================================== */
+
+        const COLORS = {
+            green: "#53ff86",
+            blue: "#46bcff",
+            orange: "#ffb52f",
+            red: "#ff5265",
+            dark: "#091729",
+            cyan: "#52eaff",
+            yellow: "#ffd84d",
+            purple: "#bc74ff"
+        };
+
+        /* =====================================================
+           CRÉATION DES OBJETS
+        ===================================================== */
+
+        function spawnObstacle(z = 1300) {
+            obstacles.push({
+                lane:
+                    Math.floor(
+                        Math.random() * 3
+                    ),
+
+                z: z,
+
+                type:
+                    Math.random() > 0.5
+                        ? "security"
+                        : "deviation"
+            });
+        }
+
+        function spawnCollectible(z = 1100) {
+            collectibles.push({
+                lane:
+                    Math.floor(
+                        Math.random() * 3
+                    ),
+
+                z: z,
+                rotation: 0
+            });
+        }
+
+        function spawnClearToken(
+            stepIndex,
+            z
+        ) {
+            clearTokens.push({
+                lane:
+                    Math.floor(
+                        Math.random() * 3
+                    ),
+
+                z: z,
+                rotation: 0,
+                stepIndex: stepIndex,
+                active: true
+            });
+        }
+
+        function initialiseObjects() {
+            obstacles.length = 0;
+            collectibles.length = 0;
+            clearTokens.length = 0;
+
+            for (
+                let i = 0;
+                i < 4;
+                i++
+            ) {
+                spawnObstacle(
+                    850 + i * 430
+                );
+            }
+
+            for (
+                let i = 0;
+                i < 7;
+                i++
+            ) {
+                spawnCollectible(
+                    520 + i * 250
+                );
+            }
+
+            for (
+                let i = 0;
+                i < clearSteps.length;
+                i++
+            ) {
+                spawnClearToken(
+                    i,
+                    1000 + i * 850
+                );
+            }
+        }
+
+        initialiseObjects();
+
+        /* =====================================================
+           COMMANDES
+        ===================================================== */
+
+        window.addEventListener(
+            "keydown",
+            function(event) {
+                const key =
+                    event.key.toLowerCase();
+
+                if (
+                    [
+                        "arrowleft",
+                        "arrowright",
+                        "arrowup",
+                        "arrowdown",
+                        " "
+                    ].includes(key)
+                ) {
+                    event.preventDefault();
+                }
+
+                if (!running) {
+                    if (key === "r") {
+                        restartGame();
+                    }
+
+                    return;
+                }
+
+                if (
+                    key === "arrowleft" ||
+                    key === "q"
+                ) {
+                    lane =
+                        Math.max(
+                            0,
+                            lane - 1
+                        );
+
+                    createLaneEffect();
+                }
+
+                if (
+                    key === "arrowright" ||
+                    key === "d"
+                ) {
+                    lane =
+                        Math.min(
+                            2,
+                            lane + 1
+                        );
+
+                    createLaneEffect();
+                }
+
+                if (
+                    key === "arrowup" ||
+                    key === " " ||
+                    key === "z"
+                ) {
+                    jump();
+                }
+
+                if (key === "arrowdown") {
+                    ducking = true;
+                }
+
+                /*
+                 * La touche C permet aussi
+                 * de valider manuellement
+                 * la prochaine étape CLEAR.
+                 */
+                if (key === "c") {
+                    activateManualCLEAR();
+                }
+            }
+        );
+
+        window.addEventListener(
+            "keyup",
+            function(event) {
+                if (
+                    event.key ===
+                    "ArrowDown"
+                ) {
+                    ducking = false;
+                }
+            }
+        );
+
+        function jump() {
+            if (playerY === 0) {
+                velocityY = 18;
+
+                createParticles(
+                    laneScreenX(
+                        lane,
+                        1
+                    ),
+                    H * 0.83,
+                    COLORS.blue,
+                    12
+                );
+            }
+        }
+
+        function createLaneEffect() {
+            createParticles(
+                laneScreenX(
+                    lane,
+                    1
+                ),
+                H * 0.84,
+                COLORS.cyan,
+                6
+            );
+        }
+
+        /* =====================================================
+           PERSPECTIVE
+        ===================================================== */
+
+        function perspective(z) {
+            return Math.max(
+                0,
+                Math.min(
+                    1,
+                    1 - z / 1400
+                )
+            );
+        }
+
+        function laneScreenX(
+            selectedLane,
+            perspectiveValue
+        ) {
+            const center = W / 2;
+
+            const destination =
+                center +
+                (selectedLane - 1) *
+                Math.min(
+                    W * 0.18,
+                    180
+                );
+
+            return (
+                center +
+                (
+                    destination -
+                    center
+                ) *
+                (
+                    0.12 +
+                    perspectiveValue *
+                    0.88
+                )
+            );
+        }
+
+        /* =====================================================
+           PARTICULES
+        ===================================================== */
+
+        function createParticles(
+            x,
+            y,
+            color,
+            count = 15
+        ) {
+            for (
+                let i = 0;
+                i < count;
+                i++
+            ) {
+                particles.push({
+                    x: x,
+                    y: y,
+
+                    vx:
+                        (
+                            Math.random() -
+                            0.5
+                        ) * 8,
+
+                    vy:
+                        (
+                            Math.random() -
+                            0.5
+                        ) * 8,
+
+                    life: 1,
+                    color: color,
+
+                    size:
+                        3 +
+                        Math.random() * 5
+                });
+            }
+        }
+
+        function updateParticles() {
+            for (
+                let i =
+                    particles.length - 1;
+                i >= 0;
+                i--
+            ) {
+                const particle =
+                    particles[i];
+
+                particle.x +=
+                    particle.vx;
+
+                particle.y +=
+                    particle.vy;
+
+                particle.vy += 0.15;
+                particle.life -= 0.025;
+
+                if (
+                    particle.life <= 0
+                ) {
+                    particles.splice(
+                        i,
+                        1
+                    );
+
+                    continue;
+                }
+
+                ctx.globalAlpha =
+                    particle.life;
+
+                ctx.fillStyle =
+                    particle.color;
+
+                ctx.shadowColor =
+                    particle.color;
+
+                ctx.shadowBlur = 8;
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    particle.x,
+                    particle.y,
+                    particle.size *
+                        particle.life,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fill();
+
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        /* =====================================================
+           ARRIÈRE-PLAN
+        ===================================================== */
+
+        function drawBackground() {
+            const gradient =
+                ctx.createLinearGradient(
+                    0,
+                    0,
+                    0,
+                    H
+                );
+
+            gradient.addColorStop(
+                0,
+                "#173d68"
+            );
+
+            gradient.addColorStop(
+                0.55,
+                "#295e7c"
+            );
+
+            gradient.addColorStop(
+                1,
+                "#071522"
+            );
+
+            ctx.fillStyle = gradient;
+
+            ctx.fillRect(
+                0,
+                0,
+                W,
+                H
+            );
+
+            drawSun();
+            drawCity();
+            drawFloatingLights();
+        }
+
+        function drawSun() {
+            const x = W / 2;
+            const y = H * 0.29;
+
+            const glow =
+                ctx.createRadialGradient(
+                    x,
+                    y,
+                    0,
+                    x,
+                    y,
+                    125
+                );
+
+            glow.addColorStop(
+                0,
+                "rgba(255,235,150,.75)"
+            );
+
+            glow.addColorStop(
+                0.3,
+                "rgba(255,210,100,.25)"
+            );
+
+            glow.addColorStop(
+                1,
+                "rgba(255,210,100,0)"
+            );
+
+            ctx.fillStyle = glow;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                x,
+                y,
+                125,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+        }
+
+        function drawCity() {
+            for (
+                let i = 0;
+                i < 15;
+                i++
+            ) {
+                const buildingWidth =
+                    W / 15;
+
+                const buildingHeight =
+                    65 +
+                    (
+                        i * 37 %
+                        115
+                    );
+
+                ctx.fillStyle =
+                    i % 2
+                        ? "#102941"
+                        : "#153650";
+
+                ctx.fillRect(
+                    i * buildingWidth,
+                    H * 0.44 -
+                        buildingHeight,
+                    buildingWidth + 1,
+                    buildingHeight
+                );
+
+                ctx.fillStyle =
+                    "rgba(88,205,255,.28)";
+
+                for (
+                    let yy = 0;
+                    yy <
+                    buildingHeight - 20;
+                    yy += 20
+                ) {
+                    for (
+                        let xx = 8;
+                        xx <
+                        buildingWidth - 5;
+                        xx += 20
+                    ) {
+                        ctx.fillRect(
+                            i *
+                                buildingWidth +
+                                xx,
+                            H * 0.44 -
+                                buildingHeight +
+                                10 +
+                                yy,
+                            7,
+                            7
+                        );
+                    }
+                }
+            }
+        }
+
+        function drawFloatingLights() {
+            for (
+                let i = 0;
+                i < 24;
+                i++
+            ) {
+                const x =
+                    (
+                        i * 83 +
+                        distance * 0.05
+                    ) % W;
+
+                const y =
+                    70 +
+                    (
+                        i * 47 %
+                        Math.max(
+                            100,
+                            H * 0.5
+                        )
+                    );
+
+                const alpha =
+                    0.2 +
+                    (
+                        Math.sin(
+                            distance * 0.01 +
+                            i
+                        ) +
+                        1
+                    ) * 0.15;
+
+                ctx.fillStyle =
+                    `rgba(110,230,255,${alpha})`;
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    x,
+                    y,
+                    1.5,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fill();
+            }
+        }
+
+        /* =====================================================
+           PISTE
+        ===================================================== */
+
+        function drawTrack() {
+            const horizonY =
+                H * 0.36;
+
+            const roadBottom =
+                Math.min(
+                    W * 0.72,
+                    850
+                );
+
+            const roadTop =
+                W * 0.09;
+
+            const roadGradient =
+                ctx.createLinearGradient(
+                    0,
+                    horizonY,
+                    0,
+                    H
+                );
+
+            roadGradient.addColorStop(
+                0,
+                "#334357"
+            );
+
+            roadGradient.addColorStop(
+                1,
+                "#121b28"
+            );
+
+            ctx.fillStyle =
+                roadGradient;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                W / 2 -
+                    roadTop / 2,
+                horizonY
+            );
+
+            ctx.lineTo(
+                W / 2 +
+                    roadTop / 2,
+                horizonY
+            );
+
+            ctx.lineTo(
+                W / 2 +
+                    roadBottom / 2,
+                H
+            );
+
+            ctx.lineTo(
+                W / 2 -
+                    roadBottom / 2,
+                H
+            );
+
+            ctx.closePath();
+            ctx.fill();
+
+            drawTrackBorders(
+                horizonY,
+                roadTop,
+                roadBottom
+            );
+
+            drawLaneSeparators(
+                horizonY,
+                roadTop,
+                roadBottom
+            );
+
+            drawTrackMotion(
+                horizonY
+            );
+        }
+
+        function drawTrackBorders(
+            horizonY,
+            roadTop,
+            roadBottom
+        ) {
+            ctx.strokeStyle =
+                COLORS.cyan;
+
+            ctx.lineWidth = 4;
+
+            ctx.shadowBlur = 15;
+
+            ctx.shadowColor =
+                COLORS.cyan;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                W / 2 -
+                    roadTop / 2,
+                horizonY
+            );
+
+            ctx.lineTo(
+                W / 2 -
+                    roadBottom / 2,
+                H
+            );
+
+            ctx.stroke();
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                W / 2 +
+                    roadTop / 2,
+                horizonY
+            );
+
+            ctx.lineTo(
+                W / 2 +
+                    roadBottom / 2,
+                H
+            );
+
+            ctx.stroke();
+
+            ctx.shadowBlur = 0;
+        }
+
+        function drawLaneSeparators(
+            horizonY,
+            roadTop,
+            roadBottom
+        ) {
+            [-0.5, 0.5]
+                .forEach(
+                    function(position) {
+                        ctx.strokeStyle =
+                            "rgba(220,236,255,.4)";
+
+                        ctx.lineWidth = 2;
+
+                        ctx.beginPath();
+
+                        ctx.moveTo(
+                            W / 2 +
+                                position *
+                                roadTop /
+                                3,
+                            horizonY
+                        );
+
+                        ctx.lineTo(
+                            W / 2 +
+                                position *
+                                roadBottom /
+                                3,
+                            H
+                        );
+
+                        ctx.stroke();
+                    }
+                );
+        }
+
+        function drawTrackMotion(
+            horizonY
+        ) {
+            for (
+                let i = 0;
+                i < 18;
+                i++
+            ) {
+                let progress =
+                    (
+                        i / 18 +
+                        distance * 0.001
+                    ) % 1;
+
+                progress =
+                    progress * progress;
+
+                const y =
+                    horizonY +
+                    progress *
+                    (
+                        H -
+                        horizonY
+                    );
+
+                const width =
+                    4 +
+                    progress * 42;
+
+                ctx.fillStyle =
+                    `rgba(80,255,150,${
+                        progress * 0.65
+                    })`;
+
+                ctx.fillRect(
+                    W / 2 -
+                        width / 2,
+                    y,
+                    width,
+                    3 +
+                        progress * 4
+                );
+            }
+        }
+
+        /* =====================================================
+           PANNEAUX QUALITÉ
+        ===================================================== */
+
+        function drawQualityBoards() {
+            const labels = [
+                {
+                    text: "QUALITÉ",
+                    color: "#50db78"
+                },
+                {
+                    text: "SÉCURITÉ",
+                    color: "#f29f3d"
+                },
+                {
+                    text: "PERFORMANCE",
+                    color: "#409bea"
+                },
+                {
+                    text: "AMÉLIORATION",
+                    color: "#86c852"
+                }
+            ];
+
+            labels.forEach(
+                function(item, index) {
+                    const width =
+                        Math.min(
+                            125,
+                            W * 0.13
+                        );
+
+                    const x =
+                        W * 0.1 +
+                        index *
+                        (
+                            W * 0.8 /
+                            4
+                        );
+
+                    const y =
+                        H * 0.19 +
+                        Math.sin(
+                            index +
+                            distance * 0.002
+                        ) * 4;
+
+                    ctx.globalAlpha =
+                        0.86;
+
+                    ctx.fillStyle =
+                        item.color;
+
+                    ctx.fillRect(
+                        x,
+                        y,
+                        width,
+                        48
+                    );
+
+                    ctx.globalAlpha = 1;
+
+                    ctx.fillStyle =
+                        "white";
+
+                    ctx.font =
+                        "bold 12px Arial";
+
+                    ctx.textAlign =
+                        "center";
+
+                    ctx.fillText(
+                        item.text,
+                        x + width / 2,
+                        y + 29
+                    );
+                }
+            );
+        }
+
+        /* =====================================================
+           CONTRÔLES QUALITÉ
+        ===================================================== */
+
+        function drawCollectible(
+            collectible
+        ) {
+            const progress =
+                perspective(
+                    collectible.z
+                );
+
+            if (progress <= 0) {
+                return;
+            }
+
+            const x =
+                laneScreenX(
+                    collectible.lane,
+                    progress
+                );
+
+            const y =
+                H * 0.37 +
+                progress *
+                (
+                    H * 0.48
+                );
+
+            const radius =
+                6 +
+                progress * 22;
+
+            ctx.save();
+
+            ctx.translate(
+                x,
+                y
+            );
+
+            ctx.rotate(
+                collectible.rotation
+            );
+
+            ctx.shadowBlur =
+                20 * progress;
+
+            ctx.shadowColor =
+                COLORS.green;
+
+            ctx.fillStyle =
+                COLORS.green;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                0,
+                0,
+                radius,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+
+            ctx.strokeStyle =
+                "#08361c";
+
+            ctx.lineWidth =
+                Math.max(
+                    2,
+                    progress * 5
+                );
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                -radius * 0.45,
+                0
+            );
+
+            ctx.lineTo(
+                -radius * 0.1,
+                radius * 0.35
+            );
+
+            ctx.lineTo(
+                radius * 0.5,
+                -radius * 0.42
+            );
+
+            ctx.stroke();
+
+            ctx.restore();
+        }
+
+        /* =====================================================
+           JETONS CLEAR
+        ===================================================== */
+
+        function drawClearToken(token) {
+            if (
+                !token.active ||
+                token.stepIndex !==
+                    clearPoints
+            ) {
+                return;
+            }
+
+            const progress =
+                perspective(
+                    token.z
+                );
+
+            if (progress <= 0) {
+                return;
+            }
+
+            const x =
+                laneScreenX(
+                    token.lane,
+                    progress
+                );
+
+            const y =
+                H * 0.37 +
+                progress *
+                (
+                    H * 0.47
+                );
+
+            const width =
+                16 +
+                progress * 75;
+
+            const height =
+                12 +
+                progress * 52;
+
+            const step =
+                clearSteps[
+                    token.stepIndex
+                ];
+
+            ctx.save();
+
+            ctx.translate(
+                x,
+                y
+            );
+
+            ctx.rotate(
+                Math.sin(
+                    token.rotation
+                ) * 0.08
+            );
+
+            ctx.shadowBlur =
+                25 * progress;
+
+            ctx.shadowColor =
+                COLORS.purple;
+
+            const gradient =
+                ctx.createLinearGradient(
+                    -width / 2,
+                    0,
+                    width / 2,
+                    0
+                );
+
+            gradient.addColorStop(
+                0,
+                "#5b37b7"
+            );
+
+            gradient.addColorStop(
+                0.5,
+                "#b16cff"
+            );
+
+            gradient.addColorStop(
+                1,
+                "#4ee9ff"
+            );
+
+            ctx.fillStyle =
+                gradient;
+
+            roundedRect(
+                ctx,
+                -width / 2,
+                -height,
+                width,
+                height,
+                10 * progress
+            );
+
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+
+            ctx.strokeStyle =
+                "rgba(255,255,255,.8)";
+
+            ctx.lineWidth =
+                Math.max(
+                    1,
+                    progress * 2
+                );
+
+            roundedRect(
+                ctx,
+                -width / 2,
+                -height,
+                width,
+                height,
+                10 * progress
+            );
+
+            ctx.stroke();
+
+            ctx.fillStyle =
+                "white";
+
+            ctx.textAlign =
+                "center";
+
+            ctx.font =
+                `900 ${Math.max(
+                    7,
+                    progress * 14
+                )}px Arial`;
+
+            ctx.fillText(
+                "CLEAR",
+                0,
+                -height * 0.58
+            );
+
+            ctx.font =
+                `bold ${Math.max(
+                    5,
+                    progress * 9
+                )}px Arial`;
+
+            ctx.fillText(
+                step.shortLabel,
+                0,
+                -height * 0.25
+            );
+
+            ctx.restore();
+        }
+
+        /* =====================================================
+           OBSTACLES
+        ===================================================== */
+
+        function drawObstacle(
+            obstacle
+        ) {
+            const progress =
+                perspective(
+                    obstacle.z
+                );
+
+            if (progress <= 0) {
+                return;
+            }
+
+            const x =
+                laneScreenX(
+                    obstacle.lane,
+                    progress
+                );
+
+            const y =
+                H * 0.37 +
+                progress *
+                (
+                    H * 0.51
+                );
+
+            const width =
+                20 +
+                progress * 80;
+
+            const height =
+                20 +
+                progress * 75;
+
+            ctx.fillStyle =
+                obstacle.type ===
+                "security"
+                    ? COLORS.orange
+                    : COLORS.red;
+
+            ctx.shadowColor =
+                ctx.fillStyle;
+
+            ctx.shadowBlur =
+                15 * progress;
+
+            roundedRect(
+                ctx,
+                x - width / 2,
+                y - height,
+                width,
+                height,
+                8 * progress
+            );
+
+            ctx.fill();
+
+            ctx.shadowBlur = 0;
+
+            ctx.fillStyle =
+                "#18202c";
+
+            ctx.fillRect(
+                x - width / 2,
+                y - height,
+                width,
+                height * 0.18
+            );
+
+            ctx.fillStyle =
+                "#fff6d9";
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x,
+                y -
+                    height * 0.83
+            );
+
+            ctx.lineTo(
+                x -
+                    width * 0.18,
+                y -
+                    height * 0.45
+            );
+
+            ctx.lineTo(
+                x +
+                    width * 0.18,
+                y -
+                    height * 0.45
+            );
+
+            ctx.closePath();
+
+            ctx.fill();
+
+            ctx.fillStyle =
+                "#1e222c";
+
+            ctx.font =
+                `900 ${Math.max(
+                    7,
+                    progress * 18
+                )}px Arial`;
+
+            ctx.textAlign =
+                "center";
+
+            ctx.fillText(
+                "!",
+                x,
+                y -
+                    height * 0.56
+            );
+
+            ctx.fillStyle =
+                "white";
+
+            ctx.font =
+                `bold ${Math.max(
+                    7,
+                    progress * 14
+                )}px Arial`;
+
+            ctx.fillText(
+                obstacle.type ===
+                "security"
+                    ? "RISQUE"
+                    : "ÉCART",
+                x,
+                y -
+                    height * 0.2
+            );
+        }
+
+        /* =====================================================
+           JOUEUR
+        ===================================================== */
+
+        function drawPlayer() {
+            const x =
+                laneScreenX(
+                    lane,
+                    1
+                );
+
+            const ground =
+                H * 0.87;
+
+            const y =
+                ground -
+                playerY;
+
+            ctx.fillStyle =
+                "rgba(0,0,0,.35)";
+
+            ctx.beginPath();
+
+            ctx.ellipse(
+                x,
+                ground + 10,
+                34 -
+                    Math.min(
+                        playerY * 0.08,
+                        15
+                    ),
+                9,
+                0,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+
+            ctx.save();
+
+            ctx.translate(
+                x,
+                y
+            );
+
+            if (ducking) {
+                ctx.scale(
+                    1,
+                    0.65
+                );
+            }
+
+            const glow =
+                ctx.createRadialGradient(
+                    0,
+                    -40,
+                    5,
+                    0,
+                    -40,
+                    72
+                );
+
+            glow.addColorStop(
+                0,
+                "rgba(68,255,136,.22)"
+            );
+
+            glow.addColorStop(
+                1,
+                "rgba(68,255,136,0)"
+            );
+
+            ctx.fillStyle = glow;
+
+            ctx.beginPath();
+
+            ctx.arc(
+                0,
+                -40,
+                72,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+
+            /* Jambes */
+
+            ctx.strokeStyle =
+                "#d8e8ff";
+
+            ctx.lineWidth = 9;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                -9,
+                -20
+            );
+
+            ctx.lineTo(
+                -16,
+                12
+            );
+
+            ctx.moveTo(
+                9,
+                -20
+            );
+
+            ctx.lineTo(
+                18,
+                10
+            );
+
+            ctx.stroke();
+
+            /* Chaussures lumineuses */
+
+            ctx.strokeStyle =
+                COLORS.cyan;
+
+            ctx.lineWidth = 7;
+
+            ctx.shadowColor =
+                COLORS.cyan;
+
+            ctx.shadowBlur = 10;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                -16,
+                12
+            );
+
+            ctx.lineTo(
+                -25,
+                14
+            );
+
+            ctx.moveTo(
+                18,
+                10
+            );
+
+            ctx.lineTo(
+                27,
+                12
+            );
+
+            ctx.stroke();
+
+            ctx.shadowBlur = 0;
+
+            /* Corps */
+
+            ctx.fillStyle =
+                "#237b4a";
+
+            roundedRect(
+                ctx,
+                -29,
+                -83,
+                58,
+                68,
+                16
+            );
+
+            ctx.fill();
+
+            ctx.fillStyle =
+                "white";
+
+            ctx.font =
+                "bold 23px Arial";
+
+            ctx.textAlign =
+                "center";
+
+            ctx.fillText(
+                "Q",
+                0,
+                -42
+            );
+
+            /* Tête robot */
+
+            ctx.fillStyle =
+                "#e3edf7";
+
+            ctx.beginPath();
+
+            ctx.arc(
+                0,
+                -103,
+                24,
+                0,
+                Math.PI * 2
+            );
+
+            ctx.fill();
+
+            ctx.fillStyle =
+                "#14243a";
+
+            roundedRect(
+                ctx,
+                -18,
+                -112,
+                36,
+                16,
+                5
+            );
+
+            ctx.fill();
+
+            ctx.fillStyle =
+                COLORS.green;
+
+            ctx.shadowColor =
+                COLORS.green;
+
+            ctx.shadowBlur = 7;
+
+            ctx.fillRect(
+                -11,
+                -107,
+                7,
+                5
+            );
+
+            ctx.fillRect(
+                5,
+                -107,
+                7,
+                5
+            );
+
+            ctx.shadowBlur = 0;
+
+            ctx.restore();
+        }
+
+        /* =====================================================
+           TRAITEMENT DES OBJETS
+        ===================================================== */
+
+        function processObjects() {
+            obstacles.forEach(
+                function(obstacle) {
+                    obstacle.z -= speed;
+
+                    if (
+                        obstacle.z < 75 &&
+                        obstacle.z > -20 &&
+                        obstacle.lane === lane &&
+                        playerY < 65
+                    ) {
+                        gameOver();
+                    }
+
+                    if (
+                        obstacle.z < -120
+                    ) {
+                        obstacle.z =
+                            1250 +
+                            Math.random() *
+                            750;
+
+                        obstacle.lane =
+                            Math.floor(
+                                Math.random() *
+                                3
+                            );
+
+                        obstacle.type =
+                            Math.random() >
+                            0.5
+                                ? "security"
+                                : "deviation";
+                    }
+                }
+            );
+
+            collectibles.forEach(
+                function(collectible) {
+                    collectible.z -=
+                        speed;
+
+                    collectible.rotation +=
+                        0.045;
+
+                    if (
+                        collectible.z <
+                            90 &&
+                        collectible.z >
+                            -20 &&
+                        collectible.lane ===
+                            lane
+                    ) {
+                        collectQuality(
+                            collectible
+                        );
+                    }
+
+                    if (
+                        collectible.z <
+                        -100
+                    ) {
+                        collectible.z =
+                            1050 +
+                            Math.random() *
+                            950;
+
+                        collectible.lane =
+                            Math.floor(
+                                Math.random() *
+                                3
+                            );
+                    }
+                }
+            );
+
+            clearTokens.forEach(
+                function(token) {
+                    if (!token.active) {
+                        return;
+                    }
+
+                    /*
+                     * Les jetons sont présentés
+                     * dans l'ordre de la séquence.
+                     */
+                    if (
+                        token.stepIndex !==
+                        clearPoints
+                    ) {
+                        return;
+                    }
+
+                    token.z -= speed;
+                    token.rotation += 0.05;
+
+                    if (
+                        token.z < 95 &&
+                        token.z > -25 &&
+                        token.lane === lane
+                    ) {
+                        collectCLEAR(
+                            token
+                        );
+                    }
+
+                    if (
+                        token.z < -120 &&
+                        token.active
+                    ) {
+                        token.z =
+                            850 +
+                            Math.random() *
+                            400;
+
+                        token.lane =
+                            Math.floor(
+                                Math.random() *
+                                3
+                            );
+
+                        showMessage(
+                            "CONTRÔLE CLEAR MANQUÉ",
+                            "Change de voie pour récupérer le contrôle",
+                            COLORS.purple
+                        );
+                    }
+                }
+            );
+        }
+
+        /* =====================================================
+           COLLECTE QUALITÉ
+        ===================================================== */
+
+        function collectQuality(
+            collectible
+        ) {
+            checks++;
+            comboProgress++;
+
+            if (
+                comboProgress >= 5
+            ) {
+                combo =
+                    Math.min(
+                        5,
+                        combo + 1
+                    );
+
+                comboProgress = 0;
+
+                showMessage(
+                    "COMBO QUALITÉ x" +
+                        combo,
+                    "Série de bonnes pratiques",
+                    COLORS.green
+                );
+            }
+            else {
+                showMessage(
+                    "✓ BONNE PRATIQUE",
+                    "Contrôle qualité collecté",
+                    COLORS.green
+                );
+            }
+
+            score +=
+                100 * combo;
+
+            screenFlash =
+                Math.max(
+                    screenFlash,
+                    0.16
+                );
+
+            createParticles(
+                laneScreenX(
+                    collectible.lane,
+                    1
+                ),
+                H * 0.76,
+                COLORS.green,
+                25
+            );
+
+            collectible.z =
+                1300 +
+                Math.random() *
+                750;
+
+            collectible.lane =
+                Math.floor(
+                    Math.random() *
+                    3
+                );
+
+            if (checks === 20) {
+                score += 1500;
+
+                showMessage(
+                    "★ OBJECTIF QUALITÉ ATTEINT",
+                    "20 contrôles réalisés",
+                    COLORS.yellow
+                );
+            }
+
+            updateHUD();
+        }
+
+        /* =====================================================
+           MÉTHODE CLEAR
+        ===================================================== */
+
+        function collectCLEAR(
+            token
+        ) {
+            if (
+                clearSequenceComplete ||
+                token.stepIndex !==
+                    clearPoints
+            ) {
+                return;
+            }
+
+            const step =
+                clearSteps[
+                    clearPoints
+                ];
+
+            token.active = false;
+            clearPoints++;
+
+            score +=
+                350 * combo;
+
+            screenFlash =
+                Math.max(
+                    screenFlash,
+                    0.28
+                );
+
+            createParticles(
+                laneScreenX(
+                    token.lane,
+                    1
+                ),
+                H * 0.72,
+                COLORS.purple,
+                42
+            );
+
+            createParticles(
+                laneScreenX(
+                    token.lane,
+                    1
+                ),
+                H * 0.72,
+                COLORS.cyan,
+                20
+            );
+
+            showMessage(
+                "✓ " + step.title,
+                step.message,
+                COLORS.green
+            );
+
+            if (
+                clearPoints >=
+                clearSteps.length
+            ) {
+                completeCLEAR();
+            }
+
+            updateCLEAR();
+            updateHUD();
+        }
+
+        function activateManualCLEAR() {
+            if (
+                clearSequenceComplete
+            ) {
+                showMessage(
+                    "LINECLEARANCE DÉJÀ VALIDÉ",
+                    "Tous les contrôles ont été réalisés",
+                    COLORS.green
+                );
+
+                return;
+            }
+
+            const activeToken =
+                clearTokens.find(
+                    function(token) {
+                        return (
+                            token.active &&
+                            token.stepIndex ===
+                                clearPoints
+                        );
+                    }
+                );
+
+            if (!activeToken) {
+                return;
+            }
+
+            collectCLEAR(
+                activeToken
+            );
+        }
+
+        function completeCLEAR() {
+            clearSequenceComplete =
+                true;
+
+            score += 1500;
+
+            combo =
+                Math.min(
+                    5,
+                    combo + 1
+                );
+
+            screenFlash = 0.4;
+
+            showMessage(
+                "✓ LINECLEARANCE VALIDÉ",
+                "Vide de ligne contrôlé • Traçabilité maintenue",
+                "#c5ff54"
+            );
+
+            createParticles(
+                W / 2,
+                H * 0.5,
+                COLORS.green,
+                70
+            );
+
+            createParticles(
+                W / 2,
+                H * 0.5,
+                COLORS.cyan,
+                45
+            );
+        }
+
+        function updateCLEAR() {
+            const percentage =
+                Math.min(
+                    clearPoints /
+                    clearSteps.length *
+                    100,
+                    100
+                );
+
+            document
+                .getElementById(
+                    "clearBar"
+                )
+                .style
+                .width =
+                    percentage + "%";
+
+            const status =
+                document.getElementById(
+                    "clearStatus"
+                );
+
+            const stepName =
+                document.getElementById(
+                    "clearStepName"
+                );
+
+            if (
+                clearSequenceComplete
+            ) {
+                status.innerHTML =
+                    "✅ LINE CLEAR";
+
+                status.style.color =
+                    "#65ff9b";
+
+                stepName.innerText =
+                    "Traçabilité maintenue";
+
+                stepName.style.color =
+                    "#65ff9b";
+            }
+            else {
+                status.innerText =
+                    "CLEAR : " +
+                    clearPoints +
+                    " / " +
+                    clearSteps.length;
+
+                status.style.color =
+                    "#d8e8f5";
+
+                const nextStep =
+                    clearSteps[
+                        clearPoints
+                    ];
+
+                stepName.innerText =
+                    "Prochaine étape : " +
+                    nextStep.title
+                        .toLowerCase();
+
+                stepName.style.color =
+                    "#8edfff";
+            }
+        }
+
+        /* =====================================================
+           MESSAGES
+        ===================================================== */
+
+        let messageTimer;
+
+        function showMessage(
+            title,
+            subtitle,
+            color
+        ) {
+            const message =
+                document.getElementById(
+                    "message"
+                );
+
+            const messageText =
+                document.getElementById(
+                    "messageText"
+                );
+
+            const subMessage =
+                document.getElementById(
+                    "subMessage"
+                );
+
+            messageText.innerText =
+                title;
+
+            subMessage.innerText =
+                subtitle || "";
+
+            message.style.color =
+                color;
+
+            message.style.opacity =
+                "1";
+
+            message.style.transform =
+                "translate(-50%, -50%) scale(1)";
+
+            clearTimeout(
+                messageTimer
+            );
+
+            messageTimer =
+                setTimeout(
+                    function() {
+                        message.style.opacity =
+                            "0";
+
+                        message.style.transform =
+                            "translate(-50%, -50%) scale(.8)";
+                    },
+                    900
+                );
+        }
+
+        /* =====================================================
+           HUD
+        ===================================================== */
+
+        function updateHUD() {
+            document
+                .getElementById(
+                    "score"
+                )
+                .innerText =
+                    Math.floor(
+                        score
+                    )
+                    .toString()
+                    .padStart(
+                        6,
+                        "0"
+                    );
+
+            document
+                .getElementById(
+                    "checks"
+                )
+                .innerText =
+                    checks;
+
+            document
+                .getElementById(
+                    "combo"
+                )
+                .innerText =
+                    combo;
+
+            document
+                .getElementById(
+                    "comboBar"
+                )
+                .style
+                .width =
+                    (
+                        comboProgress /
+                        5 *
+                        100
+                    ) +
+                    "%";
+
+            document
+                .getElementById(
+                    "missionScore"
+                )
+                .innerText =
+                    Math.min(
+                        checks,
+                        20
+                    ) +
+                    " / 20";
+
+            document
+                .getElementById(
+                    "speedDisplay"
+                )
+                .innerText =
+                    Math.max(
+                        1,
+                        Math.round(
+                            (
+                                speed -
+                                7
+                            ) /
+                            2
+                        )
+                    );
+        }
+
+        /* =====================================================
+           GAME OVER
+        ===================================================== */
+
+        function gameOver() {
+            if (!running) {
+                return;
+            }
+
+            running = false;
+
+            screenFlash = 0.5;
+
+            createParticles(
+                laneScreenX(
+                    lane,
+                    1
+                ),
+                H * 0.8,
+                COLORS.red,
+                55
+            );
+
+            document
+                .getElementById(
+                    "finalScore"
+                )
+                .innerText =
+                    Math.floor(
+                        score
+                    );
+
+            document
+                .getElementById(
+                    "finalChecks"
+                )
+                .innerText =
+                    checks;
+
+            document
+                .getElementById(
+                    "finalClear"
+                )
+                .innerText =
+                    clearSequenceComplete
+                        ? "✅ LineCLEARance validé"
+                        : (
+                            "LineCLEARance : " +
+                            clearPoints +
+                            " / " +
+                            clearSteps.length
+                        );
+
+            setTimeout(
+                function() {
+                    document
+                        .getElementById(
+                            "gameOver"
+                        )
+                        .style
+                        .display =
+                            "flex";
+                },
+                250
+            );
+        }
+
+        /* =====================================================
+           REDÉMARRAGE
+        ===================================================== */
+
+        function restartGame() {
+            lane = 1;
+
+            playerY = 0;
+            velocityY = 0;
+
+            ducking = false;
+
+            speed = 9;
+            score = 0;
+            checks = 0;
+
+            combo = 1;
+            comboProgress = 0;
+
+            clearPoints = 0;
+
+            clearSequenceComplete =
+                false;
+
+            distance = 0;
+            screenFlash = 0;
+
+            particles.length = 0;
+
+            running = true;
+
+            initialiseObjects();
+
+            document
+                .getElementById(
+                    "gameOver"
+                )
+                .style
+                .display =
+                    "none";
+
+            updateCLEAR();
+            updateHUD();
+        }
+
+        /* =====================================================
+           EFFETS D'ÉCRAN
+        ===================================================== */
+
+        function drawScreenFlash() {
+            if (
+                screenFlash <= 0
+            ) {
+                return;
+            }
+
+            ctx.fillStyle =
+                `rgba(104,255,177,${
+                    screenFlash
+                })`;
+
+            ctx.fillRect(
+                0,
+                0,
+                W,
+                H
+            );
+
+            screenFlash -= 0.025;
+        }
+
+        function drawVignette() {
+            const vignette =
+                ctx.createRadialGradient(
+                    W / 2,
+                    H / 2,
+                    Math.min(
+                        W,
+                        H
+                    ) * 0.25,
+                    W / 2,
+                    H / 2,
+                    Math.max(
+                        W,
+                        H
+                    ) * 0.72
+                );
+
+            vignette.addColorStop(
+                0,
+                "rgba(0,0,0,0)"
+            );
+
+            vignette.addColorStop(
+                1,
+                "rgba(0,4,12,.55)"
+            );
+
+            ctx.fillStyle =
+                vignette;
+
+            ctx.fillRect(
+                0,
+                0,
+                W,
+                H
+            );
+        }
+
+        /* =====================================================
+           OUTIL RECTANGLE ARRONDI
+        ===================================================== */
+
+        function roundedRect(
+            context,
+            x,
+            y,
+            width,
+            height,
+            radius
+        ) {
+            const safeRadius =
+                Math.max(
+                    0,
+                    Math.min(
+                        radius,
+                        width / 2,
+                        height / 2
+                    )
+                );
+
+            context.beginPath();
+
+            context.moveTo(
+                x + safeRadius,
+                y
+            );
+
+            context.lineTo(
+                x +
+                    width -
+                    safeRadius,
+                y
+            );
+
+            context.quadraticCurveTo(
+                x + width,
+                y,
+                x + width,
+                y + safeRadius
+            );
+
+            context.lineTo(
+                x + width,
+                y +
+                    height -
+                    safeRadius
+            );
+
+            context.quadraticCurveTo(
+                x + width,
+                y + height,
+                x +
+                    width -
+                    safeRadius,
+                y + height
+            );
+
+            context.lineTo(
+                x + safeRadius,
+                y + height
+            );
+
+            context.quadraticCurveTo(
+                x,
+                y + height,
+                x,
+                y +
+                    height -
+                    safeRadius
+            );
+
+            context.lineTo(
+                x,
+                y + safeRadius
+            );
+
+            context.quadraticCurveTo(
+                x,
+                y,
+                x + safeRadius,
+                y
+            );
+
+            context.closePath();
+        }
+
+        /* =====================================================
+           BOUCLE PRINCIPALE
+        ===================================================== */
+
+        function loop() {
+            drawBackground();
+            drawQualityBoards();
+            drawTrack();
+
+            if (running) {
+                distance += speed;
+
+                score +=
+                    0.12 * combo;
+
+                speed =
+                    Math.min(
+                        17,
+                        9 +
+                        score /
+                        1800
+                    );
+
+                if (
+                    playerY > 0 ||
+                    velocityY > 0
+                ) {
+                    playerY +=
+                        velocityY;
+
+                    velocityY -=
+                        1.05;
+
+                    if (
+                        playerY < 0
+                    ) {
+                        playerY = 0;
+                        velocityY = 0;
+                    }
+                }
+
+                processObjects();
+                updateHUD();
+            }
+
+            const renderObjects = [
+                ...obstacles.map(
+                    function(object) {
+                        return {
+                            type:
+                                "obstacle",
+                            object:
+                                object
+                        };
+                    }
+                ),
+
+                ...collectibles.map(
+                    function(object) {
+                        return {
+                            type:
+                                "collectible",
+                            object:
+                                object
+                        };
+                    }
+                ),
+
+                ...clearTokens
+                    .filter(
+                        function(token) {
+                            return (
+                                token.active &&
+                                token.stepIndex ===
+                                    clearPoints
+                            );
+                        }
+                    )
+                    .map(
+                        function(object) {
+                            return {
+                                type:
+                                    "clear",
+                                object:
+                                    object
+                            };
+                        }
+                    )
+            ];
+
+            renderObjects.sort(
+                function(a, b) {
+                    return (
+                        b.object.z -
+                        a.object.z
+                    );
+                }
+            );
+
+            renderObjects.forEach(
+                function(item) {
+                    if (
+                        item.type ===
+                        "obstacle"
+                    ) {
+                        drawObstacle(
+                            item.object
+                        );
+                    }
+                    else if (
+                        item.type ===
+                        "collectible"
+                    ) {
+                        drawCollectible(
+                            item.object
+                        );
+                    }
+                    else {
+                        drawClearToken(
+                            item.object
+                        );
+                    }
+                }
+            );
+
+            drawPlayer();
+            updateParticles();
+            drawVignette();
+            drawScreenFlash();
+
+            requestAnimationFrame(
+                loop
+            );
+        }
+
+        updateCLEAR();
+        updateHUD();
+        loop();
+    </script>
+
+</body>
+</html>
