@@ -48,7 +48,7 @@ const $=id=>document.getElementById(id),canvas=$("game"),ctx=canvas.getContext("
 const W=400,H=600,STEP=1/120,G=1500,J=-570,SJ=-850,MS=325;
 const keys=new Set(),touch=new Set();
 let mode="loading",player,platforms=[],enemies=[],particles=[],camera=0,topY=560,serial=0,worldTime=0,platformTime=0,altitude=0,score=0,tokens=0,best=0,lastTime=0,acc=0,sound=true,audio=null,ending=false;
-try{best=Math.max(0,Number(localStorage.getItem("quality-jump-best"))||0);sound=localStorage.getItem("quality-jump-sound")!=="0"}catch{}
+try{sound=localStorage.getItem("quality-jump-sound")!=="0"}catch{}
 const platformSpeed=()=>1+3*(1-Math.exp(-altitude/1800));
 function tone(f=500,d=.06){if(!sound)return;try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;audio=audio||new A();if(audio.state==="suspended")audio.resume();const o=audio.createOscillator(),g=audio.createGain();o.frequency.value=f;o.connect(g);g.connect(audio.destination);g.gain.value=.04;o.start();g.gain.exponentialRampToValueAtTime(.001,audio.currentTime+d);o.stop(audio.currentTime+d)}catch{}}
 function notify(text,state=""){const e=$("status");e.textContent=text;e.dataset.state=state}
@@ -57,9 +57,29 @@ function hud(){$("score").textContent=score;$("best").textContent=best;$("tokens
 function addPlatform(){serial++;topY-=serial<=3?72:64+Math.random()*22;const previous=platforms.at(-1),width=92,x=serial<=3?Math.max(8,Math.min(W-width-8,previous.x+(Math.random()*2-1)*65)):8+Math.random()*(W-width-16),moving=serial>4&&serial%4===0,bonus=serial===6||serial%9===0?"spring":serial===11||serial%17===0?"jet":null,fragile=serial>3&&!bonus&&!moving&&serial%5===0;platforms.push({x,y:topY,width,baseX:x,moving,fragile,broken:false,amp:Math.min(28,x-8,W-width-8-x),phase:Math.random()*Math.PI*2,coin:(serial%3===1||serial===2)&&!bonus,taken:false,bonus,bounce:0});if(serial>10&&serial%7===0)enemies.push({x:x+width/2,baseX:x+width/2,y:topY-35,phase:Math.random()*Math.PI*2,dead:false})}
 function reset(){player={x:184,y:510,width:30,height:44,vy:J,jet:0,shield:1};platforms=[{x:154,y:560,width:92,moving:false,fragile:false,broken:false,coin:false,bonus:null,bounce:0}];enemies=[];particles=[];camera=0;topY=560;serial=0;worldTime=0;platformTime=0;altitude=0;score=0;tokens=0;ending=false;keys.clear();touch.clear();notify("");for(let i=0;i<12;i++)addPlatform();hud()}
 function show(title,message,buttonText){$("title").textContent=title;$("message").innerHTML=message;$("start").textContent=buttonText;$("overlay").hidden=false}
-function start(){reset();mode="playing";acc=0;lastTime=performance.now();$("overlay").hidden=true;$("pause").disabled=false;$("pause").textContent="Pause";notify("C’est parti !");tone(520);canvas.focus()}
+function start(){if(ending||!["ready","over"].includes(mode))return;reset();mode="playing";acc=0;lastTime=performance.now();$("overlay").hidden=true;$("pause").disabled=false;$("pause").textContent="Pause";notify("C’est parti !");tone(520);canvas.focus()}
 function pause(){if(mode==="playing"){mode="paused";keys.clear();touch.clear();$("pause").textContent="Reprendre";show("Pause","Votre partie est conservée.","REPRENDRE")}else if(mode==="paused"){mode="playing";acc=0;lastTime=performance.now();$("overlay").hidden=true;$("pause").textContent="Pause";canvas.focus()}}
-async function finish(reason){if(ending||mode==="over")return;ending=true;mode="over";keys.clear();touch.clear();best=Math.max(best,score);try{localStorage.setItem("quality-jump-best",String(best))}catch{}$("pause").disabled=true;show("Bien joué !",`${reason}<br><br><b>${score} points · ${tokens} jeton(s)</b><br>Enregistrement du score…`,"REJOUER");hud();tone(190,.18);try{const saved=await window.qualityJumpScores.saveBestScore(score);best=Math.max(best,Number(saved)||0);show("Bien joué !",`${reason}<br><br><b>${score} points · ${tokens} jeton(s)</b><br>Meilleur score enregistré : <b>${best}</b>`,"REJOUER");notify("Score enregistré.")}catch(error){console.error(error);show("Bien joué !",`${reason}<br><br><b>${score} points · ${tokens} jeton(s)</b><br>Le score n’a pas pu être envoyé.`,"REJOUER");notify("Échec de l’enregistrement du score.","error")}finally{ending=false;hud()}}
+async function finish(reason) {
+  if (ending || mode === "over") return;
+  ending = true; mode = "over"; keys.clear(); touch.clear();
+  const finalScore = score, finalTokens = tokens;
+  $("start").disabled = true;
+  $("pause").disabled = true;
+  show("Bien joué !", `${reason}<br><br><b>${finalScore} points · ${finalTokens} jeton(s)</b><br>Enregistrement du score…`, "ENREGISTREMENT…");
+  hud(); tone(190, .18);
+  try {
+    const saved = await window.qualityJumpScores.saveBestScore(finalScore);
+    best = saved;
+    show("Bien joué !", `${reason}<br><br><b>${finalScore} points · ${finalTokens} jeton(s)</b><br>Meilleur score enregistré : <b>${saved}</b>`, "REJOUER");
+    notify("Score enregistré.");
+  } catch (error) {
+    console.error(error);
+    show("Bien joué !", `${reason}<br><br><b>${finalScore} points · ${finalTokens} jeton(s)</b><br>Enregistrement non confirmé. Vérifiez votre connexion puis revenez au hub.`, "REJOUER");
+    notify("Enregistrement du score non confirmé.", "error");
+  } finally {
+    ending = false; $("start").disabled = false; hud();
+  }
+}
 function spark(x,y,c,count=8){for(let i=0;i<count;i++)particles.push({x,y,vx:(Math.random()-.5)*130,vy:-Math.random()*120-20,t:.55,c})}
 function step(dt){worldTime+=dt;platformTime+=dt*platformSpeed();const left=keys.has("arrowleft")||keys.has("a")||keys.has("q")||touch.has("left"),right=keys.has("arrowright")||keys.has("d")||touch.has("right");player.x+=((right?1:0)-(left?1:0))*MS*dt;if(player.x+player.width/2>=W)player.x-=W;if(player.x+player.width/2<0)player.x+=W;for(const p of platforms){if(p.moving)p.x=p.baseX+Math.sin(platformTime*1.25+p.phase)*p.amp;p.bounce=Math.max(0,p.bounce-dt*35)}for(const e of enemies)e.x=Math.max(20,Math.min(380,e.baseX+Math.sin(worldTime*1.4+e.phase)*27));const previousBottom=player.y+player.height,flying=player.jet>0;if(flying){player.jet=Math.max(0,player.jet-dt);player.vy=-610}else player.vy+=G*dt;player.y+=player.vy*dt;if(player.vy>0){for(const p of platforms){const crossed=previousBottom<=p.y&&player.y+player.height>=p.y,overlaps=[-W,0,W].some(o=>player.x+o+player.width>p.x&&player.x+o<p.x+p.width);if(!p.broken&&crossed&&overlaps){player.y=p.y-player.height;player.vy=p.bonus==="spring"?SJ:J;p.bounce=5;if(p.fragile){p.broken=true;spark(p.x+p.width/2,p.y-camera,"#b66c37",18)}if(p.bonus==="spring"){pop("SUPER SAUT","#ffb500");tone(760)}break}}}for(const p of platforms){const x=p.x+p.width/2,y=p.y-27,hit=player.x<x+14&&player.x+player.width>x-14&&player.y<y+14&&player.y+player.height>y-14;if(p.coin&&!p.taken&&hit){p.taken=true;tokens++;pop("+50");spark(x,y-camera,"#1c5687",12);tone(820)}if(p.bonus==="jet"&&hit){p.bonus=null;player.jet=3;pop("JETPACK !","#ffb500");tone(980,.12)}}camera=Math.min(camera,player.y-250);altitude=Math.max(altitude,Math.floor(Math.max(0,510-player.y)/8));score=altitude+tokens*50;for(const e of enemies){const nx=Math.max(player.x,Math.min(e.x,player.x+player.width)),ny=Math.max(player.y,Math.min(e.y,player.y+player.height)),hit=(nx-e.x)**2+(ny-e.y)**2<17**2;if(!hit)continue;if(flying){e.dead=true;pop("PROTÉGÉ")}else if(player.shield>0){player.shield=0;e.dead=true;player.vy=J;pop("IMPACT !","#d35b46")}else{finish("Un deuxième microbe a touché la tige.");return}}while(topY>camera-160)addPlatform();platforms=platforms.filter(p=>!p.broken&&p.y<camera+H+80);enemies=enemies.filter(e=>!e.dead&&e.y<camera+H+80);for(const p of particles){p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=250*dt;p.t-=dt}particles=particles.filter(p=>p.t>0);if(player.y>camera+H+45)finish("La tige est tombée entre les plateformes.")}
 function line(x1,y1,x2,y2){ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke()}
@@ -68,10 +88,34 @@ function drawEnemy(e){const y=e.y-camera;if(y<-40||y>H+40)return;ctx.fillStyle="
 function drawPlayerAt(x){ctx.save();ctx.translate(x,player.y-camera);if(player.jet>0){ctx.strokeStyle="#1c5687";ctx.lineWidth=3;ctx.beginPath();ctx.ellipse(15,20,27,35,0,0,Math.PI*2);ctx.stroke()}ctx.fillStyle="#b7bec3";ctx.strokeStyle="#111";ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(7,7);ctx.quadraticCurveTo(4,-5,14,-9);ctx.quadraticCurveTo(31,-4,27,10);ctx.lineTo(22,19);ctx.lineTo(19,43);ctx.lineTo(11,43);ctx.lineTo(8,22);ctx.lineTo(3,14);ctx.closePath();ctx.fill();ctx.stroke();ctx.fillStyle="#ffb500";ctx.beginPath();ctx.arc(17,6,5,0,Math.PI*2);ctx.fill();ctx.fillStyle="#1c5687";ctx.fillRect(11,20,10,5);ctx.restore()}
 function draw(){ctx.fillStyle="#f7fafb";ctx.fillRect(0,0,W,H);ctx.strokeStyle="#e0e8ec";for(let y=((-camera*.25)%60+60)%60;y<H;y+=60)line(0,y,W,y);platforms.forEach(drawPlatform);enemies.forEach(drawEnemy);for(const p of particles){ctx.globalAlpha=Math.max(0,p.t/.55);ctx.fillStyle=p.c;ctx.fillRect(p.x-2,p.y-2,4,4);ctx.globalAlpha=1}drawPlayerAt(player.x);if(player.x<0)drawPlayerAt(player.x+W);else if(player.x+player.width>W)drawPlayerAt(player.x-W)}
 function frame(now){const elapsed=Math.min((now-lastTime)/1000,.05);lastTime=now;if(mode==="playing"){acc+=elapsed;while(acc>=STEP&&mode==="playing"){step(STEP);acc-=STEP}}draw();hud();requestAnimationFrame(frame)}
-$("start").addEventListener("click",()=>mode==="paused"?pause():start());$("pause").addEventListener("click",pause);$("sound").addEventListener("click",()=>{sound=!sound;try{localStorage.setItem("quality-jump-sound",sound?"1":"0")}catch{}hud();if(sound)tone(600)});window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowleft","arrowright","a","q","d"].includes(k)&&mode==="playing"){e.preventDefault();keys.add(k)}if(["p","escape"].includes(k)&&!e.repeat&&["playing","paused"].includes(mode)){e.preventDefault();pause()}});window.addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));for(const direction of ["left","right"]){const button=$(direction);button.addEventListener("pointerdown",e=>{e.preventDefault();if(mode==="playing"){button.setPointerCapture(e.pointerId);touch.add(direction)}});for(const name of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(name,()=>touch.delete(direction))}
+$("start").addEventListener("click", () => {
+  if (ending) return;
+  if (mode === "auth-error") { location.replace("../../index.html"); return; }
+  if (mode === "load-error") { location.reload(); return; }
+  if (mode === "paused") pause();
+  else if (["ready", "over"].includes(mode)) start();
+});$("pause").addEventListener("click",pause);$("sound").addEventListener("click",()=>{sound=!sound;try{localStorage.setItem("quality-jump-sound",sound?"1":"0")}catch{}hud();if(sound)tone(600)});window.addEventListener("keydown",e=>{const k=e.key.toLowerCase();if(["arrowleft","arrowright","a","q","d"].includes(k)&&mode==="playing"){e.preventDefault();keys.add(k)}if(["p","escape"].includes(k)&&!e.repeat&&["playing","paused"].includes(mode)){e.preventDefault();pause()}});window.addEventListener("keyup",e=>keys.delete(e.key.toLowerCase()));for(const direction of ["left","right"]){const button=$(direction);button.addEventListener("pointerdown",e=>{e.preventDefault();if(mode==="playing"){button.setPointerCapture(e.pointerId);touch.add(direction)}});for(const name of ["pointerup","pointercancel","lostpointercapture"])button.addEventListener(name,()=>touch.delete(direction))}
 window.addEventListener("blur",()=>{keys.clear();touch.clear();if(mode==="playing")pause()});document.addEventListener("visibilitychange",()=>{if(document.hidden&&mode==="playing")pause()});
-async function initialize(){try{await window.qualityJumpScores.requireSession();best=Math.max(best,await window.qualityJumpScores.loadBestScore());reset();hud();$("start").disabled=false;$("start").textContent="JOUER";mode="ready";lastTime=performance.now();requestAnimationFrame(frame)}catch(error){console.error(error);show("Connexion requise","Votre session est absente ou expirée.","RETOUR À LA CONNEXION");$("start").disabled=false;$("start").onclick=()=>location.replace("../../index.html");notify("Connexion requise.","error")}}
-initialize();
+async function initialize() {
+  try {
+    if (!window.qualityJumpScores) throw new Error("Service de scores non chargé.");
+    await window.qualityJumpScores.requireSession();
+    best = await window.qualityJumpScores.loadBestScore();
+    reset(); hud();
+    $("start").disabled = false; $("start").textContent = "JOUER";
+    mode = "ready"; lastTime = performance.now(); requestAnimationFrame(frame);
+  } catch (error) {
+    console.error(error);
+    const authError = error.code === "AUTH_REQUIRED";
+    mode = authError ? "auth-error" : "load-error";
+    show(authError ? "Connexion requise" : "Chargement impossible",
+      authError ? "Votre session est absente ou expirée." : "Le service de scores est indisponible. Vérifiez votre connexion puis réessayez.",
+      authError ? "RETOUR À LA CONNEXION" : "RÉESSAYER");
+    $("start").disabled = false;
+    notify(authError ? "Connexion requise." : "Chargement du jeu impossible.", "error");
+  }
+}
+window.addEventListener("DOMContentLoaded", initialize, { once: true });
 </script>
 </body>
 </html>
