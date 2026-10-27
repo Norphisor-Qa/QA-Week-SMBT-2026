@@ -1,137 +1,97 @@
 "use strict";
-
 const SUPABASE_URL = "https://pglstqfawauvxvezyigc.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "sb_publishable_YaLtd-n5jALpGOUYSJriQA_h_9X_OLY";
-const TECHNICAL_EMAIL_DOMAIN = "qualityweek.internal";
+const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+  auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
+});
 
-const supabaseClient = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_PUBLISHABLE_KEY,
-  { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } }
-);
-
-const $ = (id) => document.getElementById(id);
-
-function normalizeUsername(value) {
-  return String(value || "").trim().toLowerCase();
-}
-
-function validUsername(value) {
-  return /^[a-z0-9._-]{3,30}$/.test(value);
-}
-
-function technicalEmail(username) {
-  return `${username}@${TECHNICAL_EMAIL_DOMAIN}`;
-}
-
+const $ = id => document.getElementById(id);
+const normalizeUsername = value => String(value || "").trim().toLowerCase();
+const validUsername = value => /^[a-z0-9._-]{3,30}$/.test(value);
+const technicalEmail = username => `${username}@qualityweek.internal`;
+let busy = false;
 function showMessage(message, type = "") {
-  const zone = $("auth-message");
-  zone.textContent = message;
-  zone.dataset.status = type;
+  $("auth-message").textContent = message;
+  $("auth-message").dataset.status = type;
 }
-
-function setBusy(button, busy, normalText, busyText) {
-  button.disabled = busy;
-  button.textContent = busy ? busyText : normalText;
+function setBusy(value) {
+  busy = value;
+  $("register-btn").disabled = value;
+  $("login-btn").disabled = value;
 }
-
-async function redirectExistingSession() {
-  const { data, error } = await supabaseClient.auth.getSession();
-  if (error) console.error(error);
-  if (data?.session) window.location.replace("./hub.html");
-}
-
 async function register(event) {
   event.preventDefault();
+  if (busy) return;
   showMessage("");
-
-  const button = $("register-btn");
   const firstname = $("register-firstname").value.trim();
   const lastname = $("register-lastname").value.trim();
   const username = normalizeUsername($("register-username").value);
   const password = $("register-password").value;
-  const confirmation = $("register-password-confirm").value;
-
-  if (!firstname || !lastname || !username || !password) {
-    showMessage("Merci de remplir tous les champs.", "error");
-    return;
+  if (!firstname || !lastname || firstname.length > 80 || lastname.length > 80) {
+    showMessage("Indiquez un prénom et un nom de 1 à 80 caractères.", "error"); return;
   }
   if (!validUsername(username)) {
-    showMessage("L’identifiant doit contenir 3 à 30 caractères autorisés.", "error");
-    return;
+    showMessage("Identifiant : 3 à 30 caractères, lettres sans accent, chiffres, point, tiret ou underscore.", "error"); return;
   }
-  if (password.length < 8) {
-    showMessage("Le mot de passe doit contenir au moins 8 caractères.", "error");
-    return;
+  if (password.length < 8 || password.length > 128) {
+    showMessage("Le mot de passe doit contenir 8 à 128 caractères.", "error"); return;
   }
-  if (password !== confirmation) {
-    showMessage("Les deux mots de passe ne correspondent pas.", "error");
-    return;
+  if (password !== $("register-password-confirm").value) {
+    showMessage("Les deux mots de passe ne correspondent pas.", "error"); return;
   }
-
-  setBusy(button, true, "Créer mon compte", "Création…");
+  setBusy(true);
+  $("register-btn").textContent = "Création…";
   try {
-    const { data: authData, error: authError } = await supabaseClient.auth.signUp({
-      email: technicalEmail(username),
-      password,
+    const { data, error } = await supabaseClient.auth.signUp({
+      email: technicalEmail(username), password,
       options: { data: { username, firstname, lastname } }
     });
-    if (authError) throw authError;
-    if (!authData.user || !authData.session) {
-      throw new Error("Compte créé sans session. Vérifiez que « Confirm email » est désactivé.");
+    if (error) throw error;
+    if (!data?.session) {
+      showMessage("Inscription sans session immédiate. Contactez l’organisateur pour vérifier la configuration : l’adresse technique utilisée ici ne permet pas de recevoir un e-mail de confirmation.", "error");
+      return;
     }
-
-    const { error: profileError } = await supabaseClient.from("profiles").insert({
-      id: authData.user.id,
-      username,
-      firstname,
-      lastname
-    });
-    if (profileError) {
-      await supabaseClient.auth.signOut();
-      if (profileError.code === "23505") throw new Error("Cet identifiant est déjà utilisé.");
-      throw profileError;
-    }
-
+    // Le hub crée le profil manquant depuis les métadonnées du compte.
+    // Une erreur de profil n'impose donc pas de recréer le compte.
     window.location.replace("./hub.html");
   } catch (error) {
     console.error(error);
-    const duplicate = /already|exists|registered|duplicate/i.test(error.message || "");
-    showMessage(duplicate ? "Cet identifiant est déjà utilisé." : (error.message || "Inscription impossible."), "error");
+    showMessage("Inscription impossible. L’identifiant peut être déjà utilisé. Si le compte existe, essayez de vous connecter ; sinon contactez l’organisateur.", "error");
   } finally {
-    setBusy(button, false, "Créer mon compte", "Création…");
+    setBusy(false); $("register-btn").textContent = "Créer mon compte";
   }
 }
-
 async function login(event) {
   event.preventDefault();
+  if (busy) return;
   showMessage("");
-
-  const button = $("login-btn");
   const username = normalizeUsername($("login-username").value);
   const password = $("login-password").value;
-
   if (!validUsername(username) || !password) {
-    showMessage("Identifiant ou mot de passe incorrect.", "error");
-    return;
+    showMessage("Identifiant ou mot de passe incorrect.", "error"); return;
   }
-
-  setBusy(button, true, "Se connecter", "Connexion…");
+  setBusy(true); $("login-btn").textContent = "Connexion…";
   try {
-    const { error } = await supabaseClient.auth.signInWithPassword({
-      email: technicalEmail(username),
-      password
-    });
+    const { error } = await supabaseClient.auth.signInWithPassword({ email: technicalEmail(username), password });
     if (error) throw error;
     window.location.replace("./hub.html");
   } catch (error) {
     console.error(error);
-    showMessage("Identifiant ou mot de passe incorrect.", "error");
+    showMessage("Connexion impossible. Vérifiez vos identifiants et votre connexion réseau.", "error");
   } finally {
-    setBusy(button, false, "Se connecter", "Connexion…");
+    setBusy(false); $("login-btn").textContent = "Se connecter";
   }
 }
-
+async function redirectExistingSession() {
+  try {
+    const { data, error } = await supabaseClient.auth.getSession();
+    if (error) throw error;
+    if (data?.session) window.location.replace("./hub.html");
+  } catch (error) {
+    console.error(error);
+    showMessage("Impossible de vérifier la session. Vous pouvez essayer de vous connecter.", "error");
+  }
+}
 $("register-form").addEventListener("submit", register);
 $("login-form").addEventListener("submit", login);
 redirectExistingSession();
