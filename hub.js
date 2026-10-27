@@ -35,12 +35,31 @@ async function requireSession() {
 }
 
 async function loadProfile() {
-  const { data, error } = await supabaseClient
-    .from("profiles")
-    .select("id, username, firstname, lastname")
-    .eq("id", currentUser.id)
-    .single();
+  const readProfile = () => supabaseClient.from("profiles")
+    .select("id, username, firstname, lastname").eq("id", currentUser.id).maybeSingle();
+  let { data, error } = await readProfile();
   if (error) throw error;
+  if (!data) {
+    // Valider le compte auprès du service avant de réparer un profil manquant.
+    const result = await supabaseClient.auth.getUser();
+    if (result.error) throw result.error;
+    const user = result.data?.user;
+    if (!user || user.id !== currentUser.id) throw new Error("Session invalide.");
+    const meta = user.user_metadata || {};
+    const username = String(meta.username || "").trim().toLowerCase();
+    const firstname = String(meta.firstname || "").trim();
+    const lastname = String(meta.lastname || "").trim();
+    if (!/^[a-z0-9._-]{3,30}$/.test(username) || !firstname || !lastname || firstname.length > 80 || lastname.length > 80) {
+      throw new Error("Profil incomplet. Contactez l’organisateur pour réparer ce compte.");
+    }
+    const inserted = await supabaseClient.from("profiles").insert({ id: user.id, username, firstname, lastname });
+    // Un autre onglet ou un déclencheur peut avoir créé le profil entre-temps.
+    if (inserted.error && inserted.error.code !== "23505") throw inserted.error;
+    const reread = await readProfile();
+    if (reread.error) throw reread.error;
+    if (!reread.data) throw new Error("Profil indisponible ou identifiant déjà utilisé. Contactez l’organisateur.");
+    data = reread.data;
+  }
   currentProfile = data;
   $("player-name").textContent = data.firstname;
   $("player-username").textContent = data.username;
@@ -104,7 +123,7 @@ async function loadLeaderboard() {
   (data || []).forEach((row) => {
     const item = document.createElement("li");
     const name = document.createElement("span");
-    name.textContent = `${row.firstname} ${row.lastname}`;
+    name.textContent = `${row.rank}. ${row.firstname} ${row.lastname}`;
     const points = document.createElement("strong");
     points.textContent = `${row.total_score} pts`;
     item.append(name, points);
@@ -118,21 +137,43 @@ async function loadLeaderboard() {
 }
 
 async function logout() {
-  await supabaseClient.auth.signOut();
-  window.location.replace("./index.html");
+  const button = $("logout-btn");
+  button.disabled = true;
+  try {
+    const { error } = await supabaseClient.auth.signOut();
+    if (error) throw error;
+    window.location.replace("./index.html");
+  } catch (error) {
+    console.error(error);
+    showMessage("Déconnexion impossible. Réessayez.", "error");
+    button.disabled = false;
+  }
 }
-
 async function initialize() {
   try {
     if (!(await requireSession())) return;
-    await Promise.all([loadProfile(), loadScores(), loadLeaderboard()]);
+    await loadProfile();
     renderGames();
+    const results = await Promise.allSettled([loadScores(), loadLeaderboard()]);
+    renderGames();
+    const warnings = [];
+    if (results[0].status === "rejected") {
+      console.error(results[0].reason);
+      $("total-score").textContent = "—";
+      $("games-played").textContent = "—";
+      warnings.push("Vos scores sont temporairement indisponibles.");
+      for (const element of document.querySelectorAll(".game-duration")) element.textContent = "Score indisponible";
+    }
+    if (results[1].status === "rejected") {
+      console.error(results[1].reason);
+      $("leaderboard-list").textContent = "Classement temporairement indisponible.";
+      warnings.push("Le classement n’a pas pu être chargé.");
+    }
+    if (warnings.length) showMessage(warnings.join(" "), "error");
   } catch (error) {
     console.error(error);
-    showMessage("Impossible de charger le hub. Reconnectez-vous.", "error");
+    showMessage("Impossible de charger votre profil. Réessayez de vous connecter ; si le problème persiste, contactez l’organisateur.", "error");
   }
 }
-
 $("logout-btn").addEventListener("click", logout);
 initialize();
-
