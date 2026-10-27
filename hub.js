@@ -123,7 +123,7 @@ async function loadLeaderboard() {
   (data || []).forEach((row) => {
     const item = document.createElement("li");
     const name = document.createElement("span");
-    name.textContent = `${row.rank}. ${row.firstname} ${row.lastname}`;
+    name.textContent = `${row.rank}. ${row.username}`;
     const points = document.createElement("strong");
     points.textContent = `${row.total_score} pts`;
     item.append(name, points);
