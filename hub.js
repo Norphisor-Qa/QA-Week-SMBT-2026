@@ -7,9 +7,11 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLI
 });
 
 const games = [
-  { id: "quality-crush", title: "Quality Crush", description: "Associez les symboles et relevez le défi.", icon: "◆", href: "./Game/Quality Crush/index.html", available: true },
-  { id: "quality-run", title: "Quality Run", description: "Courez et visez plus loin.", icon: "→", href: "./Game/Quality Jump/index.html", available: true },
-  { id: "escape-game", title: "Escape game interactif", description: "Trouvez les indices et résolvez les énigmes.", icon: "⌕", href: "./Game/Escape game interactif/index.html", available: true },
+  { id: "quality-crush", title: "Quality Crush", description: "Associez les implants et résolvez les énigmes qualité.", icon: "◆", href: "./Game/Quality Crush/index.html", available: true },
+  { id: "quality-jump", title: "Quality Jump", description: "Sautez de plateforme en plateforme, toujours plus haut.", icon: "↑", href: "./Game/Quality Jump/index.html", available: true },
+  { id: "quality-run", title: "Quality Run", description: "Courez, évitez les problèmes qualité et passez la bonne porte.", icon: "→", href: "./Game/Quality Run/index.html", available: true },
+  // Fichier index.html de l'escape game vide dans la livraison : passer available à true une fois le jeu ajouté.
+  { id: "escape-game", title: "Escape game interactif", description: "Trouvez les indices et résolvez les énigmes.", icon: "⌕", href: "./Game/Escape game interactif/index.html", available: false },
   { id: "scenarios", title: "10 scénarios qualité", description: "Choisissez les bonnes réponses et les actions adaptées.", icon: "?", href: "./Game/10 scénarios qualité/index.html", available: true }
 ];
 
@@ -177,3 +179,10 @@ async function initialize() {
 }
 $("logout-btn").addEventListener("click", logout);
 initialize();
+
+// Retour depuis un jeu avec le bouton « Précédent » : la page peut venir du cache (bfcache).
+// On recharge alors les scores et le classement pour afficher les résultats à jour.
+window.addEventListener("pageshow", (event) => {
+  if (!event.persisted || !currentUser) return;
+  Promise.allSettled([loadScores(), loadLeaderboard()]).then(() => renderGames());
+});
