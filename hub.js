@@ -8,7 +8,7 @@ const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_PUBLI
 
 const games = [
   { id: "quality-crush", title: "Quality Crush", description: "Associez les symboles et relevez le défi.", icon: "◆", href: "./Game/Quality Crush/index.html", available: true },
-  { id: "quality-run", title: "Quality Run", description: "Courez et visez plus loin.", icon: "→", href: "./Game/Quality Run/index.html", available: true },
+  { id: "quality-run", title: "Quality Run", description: "Courez et visez plus loin.", icon: "→", href: "./Game/Quality Jump/index.html", available: true },
   { id: "escape-game", title: "Escape game interactif", description: "Trouvez les indices et résolvez les énigmes.", icon: "⌕", href: "./Game/Escape game interactif/index.html", available: true },
   { id: "scenarios", title: "10 scénarios qualité", description: "Choisissez les bonnes réponses et les actions adaptées.", icon: "?", href: "./Game/10 scénarios qualité/index.html", available: true }
 ];
