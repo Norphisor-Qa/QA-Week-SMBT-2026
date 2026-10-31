@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#09090b">
-<title>SHOULDER QA — Medical Device Bug Hunter</title>
+<title>10 scénarios qualité | Quality Week 2026</title>
 <style>
 :root {
   color-scheme: dark;
@@ -176,14 +176,23 @@ legend { padding: 0 8px; font-weight: 800; }
 @media(prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition: none !important; }
 }
+.hub-link { color: var(--text); text-decoration: none; border: 1px solid #52525b; border-radius: 12px; padding: 12px 16px; min-height: 48px; display: inline-flex; align-items: center; }
+.hub-link:hover { background: #27272a; }
+.save-status { font-weight: 700; color: var(--yellow); }
+.save-status.error { color: #fda4af; }
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="../supabase-score.js" defer></script>
 </head>
 <body>
 <a class="skip" href="#content">Aller au jeu</a>
 <main>
   <header class="row between">
     <span class="brand">MEDTECH QA LAB</span>
-    <button id="helpButton" type="button" aria-expanded="false">COMMENT JOUER</button>
+    <div class="row">
+      <button id="helpButton" type="button" aria-expanded="false">COMMENT JOUER</button>
+      <a class="hub-link" href="../../hub.html">HUB</a>
+    </div>
   </header>
 
   <h1>SHOULDER QA<span style="color:var(--yellow)">.</span></h1>
@@ -387,8 +396,13 @@ legend { padding: 0 8px; font-weight: 800; }
     mode: "accompagne",
     finished: false,
     saved: { count: 0, best: 0 },
-    storageAvailable: true
+    storageAvailable: true,
+    remoteBest: null,
+    saveStatus: "",
+    saveError: false,
+    saving: false
   };
+  let scores = null;
 
   try {
     const raw = JSON.parse(localStorage.getItem(STORAGE_KEY) || "null");
@@ -471,6 +485,8 @@ legend { padding: 0 8px; font-weight: 800; }
     state.seconds = 0;
     state.error = "";
     state.finished = false;
+    state.saveStatus = "";
+    state.saveError = false;
     save();
     render();
     focusContent();
@@ -545,6 +561,40 @@ legend { padding: 0 8px; font-weight: 800; }
     save();
     changeStep(4);
     announce("Enquête terminée. Le débriefing est disponible.");
+    saveRemote(result.score);
+  }
+
+  function updateSaveStatus() {
+    const element = document.getElementById("saveStatus");
+    if (!element) return;
+    element.textContent = state.saveStatus;
+    element.classList.toggle("error", state.saveError);
+  }
+
+  async function saveRemote(value) {
+    if (!scores) {
+      state.saveStatus = "Score non enregistré : service de scores indisponible.";
+      state.saveError = true;
+      updateSaveStatus();
+      return;
+    }
+    state.saving = true;
+    state.saveStatus = "Enregistrement du score…";
+    state.saveError = false;
+    updateSaveStatus();
+    try {
+      const saved = await scores.saveBestScore(value);
+      state.remoteBest = saved;
+      state.saveStatus = `Meilleur score enregistré : ${saved} points`;
+      announce("Score enregistré.");
+    } catch (error) {
+      console.error(error);
+      state.saveStatus = "Enregistrement non confirmé : il sera renvoyé automatiquement à la prochaine ouverture du jeu.";
+      state.saveError = true;
+    } finally {
+      state.saving = false;
+      updateSaveStatus();
+    }
   }
 
   function homeHTML() {
@@ -563,7 +613,8 @@ legend { padding: 0 8px; font-weight: 800; }
         </select>
         <button class="primary full" data-action="play">▶ ESSAYER LE JEU</button>
         <p class="small muted">
-          ${state.saved.count} enquêtes terminées · meilleur score : ${state.saved.best}
+          ${state.saved.count} enquête(s) terminée(s) sur cet appareil · meilleur score enregistré :
+          ${state.remoteBest === null ? "…" : state.remoteBest}
         </p>
         ${!state.storageAvailable ? `
           <p class="small muted">
@@ -616,7 +667,9 @@ legend { padding: 0 8px; font-weight: 800; }
           <article class="panel">
             <p>${escapeHTML(fact)}</p>
             <div class="choices" role="group" aria-label="Qualifier la preuve ${index + 1}">
-              ${labels.map((label, labelIndexbutton
+              ${labels.map((label, labelIndex) => `
+                <button
+                  type="button"
                   class="${state.qualifications[index] === label ? "selected" : ""}"
                   data-action="qualify"
                   data-index="${index}"
@@ -683,6 +736,7 @@ legend { padding: 0 8px; font-weight: 800; }
           <h2 class="score">${result.score} points</h2>
           <p>${result.hits}/3 qualifications correctes · ${result.falseFlags} faux signalement(s)</p>
           <p class="small muted">Temps indicatif : ${timeLabel()}</p>
+          <p id="saveStatus" class="save-status ${state.saveError ? "error" : ""}" role="status">${escapeHTML(state.saveStatus)}</p>
         </div>
 
         ${scenario.facts.map((fact, index) => `
@@ -881,7 +935,7 @@ legend { padding: 0 8px; font-weight: 800; }
   });
 
   window.addEventListener("beforeunload", event => {
-    if (state.index !== null && !state.finished) {
+    if ((state.index !== null && !state.finished) || state.saving) {
       event.preventDefault();
       event.returnValue = "";
     }
@@ -916,6 +970,17 @@ legend { padding: 0 8px; font-weight: 800; }
       ) throw new Error("Configuration");
     });
     render();
+    window.addEventListener("DOMContentLoaded", async () => {
+      if (!window.QWScores) {
+        console.error("Module de scores absent.");
+        return;
+      }
+      const ready = await window.QWScores.boot("scenarios");
+      if (!ready) return;
+      scores = ready.scores;
+      state.remoteBest = ready.best;
+      if (state.index === null) render();
+    }, { once: true });
   } catch {
     content.innerHTML = `
       <section class="panel">
