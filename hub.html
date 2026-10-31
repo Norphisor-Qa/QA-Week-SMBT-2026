@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Quality Week 2026">
+  <title data-i18n="pageTitle">Quality Week 2026 | Les mini-jeux</title>
+  <link rel="stylesheet" href="./style.css">
+  <script src="./i18n.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+  <script src="./Game/music.js" data-track="hub" defer></script>
+  <script src="./hub.js" defer></script>
+</head>
+<body>
+  <a class="skip-link" href="#contenu" data-i18n="skip">Aller au contenu</a>
+  <header class="header">
+    <div class="container header-inner">
+      <a class="brand" href="#accueil"><img class="brand-logo" src="./logo-stryker.png" alt="Stryker"><span>Quality Week 2026</span></a>
+      <nav data-i18n-aria="navLabel" aria-label="Navigation principale">
+        <a href="#jeux" data-i18n="navGames">Les jeux</a>
+        <a href="#classement" data-i18n="navBoard">Classement</a>
+        <span id="lang-slot"></span>
+        <button id="logout-btn" class="button" type="button" data-i18n="logout">Déconnexion</button>
+      </nav>
+    </div>
+  </header>
+  <main id="contenu" class="qw-z">
+    <section id="accueil" class="hero container" aria-labelledby="hero-title">
+      <div class="hero-copy">
+        <p class="eyebrow" data-i18n="eyebrow">APPRENDRE. EXPLORER. JOUER.</p>
+        <h1 id="hero-title"><span data-i18n="hello">Bonjour</span> <span id="player-name">…</span></h1>
+        <p class="tagline"><span data-i18n="totalLabel">Votre score total :</span> <strong id="total-score">0</strong> <span data-i18n="points">points</span></p>
+        <p class="intro" data-i18n="intro">Choisissez un défi. Chaque jeu rapporte jusqu’à environ 5 000 points sur la semaine.</p>
+        <div class="comfort"><span data-i18n="comfort">Confort :</span><span id="qw-music-slot"></span></div>
+      </div>
+      <aside class="hero-note" data-i18n-aria="summary" aria-label="Résumé du joueur">
+        <span class="note-symbol" aria-hidden="true">★</span>
+        <p><strong id="player-username">…</strong><br><span id="games-played">0</span> <span data-i18n="gamesScored">jeu(x) avec un score</span></p>
+      </aside>
+    </section>
+    <section id="jeux" class="container section" aria-labelledby="games-title">
+      <div class="section-heading">
+        <div><p class="eyebrow" data-i18n="yourTurn">À VOUS DE JOUER</p><h2 id="games-title" data-i18n="chooseTitle">Choisissez votre défi</h2></div>
+        <p data-i18n="chooseSub">Aucune connaissance technique n’est nécessaire : chaque jeu explique ses règles et corrige vos réponses.</p>
+      </div>
+      <div id="games-grid" class="games-grid"></div>
+      <p id="hub-message" class="auth-message" role="status" aria-live="polite"></p>
+      <details class="points-info">
+        <summary data-i18n="scaleTitle">Comment sont calculés les points ?</summary>
+        <table>
+          <tbody>
+            <tr><th data-i18n="gDaily">Défi du jour</th><td data-i18n="sDaily">Jusqu’à 1 000 points par jour (énigme 200, pendu 300, mots croisés 500)</td></tr>
+            <tr><th>Quality Crush</th><td data-i18n="sCrush">40, 70 ou 100 points par niveau réussi (1, 2 ou 3 étoiles), 50 niveaux</td></tr>
+            <tr><th>Quality Run</th><td data-i18n="sRun">Score de votre meilleure course ÷ 3, plafonné à 5 000 points</td></tr>
+            <tr><th data-i18n="gScen">Scénarios qualité</th><td data-i18n="sScen">Jusqu’à 500 points par dossier, vos 10 meilleurs dossiers</td></tr>
+          </tbody>
+        </table>
+      </details>
+    </section>
+    <section id="classement" class="container section" aria-labelledby="leaderboard-title">
+      <p class="eyebrow" data-i18n="boardEyebrow">CLASSEMENT GÉNÉRAL</p>
+      <h2 id="leaderboard-title" data-i18n="boardTitle">Les meilleurs scores cumulés</h2>
+      <div class="leaderboard-wrap"><ol id="leaderboard-list" class="leaderboard-list"></ol></div>
+    </section>
+  </main>
+  <footer class="footer"><div class="container footer-inner"><p><img class="footer-logo" src="./logo-stryker.png" alt=""> <strong>Quality Week 2026</strong> · <span data-i18n="tagline">La qualité se joue ensemble.</span></p><a href="#accueil" data-i18n="top">Retour en haut ↑</a></div></footer>
+</body>
+</html>
