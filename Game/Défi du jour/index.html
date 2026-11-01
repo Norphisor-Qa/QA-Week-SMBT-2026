@@ -1,0 +1,527 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#ffffff">
+<title>Défi du jour | Quality Week 2026</title>
+<link rel="stylesheet" href="../qw-common.css">
+<style>
+:root{--gold:#ffb500;--ink:#0b0b0c;--soft:#f5f5f2;--green:#1d6b3b;--red:#a40000;--blue:#1c5687}
+*{box-sizing:border-box}
+body{margin:0;background:var(--soft);color:var(--ink);font:17px/1.55 Arial,Helvetica,sans-serif}
+main{max-width:920px;margin:auto;padding:16px 14px 40px}
+.eyebrow{font-size:12px;font-weight:900;letter-spacing:.16em;color:#333}
+h1{font-size:clamp(34px,7vw,56px);line-height:1;letter-spacing:-.04em;margin:14px 0 6px}
+h2{font-size:24px;margin:0 0 10px}h3{margin:0 0 8px}p{margin:0 0 12px}
+button,input{font:inherit}
+.btn{min-height:48px;padding:10px 18px;border:2px solid #000;border-radius:12px;background:#fff;color:#000;font-weight:800;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.btn.primary{background:var(--gold)}.btn:hover:not(:disabled){transform:translateY(-1px)}
+.btn:disabled{opacity:.45;cursor:default;transform:none}
+:focus-visible{outline:3px solid #000;outline-offset:3px}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}.between{justify-content:space-between}
+.card{background:#fff;border:2px solid #111;border-top:8px solid var(--gold);border-radius:18px;padding:18px;box-shadow:0 8px 0 #0001}
+.muted{color:#444}.small{font-size:14px}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0)}
+.levels{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:16px}
+.level{display:flex;flex-direction:column;gap:6px;min-height:220px}
+.level .num{width:46px;height:46px;border-radius:50%;background:var(--gold);border:2px solid #000;display:grid;place-items:center;font-weight:900;font-size:20px}
+.level.done{background:#eefaf2;border-color:var(--green);border-top-color:var(--green)}.level.done .num{background:var(--green);color:#fff}
+.level.locked{opacity:.6}
+.level .st{font-weight:900}.level .btn{margin-top:auto}
+.total{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.total div{background:#fff;border:2px solid #111;border-left:8px solid var(--gold);border-radius:12px;padding:8px 14px}
+.total b{display:block;font-size:24px}
+.warn{background:#fff6dd;border:2px dashed var(--gold);border-radius:12px;padding:10px 14px;font-size:15px}
+.status{min-height:24px;font-weight:800}.status.err{color:var(--red)}.status.ok{color:var(--green)}
+.riddle{font-size:clamp(19px,2.6vw,24px);font-weight:700;line-height:1.45;border-left:8px solid var(--gold);padding-left:16px;margin:16px 0}
+.pattern{display:flex;gap:5px;flex-wrap:wrap;margin:10px 0 16px}
+.pattern span{width:30px;height:36px;border-bottom:4px solid #111}
+.pattern span.gap{border:0;width:14px}
+.answer{width:100%;min-height:54px;padding:10px 14px;border:3px solid #111;border-radius:12px;font-size:22px;font-weight:800;text-transform:uppercase;letter-spacing:.08em}
+.lives{font-size:24px;letter-spacing:4px}
+.hang{display:grid;grid-template-columns:240px 1fr;gap:18px;align-items:center}
+.hang svg{width:100%;max-width:240px;height:auto;background:#fff;border:2px solid #111;border-radius:16px}
+.word{display:flex;gap:6px;flex-wrap:wrap;margin:10px 0 16px}
+.word span{width:clamp(22px,5vw,36px);height:clamp(30px,6vw,44px);border-bottom:4px solid #111;display:grid;place-items:center;font-size:clamp(18px,3.5vw,28px);font-weight:900}
+.word span.miss{color:var(--red)}
+.keys{display:grid;grid-template-columns:repeat(13,1fr);gap:5px}
+.key{min-height:46px;border:2px solid #111;border-radius:8px;background:#fff;font-weight:900;cursor:pointer;padding:0;font-size:17px}
+.key.hit{background:var(--green);color:#fff;border-color:var(--green)}
+.key.miss{background:#eee;color:#666;border-color:#bbb;text-decoration:line-through}
+.cw{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:start}
+.grid{display:grid;gap:2px;grid-auto-rows:var(--cs);align-content:start;justify-content:start;user-select:none}
+.cell{position:relative;width:var(--cs);height:var(--cs)}
+.cell.on{background:#fff;border:2px solid #111;border-radius:4px}
+.cell input{width:100%;height:100%;border:0;background:transparent;text-align:center;font-weight:900;font-size:calc(var(--cs)*.55);text-transform:uppercase;padding:0;caret-color:transparent;border-radius:2px}
+.cell.inword input{background:#fff3c4}.cell.cur input{background:var(--gold)}
+.cell .n{position:absolute;left:2px;top:0;font-size:calc(var(--cs)*.28);font-weight:900;pointer-events:none;line-height:1.1}
+.cell.good input{background:#d7f5e1;color:var(--green)}.cell.bad input{background:#fde2e1;color:var(--red)}.cell.rev input{color:var(--blue)}
+.clues{display:grid;gap:12px;font-size:15px}
+.clues ol{margin:0;padding-left:0;list-style:none}
+.clues li{padding:5px 8px;border-radius:8px;cursor:pointer}
+.clues li.cur{background:#fff3c4;font-weight:700}
+.clues li.ok{color:var(--green)}
+.result{text-align:center}
+.result .pts{font-size:56px;font-weight:950;line-height:1}
+.explain{background:#fff6dd;border-left:6px solid var(--gold);padding:12px 14px;border-radius:10px;text-align:left}
+.dateline::first-letter{text-transform:uppercase}
+.curClue{position:sticky;top:0;z-index:5;margin:8px 0;padding:10px 12px;background:#fff3c4;border:2px solid #111;border-radius:10px;font-size:15px}
+.grid{overflow:hidden}
+footer{margin-top:24px;font-size:13px;color:#444;text-align:center}
+@media(max-width:760px){main{padding:8px 8px 30px}.card{padding:12px}.cw .clues{font-size:14px}.levels{grid-template-columns:1fr}.level{min-height:0}.hang{grid-template-columns:1fr}.hang svg{max-width:180px;margin:auto}.keys{grid-template-columns:repeat(9,1fr)}.cw{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<script src="../../i18n.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>
+<script src="../../qw-session.js" defer></script>
+<script src="../supabase-score.js" defer></script>
+<script src="../music.js" data-track="daily" defer></script>
+</head>
+<body>
+<header class="qw-topbar">
+  <a class="qw-brand" href="../../hub.html"><img src="../../logo-stryker.png" alt="Stryker"><span><small>QUALITY WEEK 2026</small><b id="gameName">Défi du jour</b></span></a>
+  <div class="qw-actions" id="topBtns"><span id="qw-music-slot"></span><a class="qw-btn" href="../../hub.html" id="hubBtn"></a></div>
+</header>
+<main class="qw-z">
+  <span class="eyebrow" id="eyebrow"></span>
+  <div id="app" tabindex="-1"><p class="muted" style="margin-top:30px">…</p></div>
+  <footer id="foot"></footer>
+</main>
+<script>
+"use strict";
+(() => {
+/* Contenus du Défi du jour : 15 éléments par niveau, MÊME ORDRE en français et en anglais
+   (le serveur enregistre l'index 0 à 14, quelle que soit la langue). */
+const RIDDLES = {
+fr: [
+  { q: "Je suis le fil qui relie chaque pièce à son histoire : sans moi, impossible de savoir d’où elle vient ni où elle est partie.", a: ["TRAÇABILITÉ"], hint: "On me garantit grâce au numéro de lot.", e: "La traçabilité permet de retrouver l’historique, l’utilisation et la localisation d’un produit, notamment en cas de rappel." },
+  { q: "J’ai un ticket, une zone et une étiquette rouge, mais je ne voyage jamais tant qu’on n’a pas décidé de mon sort.", a: ["QUARANTAINE"], hint: "Mon nom évoque une durée de quarante jours.", e: "La quarantaine isole les produits en attente de décision : personne ne doit les utiliser ni retirer l’étiquette." },
+  { q: "On me pose cinq fois de suite pour remonter du symptôme jusqu’à la cause racine.", a: ["POURQUOI", "5 POURQUOI", "CINQ POURQUOI"], hint: "C’est une question, pas une réponse.", e: "La méthode des 5 Pourquoi aide à dépasser le symptôme pour trouver la cause racine d’un problème." },
+  { q: "Je ressemble à une arête de poisson et je range les causes possibles en familles : matière, méthode, machine, main-d’œuvre, milieu…", a: ["ISHIKAWA", "DIAGRAMME D'ISHIKAWA"], hint: "Je porte le nom d’un ingénieur japonais.", e: "Le diagramme d’Ishikawa (5M) classe les causes possibles d’un effet pour structurer l’analyse." },
+  { q: "Quatre lettres, quatre étapes, une roue qui ne s’arrête jamais : planifier, faire, vérifier, agir.", a: ["PDCA"], hint: "On m’appelle aussi la roue de Deming.", e: "Le PDCA (Plan-Do-Check-Act) est le cycle de base de l’amélioration continue." },
+  { q: "D’origine japonaise, je rends l’erreur impossible… ou au moins immédiatement visible. Il ne faut jamais me contourner.", a: ["POKA-YOKE", "POKAYOKE", "DÉTROMPEUR"], hint: "En français, on m’appelle détrompeur.", e: "Un poka-yoke (détrompeur) empêche une erreur connue : une pièce qui ne rentre que dans le bon sens, un capteur…" },
+  { q: "Je compare un instrument de mesure à une référence pour savoir s’il dit la vérité. Quand ma date est dépassée, l’instrument est mis de côté.", a: ["ÉTALONNAGE"], hint: "Ma date figure sur une petite étiquette collée sur l’instrument.", e: "L’étalonnage compare un instrument à une référence. Un instrument à l’étalonnage dépassé ne doit pas être utilisé." },
+  { q: "20 % des causes produisent 80 % des effets : je porte le nom d’un économiste italien.", a: ["PARETO"], hint: "Je suis aussi un diagramme en barres décroissantes.", e: "Le diagramme de Pareto aide à concentrer les efforts sur les quelques causes qui pèsent le plus." },
+  { q: "Je suis une autorisation écrite, approuvée et limitée, d’accepter un produit qui ne respecte pas exactement l’exigence.", a: ["DÉROGATION"], hint: "Je commence par D et je ne suis jamais décidée seule au poste.", e: "Une dérogation est approuvée par écrit par les personnes autorisées, pour une quantité ou une durée limitée." },
+  { q: "Je suis la voix du client quand il n’est pas satisfait. On m’analyse pour trouver la cause, parfois jusqu’au poste de travail.", a: ["RÉCLAMATION"], hint: "Mon synonyme courant est « plainte ».", e: "Une réclamation client est enregistrée et investiguée : la traçabilité de l’atelier est essentielle pour y répondre." },
+  { q: "Premier arrivé, premier utilisé : j’évite les produits périmés en quatre lettres anglaises.", a: ["FIFO"], hint: "First In, …", e: "FIFO (First In, First Out) : on utilise d’abord ce qui est arrivé en premier." },
+  { q: "En japonais, je désigne le terrain, là où la valeur est réellement créée. Les managers devraient m’arpenter souvent.", a: ["GEMBA"], hint: "Cinq lettres, commence par G.", e: "Aller au Gemba, c’est observer les faits sur le terrain plutôt que de décider depuis un bureau." },
+  { q: "Avant de lancer un nouveau lot, je retire toutes les pièces, étiquettes et documents du précédent.", a: ["VIDE DE LIGNE", "VIDE-DE-LIGNE"], hint: "Trois mots, on me fait sur la ligne.", e: "Le vide de ligne évite le mélange de lots, d’étiquettes ou de documents entre deux productions." },
+  { q: "Je suis la norme des systèmes de management de la qualité pour les dispositifs médicaux : ISO… ?", a: ["13485", "ISO 13485"], hint: "Cinq chiffres, commence par 13.", e: "L’ISO 13485 définit les exigences du système de management de la qualité des fabricants de dispositifs médicaux." },
+  { q: "On me fait au moment de l’opération, jamais à la fin de la semaine. Je suis la preuve que le travail a été fait.", a: ["ENREGISTREMENT"], hint: "On me remplit au stylo indélébile.", e: "Un enregistrement est rempli en direct, lisible et indélébile : il constitue la preuve de ce qui a été réalisé." }
+],
+en: [
+  { q: "I am the thread that links every part to its history: without me, nobody knows where it came from or where it went.", a: ["TRACEABILITY"], hint: "The lot number makes me possible.", e: "Traceability lets you find a product’s history, use and location, especially in the event of a recall." },
+  { q: "I have a ticket, an area and a red label, but I never travel until someone decides my fate.", a: ["QUARANTINE"], hint: "My name comes from a period of forty days.", e: "Quarantine isolates products awaiting a decision: nobody may use them or remove the label." },
+  { q: "You ask me five times in a row to get from the symptom to the root cause.", a: ["WHY", "5 WHYS", "FIVE WHYS", "WHYS"], hint: "I am a question, not an answer.", e: "The 5 Whys method helps you go beyond the symptom to find the root cause of a problem." },
+  { q: "I look like a fish skeleton and sort possible causes into families: material, method, machine, manpower, environment…", a: ["ISHIKAWA", "FISHBONE", "ISHIKAWA DIAGRAM"], hint: "I am named after a Japanese engineer.", e: "The Ishikawa (fishbone) diagram sorts the possible causes of an effect to structure the analysis." },
+  { q: "Four letters, four steps, a wheel that never stops: plan, do, check, act.", a: ["PDCA"], hint: "I am also called the Deming wheel.", e: "PDCA (Plan-Do-Check-Act) is the basic cycle of continuous improvement." },
+  { q: "From Japan, I make the error impossible… or at least immediately visible. Never bypass me.", a: ["POKA-YOKE", "POKAYOKE", "ERROR-PROOFING", "ERROR PROOFING"], hint: "In English, I am called error-proofing.", e: "A poka-yoke (error-proofing device) prevents a known error: a part that only fits one way, a sensor…" },
+  { q: "I compare a measuring instrument with a reference to find out whether it tells the truth. When my date is past, the instrument is set aside.", a: ["CALIBRATION"], hint: "My date is on a small label stuck on the instrument.", e: "Calibration compares an instrument with a reference. An instrument past its calibration date must not be used." },
+  { q: "20% of causes produce 80% of effects: I am named after an Italian economist.", a: ["PARETO"], hint: "I am also a chart with decreasing bars.", e: "The Pareto chart helps focus effort on the few causes that matter most." },
+  { q: "I am a written, approved and limited permission to accept a product that does not exactly meet the requirement.", a: ["CONCESSION", "WAIVER", "DEVIATION PERMIT"], hint: "I start with C and am never decided alone at the station.", e: "A concession is approved in writing by authorized people, for a limited quantity or period." },
+  { q: "I am the customer’s voice when they are not satisfied. I am analysed to find the cause, sometimes right back to the workstation.", a: ["COMPLAINT"], hint: "I start with C and nobody likes receiving me.", e: "A customer complaint is recorded and investigated: workshop traceability is essential to answer it." },
+  { q: "First arrived, first used: I prevent expired products in four letters.", a: ["FIFO"], hint: "First In, …", e: "FIFO (First In, First Out): use first what arrived first." },
+  { q: "In Japanese, I am the shop floor, where value is really created. Managers should walk me often.", a: ["GEMBA"], hint: "Five letters, starts with G.", e: "Going to the Gemba means observing facts on the shop floor rather than deciding from an office." },
+  { q: "Before starting a new lot, I remove all parts, labels and documents from the previous one.", a: ["LINE CLEARANCE", "LINE-CLEARANCE"], hint: "Two words, done on the line.", e: "Line clearance prevents lots, labels or documents from being mixed between two production runs." },
+  { q: "I am the quality management system standard for medical devices: ISO… ?", a: ["13485", "ISO 13485"], hint: "Five digits, starting with 13.", e: "ISO 13485 sets the quality management system requirements for medical device manufacturers." },
+  { q: "I am filled in when the operation is done, never at the end of the week. I am the proof that the work was done.", a: ["RECORD"], hint: "I am filled in with an indelible pen.", e: "A record is filled in in real time, legibly and indelibly: it is the evidence of what was done." }
+]
+};
+const HANGMAN = {
+fr: [
+  { w: "CONFORMITE", c: "Respect des exigences spécifiées" }, { w: "AMELIORATION", c: "Elle doit être continue" },
+  { w: "INSPECTION", c: "Examen d’un produit pour déterminer sa conformité" }, { w: "VERIFICATION", c: "Confirmation, preuves à l’appui, que les exigences sont satisfaites" },
+  { w: "HABILITATION", c: "Autorisation de réaliser une tâche après formation" }, { w: "ENREGISTREMENT", c: "Document qui fournit la preuve d’une activité réalisée" },
+  { w: "DISPOSITIF", c: "Un implant est un … médical" }, { w: "STERILISATION", c: "Procédé qui élimine les micro-organismes viables" },
+  { w: "INDICATEUR", c: "Donnée chiffrée qui permet de suivre une performance" }, { w: "FOURNISSEUR", c: "Il nous livre matières premières et composants" },
+  { w: "ECHANTILLON", c: "Partie d’un lot prélevée pour être contrôlée" }, { w: "TOLERANCE", c: "Écart admissible autour de la valeur nominale" },
+  { w: "SURVEILLANCE", c: "Suivi régulier d’un procédé ou d’un produit" }, { w: "ETALONNAGE", c: "On le vérifie sur l’étiquette d’un instrument de mesure" },
+  { w: "DOCUMENTATION", c: "Procédures, instructions et enregistrements forment la …" }
+],
+en: [
+  { w: "CONFORMITY", c: "Meeting the specified requirements" }, { w: "IMPROVEMENT", c: "It must be continuous" },
+  { w: "INSPECTION", c: "Examination of a product to determine its conformity" }, { w: "VERIFICATION", c: "Confirmation, with evidence, that requirements are met" },
+  { w: "QUALIFICATION", c: "Authorization to perform a task after training" }, { w: "RECORDKEEPING", c: "Keeping the documents that prove activities were performed" },
+  { w: "DEVICE", c: "An implant is a medical …" }, { w: "STERILIZATION", c: "Process that kills viable micro-organisms" },
+  { w: "INDICATOR", c: "Figure used to track performance" }, { w: "SUPPLIER", c: "Delivers raw materials and components to us" },
+  { w: "SAMPLING", c: "Taking part of a lot for inspection" }, { w: "TOLERANCE", c: "Permissible variation around the nominal value" },
+  { w: "MONITORING", c: "Regular follow-up of a process or product" }, { w: "CALIBRATION", c: "You check it on the label of a measuring instrument" },
+  { w: "DOCUMENTATION", c: "Procedures, instructions and records make up the …" }
+]
+};
+
+const GRIDS = { fr: [{"h": 12, "w": 13, "entries": [{"w": "VALIDATION", "r": 6, "c": 2, "d": "A", "clue": "Preuve qu'un procédé donne un résultat reproductible"}, {"w": "ETIQUETTE", "r": 0, "c": 8, "d": "D", "clue": "Elle identifie le produit, le lot et la quantité"}, {"w": "SIGNATURE", "r": 0, "c": 0, "d": "A", "clue": "Elle prouve qui a réalisé l'opération"}, {"w": "MARQUAGE", "r": 4, "c": 4, "d": "A", "clue": "Identification gravée sur la pièce"}, {"w": "OBJECTIF", "r": 8, "c": 5, "d": "A", "clue": "Résultat à atteindre"}, {"w": "REVISION", "r": 2, "c": 5, "d": "A", "clue": "Indice de mise à jour d'un document"}, {"w": "ALERTE", "r": 6, "c": 3, "d": "D", "clue": "Signal à remonter sans attendre"}, {"w": "MESURE", "r": 11, "c": 2, "d": "A", "clue": "Valeur obtenue avec un instrument"}, {"w": "GEMBA", "r": 0, "c": 2, "d": "D", "clue": "Le terrain, là où la valeur est créée (japonais)"}]}, {"h": 13, "w": 13, "entries": [{"w": "QUARANTAINE", "r": 6, "c": 0, "d": "A", "clue": "Zone et statut des produits en attente de décision"}, {"w": "INSTRUCTION", "r": 2, "c": 3, "d": "D", "clue": "Document décrivant une tâche au poste"}, {"w": "PROCESSUS", "r": 11, "c": 1, "d": "A", "clue": "Activités qui transforment des entrées en sorties"}, {"w": "PROCEDURE", "r": 0, "c": 1, "d": "D", "clue": "Manière spécifiée d'accomplir une activité"}, {"w": "CONFORME", "r": 3, "c": 1, "d": "A", "clue": "Qui respecte les exigences"}, {"w": "ANALYSE", "r": 5, "c": 5, "d": "D", "clue": "Étude des données avant de conclure"}, {"w": "PREUVE", "r": 0, "c": 1, "d": "A", "clue": "Elle étaye une conclusion"}, {"w": "RISQUE", "r": 1, "c": 10, "d": "D", "clue": "Combinaison de la probabilité et de la gravité d'un dommage"}, {"w": "NORME", "r": 1, "c": 8, "d": "A", "clue": "Document de référence, comme l'ISO 13485"}]}, {"h": 13, "w": 12, "entries": [{"w": "AMELIORATION", "r": 6, "c": 0, "d": "A", "clue": "Elle doit être continue"}, {"w": "INSPECTION", "r": 0, "c": 8, "d": "D", "clue": "Examen visuel ou dimensionnel d'un produit"}, {"w": "IMPLANT", "r": 1, "c": 3, "d": "A", "clue": "Dispositif placé dans le corps, comme une tige humérale"}, {"w": "DOSSIER", "r": 4, "c": 3, "d": "A", "clue": "Ensemble de documents d'un lot"}, {"w": "ARCHIVE", "r": 6, "c": 0, "d": "D", "clue": "Lieu où l'on conserve les enregistrements"}, {"w": "CRITERE", "r": 8, "c": 0, "d": "A", "clue": "Référence pour juger un résultat"}, {"w": "KAIZEN", "r": 1, "c": 11, "d": "D", "clue": "Amélioration continue à petits pas (japonais)"}, {"w": "REVUE", "r": 8, "c": 5, "d": "D", "clue": "Examen périodique, par exemple de direction"}, {"w": "CAUSE", "r": 11, "c": 3, "d": "A", "clue": "On la cherche à la racine"}]}, {"h": 12, "w": 12, "entries": [{"w": "TRACABILITE", "r": 7, "c": 1, "d": "A", "clue": "Capacité à retrouver l'historique et la destination d'un produit"}, {"w": "DEROGATION", "r": 1, "c": 10, "d": "D", "clue": "Autorisation écrite d'accepter un écart limité"}, {"w": "STERILE", "r": 2, "c": 8, "d": "D", "clue": "Exempt de micro-organismes viables"}, {"w": "QUALITE", "r": 2, "c": 1, "d": "D", "clue": "Aptitude à satisfaire des exigences"}, {"w": "PATIENT", "r": 4, "c": 0, "d": "A", "clue": "Celui que la qualité protège en bout de chaîne"}, {"w": "PARETO", "r": 0, "c": 6, "d": "D", "clue": "Diagramme des 20/80"}, {"w": "CLIENT", "r": 10, "c": 6, "d": "A", "clue": "Bénéficiaire du produit ou du service"}, {"w": "AMDEC", "r": 1, "c": 4, "d": "D", "clue": "Analyse des modes de défaillance (sigle)"}, {"w": "AUDIT", "r": 7, "c": 3, "d": "D", "clue": "Examen méthodique des pratiques par rapport à des critères"}]}, {"h": 13, "w": 12, "entries": [{"w": "VERIFICATION", "r": 7, "c": 0, "d": "A", "clue": "Confirmation que les exigences spécifiées sont satisfaites"}, {"w": "FOURNISSEUR", "r": 2, "c": 9, "d": "D", "clue": "Il livre matières et composants"}, {"w": "ETALONNAGE", "r": 2, "c": 11, "d": "D", "clue": "Comparaison d'un instrument à une référence"}, {"w": "INDICATEUR", "r": 0, "c": 1, "d": "D", "clue": "Donnée chiffrée de suivi de la performance"}, {"w": "FORMATION", "r": 1, "c": 5, "d": "D", "clue": "Obligatoire avant de travailler seul sur un poste"}, {"w": "USINAGE", "r": 5, "c": 3, "d": "D", "clue": "Opération d'enlèvement de matière"}, {"w": "REBUT", "r": 11, "c": 2, "d": "A", "clue": "Disposition définitive d'une pièce inutilisable"}, {"w": "ECART", "r": 5, "c": 7, "d": "D", "clue": "Différence entre l'attendu et l'observé"}, {"w": "FIFO", "r": 0, "c": 0, "d": "A", "clue": "Premier entré, premier sorti"}]}, {"h": 13, "w": 13, "entries": [{"w": "VERIFICATION", "r": 6, "c": 0, "d": "A", "clue": "Confirmation que les exigences spécifiées sont satisfaites"}, {"w": "AMELIORATION", "r": 1, "c": 10, "d": "D", "clue": "Elle doit être continue"}, {"w": "RECLAMATION", "r": 0, "c": 7, "d": "D", "clue": "Insatisfaction exprimée par un client"}, {"w": "QUARANTAINE", "r": 10, "c": 2, "d": "A", "clue": "Zone et statut des produits en attente de décision"}, {"w": "ECHANTILLON", "r": 12, "c": 0, "d": "A", "clue": "Partie d'un lot prélevée pour contrôle"}, {"w": "TOLERANCE", "r": 2, "c": 0, "d": "A", "clue": "Écart admissible autour d'une valeur nominale"}, {"w": "OBJECTIF", "r": 8, "c": 1, "d": "A", "clue": "Résultat à atteindre"}, {"w": "ISHIKAWA", "r": 4, "c": 0, "d": "A", "clue": "Diagramme en arête de poisson"}, {"w": "DOSSIER", "r": 0, "c": 1, "d": "A", "clue": "Ensemble de documents d'un lot"}]}, {"h": 13, "w": 11, "entries": [{"w": "FOURNISSEUR", "r": 6, "c": 0, "d": "A", "clue": "Il livre matières et composants"}, {"w": "DEROGATION", "r": 3, "c": 1, "d": "D", "clue": "Autorisation écrite d'accepter un écart limité"}, {"w": "CONFORME", "r": 4, "c": 4, "d": "D", "clue": "Qui respecte les exigences"}, {"w": "STERILE", "r": 3, "c": 10, "d": "D", "clue": "Exempt de micro-organismes viables"}, {"w": "IMPLANT", "r": 10, "c": 3, "d": "A", "clue": "Dispositif placé dans le corps, comme une tige humérale"}, {"w": "QUALITE", "r": 0, "c": 8, "d": "D", "clue": "Aptitude à satisfaire des exigences"}, {"w": "DEFAUT", "r": 1, "c": 4, "d": "A", "clue": "Non-respect d'une exigence sur le produit"}, {"w": "SALLE", "r": 8, "c": 6, "d": "D", "clue": "Elle est « propre » en production stérile"}, {"w": "GEMBA", "r": 12, "c": 5, "d": "A", "clue": "Le terrain, là où la valeur est créée (japonais)"}]}, {"h": 13, "w": 13, "entries": [{"w": "TRACABILITE", "r": 5, "c": 2, "d": "A", "clue": "Capacité à retrouver l'historique et la destination d'un produit"}, {"w": "PROCEDURE", "r": 1, "c": 12, "d": "D", "clue": "Manière spécifiée d'accomplir une activité"}, {"w": "EMBALLAGE", "r": 1, "c": 9, "d": "D", "clue": "Il protège le produit et sa stérilité"}, {"w": "CONTROLE", "r": 5, "c": 5, "d": "D", "clue": "Vérification d'une caractéristique par rapport à un critère"}, {"w": "KAIZEN", "r": 7, "c": 0, "d": "A", "clue": "Amélioration continue à petits pas (japonais)"}, {"w": "RISQUE", "r": 1, "c": 4, "d": "A", "clue": "Combinaison de la probabilité et de la gravité d'un dommage"}, {"w": "PARETO", "r": 10, "c": 0, "d": "A", "clue": "Diagramme des 20/80"}, {"w": "FIFO", "r": 0, "c": 5, "d": "D", "clue": "Premier entré, premier sorti"}, {"w": "CAPA", "r": 9, "c": 1, "d": "D", "clue": "Action corrective et préventive (sigle)"}]}, {"h": 13, "w": 12, "entries": [{"w": "INDICATEUR", "r": 6, "c": 2, "d": "A", "clue": "Donnée chiffrée de suivi de la performance"}, {"w": "VALIDATION", "r": 0, "c": 8, "d": "D", "clue": "Preuve qu'un procédé donne un résultat reproductible"}, {"w": "ETIQUETTE", "r": 4, "c": 5, "d": "D", "clue": "Elle identifie le produit, le lot et la quantité"}, {"w": "PROCESSUS", "r": 12, "c": 1, "d": "A", "clue": "Activités qui transforment des entrées en sorties"}, {"w": "ISHIKAWA", "r": 3, "c": 2, "d": "D", "clue": "Diagramme en arête de poisson"}, {"w": "ECART", "r": 1, "c": 6, "d": "A", "clue": "Différence entre l'attendu et l'observé"}, {"w": "AUDIT", "r": 5, "c": 10, "d": "D", "clue": "Examen méthodique des pratiques par rapport à des critères"}, {"w": "PLAN", "r": 8, "c": 0, "d": "A", "clue": "Le P de PDCA"}, {"w": "VISA", "r": 3, "c": 1, "d": "A", "clue": "Paraphe qui valide une étape"}]}, {"h": 10, "w": 13, "entries": [{"w": "ECHANTILLON", "r": 4, "c": 0, "d": "A", "clue": "Partie d'un lot prélevée pour contrôle"}, {"w": "ETALONNAGE", "r": 0, "c": 9, "d": "D", "clue": "Comparaison d'un instrument à une référence"}, {"w": "INSPECTION", "r": 6, "c": 0, "d": "A", "clue": "Examen visuel ou dimensionnel d'un produit"}, {"w": "SIGNATURE", "r": 1, "c": 4, "d": "A", "clue": "Elle prouve qui a réalisé l'opération"}, {"w": "EMBALLAGE", "r": 1, "c": 12, "d": "D", "clue": "Il protège le produit et sa stérilité"}, {"w": "ANALYSE", "r": 9, "c": 3, "d": "A", "clue": "Étude des données avant de conclure"}, {"w": "CAUSE", "r": 0, "c": 0, "d": "D", "clue": "On la cherche à la racine"}, {"w": "PDCA", "r": 6, "c": 3, "d": "D", "clue": "Roue de Deming en quatre lettres"}, {"w": "CAPA", "r": 6, "c": 5, "d": "D", "clue": "Action corrective et préventive (sigle)"}]}, {"h": 13, "w": 13, "entries": [{"w": "INSTRUCTION", "r": 5, "c": 2, "d": "A", "clue": "Document décrivant une tâche au poste"}, {"w": "MARQUAGE", "r": 3, "c": 6, "d": "D", "clue": "Identification gravée sur la pièce"}, {"w": "CONTROLE", "r": 3, "c": 12, "d": "D", "clue": "Vérification d'une caractéristique par rapport à un critère"}, {"w": "ARCHIVE", "r": 10, "c": 0, "d": "A", "clue": "Lieu où l'on conserve les enregistrements"}, {"w": "USINAGE", "r": 8, "c": 2, "d": "A", "clue": "Opération d'enlèvement de matière"}, {"w": "DEFAUT", "r": 0, "c": 9, "d": "D", "clue": "Non-respect d'une exigence sur le produit"}, {"w": "ALERTE", "r": 1, "c": 4, "d": "A", "clue": "Signal à remonter sans attendre"}, {"w": "MESURE", "r": 7, "c": 8, "d": "D", "clue": "Valeur obtenue avec un instrument"}, {"w": "CLIENT", "r": 12, "c": 5, "d": "A", "clue": "Bénéficiaire du produit ou du service"}]}, {"h": 13, "w": 13, "entries": [{"w": "RECLAMATION", "r": 5, "c": 2, "d": "A", "clue": "Insatisfaction exprimée par un client"}, {"w": "VALIDATION", "r": 0, "c": 6, "d": "D", "clue": "Preuve qu'un procédé donne un résultat reproductible"}, {"w": "ETALONNAGE", "r": 9, "c": 0, "d": "A", "clue": "Comparaison d'un instrument à une référence"}, {"w": "TOLERANCE", "r": 1, "c": 1, "d": "A", "clue": "Écart admissible autour d'une valeur nominale"}, {"w": "CRITERE", "r": 3, "c": 4, "d": "A", "clue": "Référence pour juger un résultat"}, {"w": "PREUVE", "r": 4, "c": 0, "d": "D", "clue": "Elle étaye une conclusion"}, {"w": "REBUT", "r": 8, "c": 9, "d": "D", "clue": "Disposition définitive d'une pièce inutilisable"}, {"w": "NORME", "r": 4, "c": 11, "d": "D", "clue": "Document de référence, comme l'ISO 13485"}, {"w": "VISA", "r": 7, "c": 5, "d": "A", "clue": "Paraphe qui valide une étape"}]}, {"h": 13, "w": 13, "entries": [{"w": "FOURNISSEUR", "r": 6, "c": 0, "d": "A", "clue": "Il livre matières et composants"}, {"w": "FORMATION", "r": 4, "c": 3, "d": "D", "clue": "Obligatoire avant de travailler seul sur un poste"}, {"w": "PROCEDURE", "r": 4, "c": 1, "d": "D", "clue": "Manière spécifiée d'accomplir une activité"}, {"w": "PROCESSUS", "r": 0, "c": 6, "d": "D", "clue": "Activités qui transforment des entrées en sorties"}, {"w": "OBJECTIF", "r": 3, "c": 8, "d": "D", "clue": "Résultat à atteindre"}, {"w": "REVISION", "r": 2, "c": 0, "d": "A", "clue": "Indice de mise à jour d'un document"}, {"w": "PATIENT", "r": 0, "c": 6, "d": "A", "clue": "Celui que la qualité protège en bout de chaîne"}, {"w": "PREUVE", "r": 5, "c": 10, "d": "D", "clue": "Elle étaye une conclusion"}, {"w": "NORME", "r": 0, "c": 11, "d": "D", "clue": "Document de référence, comme l'ISO 13485"}]}, {"h": 12, "w": 10, "entries": [{"w": "INDICATEUR", "r": 7, "c": 0, "d": "A", "clue": "Donnée chiffrée de suivi de la performance"}, {"w": "ETIQUETTE", "r": 1, "c": 6, "d": "D", "clue": "Elle identifie le produit, le lot et la quantité"}, {"w": "TOLERANCE", "r": 3, "c": 9, "d": "D", "clue": "Écart admissible autour d'une valeur nominale"}, {"w": "MARQUAGE", "r": 11, "c": 2, "d": "A", "clue": "Identification gravée sur la pièce"}, {"w": "ANALYSE", "r": 1, "c": 0, "d": "A", "clue": "Étude des données avant de conclure"}, {"w": "STERILE", "r": 9, "c": 0, "d": "A", "clue": "Exempt de micro-organismes viables"}, {"w": "DEFAUT", "r": 5, "c": 2, "d": "A", "clue": "Non-respect d'une exigence sur le produit"}, {"w": "ALERTE", "r": 0, "c": 3, "d": "D", "clue": "Signal à remonter sans attendre"}, {"w": "AMDEC", "r": 1, "c": 0, "d": "D", "clue": "Analyse des modes de défaillance (sigle)"}]}, {"h": 13, "w": 12, "entries": [{"w": "AMELIORATION", "r": 6, "c": 0, "d": "A", "clue": "Elle doit être continue"}, {"w": "EMBALLAGE", "r": 0, "c": 0, "d": "D", "clue": "Il protège le produit et sa stérilité"}, {"w": "SIGNATURE", "r": 2, "c": 7, "d": "D", "clue": "Elle prouve qui a réalisé l'opération"}, {"w": "ISHIKAWA", "r": 3, "c": 4, "d": "A", "clue": "Diagramme en arête de poisson"}, {"w": "PATIENT", "r": 2, "c": 2, "d": "D", "clue": "Celui que la qualité protège en bout de chaîne"}, {"w": "USINAGE", "r": 10, "c": 1, "d": "A", "clue": "Opération d'enlèvement de matière"}, {"w": "REBUT", "r": 9, "c": 7, "d": "A", "clue": "Disposition définitive d'une pièce inutilisable"}, {"w": "ECART", "r": 8, "c": 5, "d": "D", "clue": "Différence entre l'attendu et l'observé"}, {"w": "AUDIT", "r": 3, "c": 9, "d": "D", "clue": "Examen méthodique des pratiques par rapport à des critères"}]}], en: [{"h": 13, "w": 12, "entries": [{"w": "INSPECTION", "r": 6, "c": 2, "d": "A", "clue": "Visual or dimensional examination of a product"}, {"w": "CONCESSION", "r": 3, "c": 7, "d": "D", "clue": "Written permission to accept a limited deviation"}, {"w": "TOLERANCE", "r": 0, "c": 3, "d": "D", "clue": "Permissible variation around a nominal value"}, {"w": "DEVIATION", "r": 3, "c": 9, "d": "D", "clue": "Difference between what is expected and what is observed"}, {"w": "CLEANROOM", "r": 2, "c": 11, "d": "D", "clue": "Controlled area for sterile production"}, {"w": "MACHINING", "r": 12, "c": 0, "d": "A", "clue": "Material removal operation"}, {"w": "COMPLAINT", "r": 1, "c": 2, "d": "A", "clue": "Dissatisfaction expressed by a customer"}, {"w": "IMPLANT", "r": 4, "c": 5, "d": "D", "clue": "Device placed in the body, such as a humeral stem"}, {"w": "GEMBA", "r": 8, "c": 1, "d": "D", "clue": "The shop floor, where value is created (Japanese)"}]}, {"h": 13, "w": 12, "entries": [{"w": "TRACEABILITY", "r": 7, "c": 0, "d": "A", "clue": "Ability to trace a product's history and destination"}, {"w": "VALIDATION", "r": 0, "c": 9, "d": "D", "clue": "Proof that a process gives a reproducible result"}, {"w": "OBJECTIVE", "r": 4, "c": 4, "d": "D", "clue": "Result to be achieved"}, {"w": "SIGNATURE", "r": 3, "c": 2, "d": "D", "clue": "It proves who performed the operation"}, {"w": "COMPLIANT", "r": 1, "c": 3, "d": "A", "clue": "Meeting the requirements"}, {"w": "TRAINING", "r": 10, "c": 1, "d": "A", "clue": "Required before working alone at a station"}, {"w": "MARKING", "r": 3, "c": 5, "d": "A", "clue": "Identification engraved on the part"}, {"w": "RECALL", "r": 12, "c": 3, "d": "A", "clue": "Withdrawal of products from the market"}, {"w": "DEFECT", "r": 2, "c": 0, "d": "D", "clue": "Failure to meet a requirement on the product"}]}, {"h": 13, "w": 12, "entries": [{"w": "CALIBRATION", "r": 6, "c": 0, "d": "A", "clue": "Comparing an instrument with a reference"}, {"w": "INSTRUCTION", "r": 0, "c": 0, "d": "D", "clue": "Document describing a task at the station"}, {"w": "PACKAGING", "r": 0, "c": 3, "d": "D", "clue": "It protects the product and its sterility"}, {"w": "CUSTOMER", "r": 2, "c": 3, "d": "A", "clue": "Recipient of the product or service"}, {"w": "ANALYSIS", "r": 5, "c": 10, "d": "D", "clue": "Study of data before concluding"}, {"w": "STERILE", "r": 8, "c": 5, "d": "A", "clue": "Free from viable micro-organisms"}, {"w": "PATIENT", "r": 4, "c": 7, "d": "D", "clue": "The person quality protects at the end of the chain"}, {"w": "PARETO", "r": 0, "c": 3, "d": "A", "clue": "The 80/20 chart"}, {"w": "ALERT", "r": 10, "c": 3, "d": "A", "clue": "Signal to escalate without waiting"}]}, {"h": 11, "w": 11, "entries": [{"w": "MEASUREMENT", "r": 4, "c": 0, "d": "A", "clue": "Value obtained with an instrument"}, {"w": "PROCEDURE", "r": 0, "c": 1, "d": "D", "clue": "Specified way to carry out an activity"}, {"w": "CRITERION", "r": 0, "c": 6, "d": "D", "clue": "Reference used to judge a result"}, {"w": "EVIDENCE", "r": 8, "c": 1, "d": "A", "clue": "It supports a conclusion"}, {"w": "STANDARD", "r": 3, "c": 10, "d": "D", "clue": "Reference document, such as ISO 13485"}, {"w": "REVISION", "r": 6, "c": 3, "d": "A", "clue": "Update index of a document"}, {"w": "REVIEW", "r": 2, "c": 3, "d": "A", "clue": "Periodic examination, for example by management"}, {"w": "RECORD", "r": 10, "c": 5, "d": "A", "clue": "Document that provides evidence of an activity"}, {"w": "BATCH", "r": 0, "c": 3, "d": "A", "clue": "Another word for a production lot"}]}, {"h": 13, "w": 13, "entries": [{"w": "IMPROVEMENT", "r": 7, "c": 2, "d": "A", "clue": "It must be continuous"}, {"w": "INDICATOR", "r": 4, "c": 2, "d": "D", "clue": "Figure used to monitor performance"}, {"w": "INITIALS", "r": 4, "c": 0, "d": "A", "clue": "Short signature that validates a step"}, {"w": "ISHIKAWA", "r": 1, "c": 0, "d": "D", "clue": "Fishbone diagram"}, {"w": "PROCESS", "r": 6, "c": 5, "d": "D", "clue": "Activities that turn inputs into outputs"}, {"w": "KAIZEN", "r": 3, "c": 10, "d": "D", "clue": "Continuous improvement in small steps (Japanese)"}, {"w": "SAMPLE", "r": 12, "c": 5, "d": "A", "clue": "Part of a lot taken for testing"}, {"w": "CAUSE", "r": 9, "c": 5, "d": "A", "clue": "We look for it at the root"}, {"w": "AUDIT", "r": 0, "c": 3, "d": "D", "clue": "Methodical examination of practices against criteria"}]}, {"h": 12, "w": 12, "entries": [{"w": "QUARANTINE", "r": 7, "c": 2, "d": "A", "clue": "Area and status for products awaiting a decision"}, {"w": "PACKAGING", "r": 3, "c": 4, "d": "D", "clue": "It protects the product and its sterility"}, {"w": "MARKING", "r": 2, "c": 10, "d": "D", "clue": "Identification engraved on the part"}, {"w": "IMPLANT", "r": 1, "c": 8, "d": "D", "clue": "Device placed in the body, such as a humeral stem"}, {"w": "HAZARD", "r": 6, "c": 6, "d": "D", "clue": "Potential source of harm"}, {"w": "DEFECT", "r": 5, "c": 0, "d": "A", "clue": "Failure to meet a requirement on the product"}, {"w": "SCRAP", "r": 3, "c": 0, "d": "A", "clue": "Final disposition of an unusable part"}, {"w": "CAPA", "r": 0, "c": 3, "d": "D", "clue": "Corrective and preventive action (acronym)"}, {"w": "FMEA", "r": 1, "c": 0, "d": "A", "clue": "Failure mode and effects analysis (acronym)"}]}, {"h": 13, "w": 13, "entries": [{"w": "VERIFICATION", "r": 7, "c": 0, "d": "A", "clue": "Confirmation that specified requirements are met"}, {"w": "MEASUREMENT", "r": 1, "c": 1, "d": "D", "clue": "Value obtained with an instrument"}, {"w": "QUARANTINE", "r": 0, "c": 9, "d": "D", "clue": "Area and status for products awaiting a decision"}, {"w": "INDICATOR", "r": 4, "c": 3, "d": "D", "clue": "Figure used to monitor performance"}, {"w": "ARCHIVE", "r": 9, "c": 3, "d": "A", "clue": "Where records are kept"}, {"w": "QUALITY", "r": 5, "c": 7, "d": "D", "clue": "Ability to meet requirements"}, {"w": "GEMBA", "r": 2, "c": 5, "d": "A", "clue": "The shop floor, where value is created (Japanese)"}, {"w": "GAUGE", "r": 4, "c": 8, "d": "A", "clue": "Measuring device used for inspection"}, {"w": "LABEL", "r": 1, "c": 12, "d": "D", "clue": "It identifies the product, lot and quantity"}]}, {"h": 12, "w": 10, "entries": [{"w": "REVISION", "r": 6, "c": 1, "d": "A", "clue": "Update index of a document"}, {"w": "SUPPLIER", "r": 0, "c": 2, "d": "D", "clue": "Delivers materials and components"}, {"w": "CUSTOMER", "r": 1, "c": 1, "d": "A", "clue": "Recipient of the product or service"}, {"w": "PATIENT", "r": 3, "c": 6, "d": "D", "clue": "The person quality protects at the end of the chain"}, {"w": "GAUGE", "r": 4, "c": 5, "d": "A", "clue": "Measuring device used for inspection"}, {"w": "ALERT", "r": 9, "c": 2, "d": "A", "clue": "Signal to escalate without waiting"}, {"w": "CAPA", "r": 3, "c": 0, "d": "A", "clue": "Corrective and preventive action (acronym)"}, {"w": "PLAN", "r": 8, "c": 3, "d": "D", "clue": "The P in PDCA"}, {"w": "LOT", "r": 0, "c": 5, "d": "D", "clue": "Set of parts made under the same conditions"}]}, {"h": 12, "w": 12, "entries": [{"w": "VERIFICATION", "r": 6, "c": 0, "d": "A", "clue": "Confirmation that specified requirements are met"}, {"w": "IMPROVEMENT", "r": 0, "c": 1, "d": "D", "clue": "It must be continuous"}, {"w": "INSTRUCTION", "r": 9, "c": 0, "d": "A", "clue": "Document describing a task at the station"}, {"w": "INSPECTION", "r": 0, "c": 1, "d": "A", "clue": "Visual or dimensional examination of a product"}, {"w": "STERILE", "r": 5, "c": 8, "d": "D", "clue": "Free from viable micro-organisms"}, {"w": "PROCESS", "r": 3, "c": 0, "d": "A", "clue": "Activities that turn inputs into outputs"}, {"w": "ARCHIVE", "r": 11, "c": 2, "d": "A", "clue": "Where records are kept"}, {"w": "CAUSE", "r": 0, "c": 6, "d": "D", "clue": "We look for it at the root"}, {"w": "PLAN", "r": 3, "c": 11, "d": "D", "clue": "The P in PDCA"}]}, {"h": 13, "w": 12, "entries": [{"w": "VALIDATION", "r": 7, "c": 0, "d": "A", "clue": "Proof that a process gives a reproducible result"}, {"w": "CONCESSION", "r": 0, "c": 7, "d": "D", "clue": "Written permission to accept a limited deviation"}, {"w": "CRITERION", "r": 1, "c": 0, "d": "A", "clue": "Reference used to judge a result"}, {"w": "PROCEDURE", "r": 4, "c": 3, "d": "A", "clue": "Specified way to carry out an activity"}, {"w": "COMPLIANT", "r": 9, "c": 0, "d": "A", "clue": "Meeting the requirements"}, {"w": "DEVIATION", "r": 3, "c": 11, "d": "D", "clue": "Difference between what is expected and what is observed"}, {"w": "KAIZEN", "r": 11, "c": 6, "d": "A", "clue": "Continuous improvement in small steps (Japanese)"}, {"w": "SCRAP", "r": 0, "c": 0, "d": "D", "clue": "Final disposition of an unusable part"}, {"w": "PDCA", "r": 9, "c": 3, "d": "D", "clue": "Deming wheel in four letters"}]}, {"h": 12, "w": 10, "entries": [{"w": "COMPLAINT", "r": 6, "c": 1, "d": "A", "clue": "Dissatisfaction expressed by a customer"}, {"w": "OBJECTIVE", "r": 0, "c": 7, "d": "D", "clue": "Result to be achieved"}, {"w": "CLEANROOM", "r": 0, "c": 1, "d": "A", "clue": "Controlled area for sterile production"}, {"w": "SUPPLIER", "r": 4, "c": 4, "d": "D", "clue": "Delivers materials and components"}, {"w": "INITIALS", "r": 3, "c": 9, "d": "D", "clue": "Short signature that validates a step"}, {"w": "SAMPLE", "r": 8, "c": 0, "d": "A", "clue": "Part of a lot taken for testing"}, {"w": "RECORD", "r": 11, "c": 0, "d": "A", "clue": "Document that provides evidence of an activity"}, {"w": "RISK", "r": 4, "c": 2, "d": "A", "clue": "Combination of the probability and severity of harm"}, {"w": "ISO", "r": 7, "c": 0, "d": "D", "clue": "International standards organization (acronym)"}]}, {"h": 13, "w": 12, "entries": [{"w": "TRACEABILITY", "r": 5, "c": 0, "d": "A", "clue": "Ability to trace a product's history and destination"}, {"w": "TOLERANCE", "r": 2, "c": 4, "d": "D", "clue": "Permissible variation around a nominal value"}, {"w": "ANALYSIS", "r": 7, "c": 4, "d": "A", "clue": "Study of data before concluding"}, {"w": "TRAINING", "r": 5, "c": 0, "d": "D", "clue": "Required before working alone at a station"}, {"w": "QUALITY", "r": 3, "c": 2, "d": "D", "clue": "Ability to meet requirements"}, {"w": "RECALL", "r": 0, "c": 8, "d": "D", "clue": "Withdrawal of products from the market"}, {"w": "REVIEW", "r": 10, "c": 3, "d": "A", "clue": "Periodic examination, for example by management"}, {"w": "HAZARD", "r": 0, "c": 4, "d": "A", "clue": "Potential source of harm"}, {"w": "AUDIT", "r": 7, "c": 6, "d": "D", "clue": "Methodical examination of practices against criteria"}]}, {"h": 12, "w": 13, "entries": [{"w": "CALIBRATION", "r": 7, "c": 1, "d": "A", "clue": "Comparing an instrument with a reference"}, {"w": "COMPLIANT", "r": 2, "c": 9, "d": "D", "clue": "Meeting the requirements"}, {"w": "MACHINING", "r": 9, "c": 4, "d": "A", "clue": "Material removal operation"}, {"w": "SIGNATURE", "r": 3, "c": 2, "d": "D", "clue": "It proves who performed the operation"}, {"w": "EVIDENCE", "r": 4, "c": 0, "d": "A", "clue": "It supports a conclusion"}, {"w": "REVIEW", "r": 0, "c": 4, "d": "D", "clue": "Periodic examination, for example by management"}, {"w": "BATCH", "r": 2, "c": 6, "d": "A", "clue": "Another word for a production lot"}, {"w": "LABEL", "r": 1, "c": 7, "d": "D", "clue": "It identifies the product, lot and quantity"}, {"w": "FMEA", "r": 11, "c": 0, "d": "A", "clue": "Failure mode and effects analysis (acronym)"}]}, {"h": 11, "w": 12, "entries": [{"w": "SIGNATURE", "r": 5, "c": 3, "d": "A", "clue": "It proves who performed the operation"}, {"w": "EVIDENCE", "r": 1, "c": 11, "d": "D", "clue": "It supports a conclusion"}, {"w": "CUSTOMER", "r": 3, "c": 3, "d": "D", "clue": "Recipient of the product or service"}, {"w": "STANDARD", "r": 0, "c": 7, "d": "D", "clue": "Reference document, such as ISO 13485"}, {"w": "QUALITY", "r": 4, "c": 9, "d": "D", "clue": "Ability to meet requirements"}, {"w": "RECORD", "r": 7, "c": 0, "d": "A", "clue": "Document that provides evidence of an activity"}, {"w": "BATCH", "r": 3, "c": 0, "d": "A", "clue": "Another word for a production lot"}, {"w": "FMEA", "r": 9, "c": 1, "d": "A", "clue": "Failure mode and effects analysis (acronym)"}, {"w": "CAPA", "r": 2, "c": 1, "d": "D", "clue": "Corrective and preventive action (acronym)"}]}, {"h": 12, "w": 13, "entries": [{"w": "VALIDATION", "r": 7, "c": 2, "d": "A", "clue": "Proof that a process gives a reproducible result"}, {"w": "INSPECTION", "r": 0, "c": 5, "d": "D", "clue": "Visual or dimensional examination of a product"}, {"w": "CONCESSION", "r": 1, "c": 3, "d": "A", "clue": "Written permission to accept a limited deviation"}, {"w": "SUPPLIER", "r": 3, "c": 3, "d": "A", "clue": "Delivers materials and components"}, {"w": "PARETO", "r": 6, "c": 3, "d": "D", "clue": "The 80/20 chart"}, {"w": "KAIZEN", "r": 6, "c": 7, "d": "D", "clue": "Continuous improvement in small steps (Japanese)"}, {"w": "RISK", "r": 6, "c": 9, "d": "D", "clue": "Combination of the probability and severity of harm"}, {"w": "FIFO", "r": 11, "c": 0, "d": "A", "clue": "First in, first out"}, {"w": "LOT", "r": 0, "c": 11, "d": "D", "clue": "Set of parts made under the same conditions"}]}] };
+const I = window.QWI18N, L = I.lang;
+const T = {
+  fr: {
+    eyebrow: "UN DÉFI PAR JOUR · SANS LIMITE DE TEMPS", hub: "← Hub", game: "Défi du jour", foot: "Contenu pédagogique. Les définitions sont simplifiées et ne remplacent pas les procédures applicables.",
+    title: "Défi du jour", lv1: "Énigme", lv2: "Pendu", lv3: "Mots croisés",
+    d1: "Une devinette qualité. 3 tentatives, un indice disponible.", d2: "Retrouvez le mot avant 7 erreurs.", d3: "Une grille de 9 mots sur la qualité.",
+    today: "Points aujourd’hui", totalHub: "Total du défi (hub)", nextIn: "Prochain défi dans", upTo: "jusqu’à {n} pts",
+    levelN: "Niveau {n} · {name}", doneScore: "Terminé : {n} pts", inProgress: "En cours", availableL: "Disponible", lockedL: "Verrouillé",
+    tomorrow: "Revenez demain", resume: "Reprendre", play: "Jouer",
+    rules: "Chaque niveau se joue <b>une seule fois par jour</b>, dans l’ordre. Un niveau commencé compte pour la journée : si vous quittez, vous le reprendrez là où vous en étiez. Le contenu change chaque jour et vous ne retomberez pas sur une énigme, un mot ou une grille déjà joués. Vous pouvez jouer en français ou en anglais : le contenu du jour est le même dans les deux langues.",
+    preparing: "Préparation du niveau…", locked: "Terminez d’abord le niveau précédent.", seen: "Ce contenu a déjà été joué : rechargez la page.",
+    expired: "Session expirée : reconnectez-vous.", server: "Le serveur n’a pas répondu. Vérifiez votre connexion puis réessayez.",
+    saving: "Enregistrement du score…", savedOk: "Score enregistré. Total du défi : {n} points.", retry: "Réessayer", savedShort: "Score enregistré.",
+    nextLevel: "Niveau {n} : {name} →", backDay: "Retour au défi", levelU: "NIVEAU {n} · {name}",
+    rdLabel: "NIVEAU 1 · ÉNIGME", triesLeft: "{n} tentative(s) restante(s)", expectedLen: "Réponse attendue ({n} caractères) :",
+    hintTxt: "💡 Indice : {h}", yourAnswer: "Votre réponse", validate: "Valider", hintBtn: "💡 Indice (−40 pts)",
+    ignore: "Les accents, espaces et tirets ne sont pas pris en compte.", already: "Déjà proposé :", notIt: "Ce n’est pas ça. Encore {n} tentative(s).",
+    rdOk: "Bravo, énigme résolue !", rdKo: "Énigme non résolue", answerIs: "Réponse : {a}",
+    hgLabel: "NIVEAU 2 · PENDU", errors: "<b>{n}</b> / {m} erreurs", clue: "Indice :", wordAria: "Mot à trouver, {n} lettres",
+    hgHelp: "{n} lettres · sans accents · utilisez le clavier de l’écran ou votre clavier.", letters: "Lettres", letterAria: "Lettre {l}",
+    lost: "PERDU", gallowsAria: "{n} erreur(s) sur {m}", hgOk: "Mot trouvé !", hgKo: "Perdu…", wordWas: "Le mot était : {w}", withErr: "Vous l’avez trouvé avec {n} erreur(s).",
+    cwLabel: "NIVEAU 3 · MOTS CROISÉS", cells: "{n} cases · sans accents",
+    cwHelp: "Cliquez sur une case (deuxième clic : changer de sens) ou sur une définition, puis tapez. Flèches pour se déplacer, retour arrière pour effacer.",
+    across: "Horizontal", down: "Vertical", cellAria: "Case ligne {r} colonne {c}", reveal: "Révéler une lettre (−30 pts) · {n} restante(s)", validateGrid: "Valider la grille",
+    confirmEmpty: "Il reste {n} case(s) vide(s). Valider quand même ? La grille ne pourra plus être modifiée.", confirmFull: "Valider définitivement la grille ?",
+    cwPerfect: "Grille parfaite !", cwDone: "Grille validée", cwRes: "{g} case(s) correcte(s) sur {t}", revealed: " · {n} lettre(s) révélée(s)",
+    cwLegend: "En vert vos bonnes lettres, en rouge les corrections.",
+    notConfigured: "Le Défi du jour n’est pas encore configuré sur le serveur (script supabase-daily.sql à exécuter) ou le service est indisponible."
+  },
+  en: {
+    eyebrow: "ONE CHALLENGE A DAY · NO TIME LIMIT", hub: "← Hub", game: "Daily challenge", foot: "Training content. Definitions are simplified and do not replace applicable procedures.",
+    title: "Daily challenge", lv1: "Riddle", lv2: "Hangman", lv3: "Crossword",
+    d1: "A quality riddle. 3 attempts, one hint available.", d2: "Find the word before 7 mistakes.", d3: "A 9-word quality crossword.",
+    today: "Points today", totalHub: "Challenge total (hub)", nextIn: "Next challenge in", upTo: "up to {n} pts",
+    levelN: "Level {n} · {name}", doneScore: "Done: {n} pts", inProgress: "In progress", availableL: "Available", lockedL: "Locked",
+    tomorrow: "Come back tomorrow", resume: "Resume", play: "Play",
+    rules: "Each level can be played <b>only once a day</b>, in order. A level you start counts for the day: if you leave, you will resume where you left off. The content changes every day and you will never get a riddle, word or grid you have already played. You can play in French or English: the day’s content is the same in both languages.",
+    preparing: "Preparing the level…", locked: "Finish the previous level first.", seen: "This content has already been played: reload the page.",
+    expired: "Session expired: sign in again.", server: "The server did not respond. Check your connection and try again.",
+    saving: "Saving score…", savedOk: "Score saved. Challenge total: {n} points.", retry: "Try again", savedShort: "Score saved.",
+    nextLevel: "Level {n}: {name} →", backDay: "Back to the challenge", levelU: "LEVEL {n} · {name}",
+    rdLabel: "LEVEL 1 · RIDDLE", triesLeft: "{n} attempt(s) left", expectedLen: "Expected answer ({n} characters):",
+    hintTxt: "💡 Hint: {h}", yourAnswer: "Your answer", validate: "Submit", hintBtn: "💡 Hint (−40 pts)",
+    ignore: "Accents, spaces and hyphens are ignored.", already: "Already tried:", notIt: "Not quite. {n} attempt(s) left.",
+    rdOk: "Well done, riddle solved!", rdKo: "Riddle not solved", answerIs: "Answer: {a}",
+    hgLabel: "LEVEL 2 · HANGMAN", errors: "<b>{n}</b> / {m} mistakes", clue: "Clue:", wordAria: "Word to find, {n} letters",
+    hgHelp: "{n} letters · use the on-screen keyboard or your keyboard.", letters: "Letters", letterAria: "Letter {l}",
+    lost: "LOST", gallowsAria: "{n} mistake(s) out of {m}", hgOk: "Word found!", hgKo: "Lost…", wordWas: "The word was: {w}", withErr: "You found it with {n} mistake(s).",
+    cwLabel: "LEVEL 3 · CROSSWORD", cells: "{n} cells",
+    cwHelp: "Click a cell (click again to change direction) or a clue, then type. Arrow keys to move, Backspace to delete.",
+    across: "Across", down: "Down", cellAria: "Cell row {r} column {c}", reveal: "Reveal a letter (−30 pts) · {n} left", validateGrid: "Submit the grid",
+    confirmEmpty: "{n} cell(s) are still empty. Submit anyway? The grid can no longer be changed.", confirmFull: "Submit the grid for good?",
+    cwPerfect: "Perfect grid!", cwDone: "Grid submitted", cwRes: "{g} correct cell(s) out of {t}", revealed: " · {n} letter(s) revealed",
+    cwLegend: "Your correct letters in green, corrections in red.",
+    notConfigured: "The daily challenge is not configured on the server yet (run supabase-daily.sql) or the service is unavailable."
+  }
+};
+const t = (k, v) => I.t(T, k, v);
+const RD = RIDDLES[L] || RIDDLES.fr, HG = HANGMAN[L] || HANGMAN.fr, GR = GRIDS[L] || GRIDS.fr;
+const LEVELS = [
+  { n: 1, name: t("lv1"), max: 200, desc: t("d1") },
+  { n: 2, name: t("lv2"), max: 300, desc: t("d2") },
+  { n: 3, name: t("lv3"), max: 500, desc: t("d3") }
+];
+document.getElementById("eyebrow").textContent = t("eyebrow");
+document.getElementById("hubBtn").textContent = t("hub");
+document.getElementById("gameName").textContent = t("game");
+document.getElementById("foot").textContent = t("foot");
+document.title = t("game") + " | Quality Week 2026";
+I.mount(document.getElementById("topBtns"));
+const app = document.getElementById("app");
+const esc = s => String(s).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const norm = s => String(s).normalize("NFD").replace(/[\u0300-\u036f]/g, "").toUpperCase().replace(/[^A-Z0-9]/g, "");
+
+let user = null, day = null, today = {}, counts = {}, total = 0, busy = false, view = "home", clockT = 0, scores = null;
+I.setGuard(() => ["riddle", "hangman", "crossword"].includes(view));
+/* Partie du jour en cours : rattachée au COMPTE dans Supabase (table game_progress), jamais au navigateur. */
+let DS = { day: null, states: {} };
+const stateKey = n => `${n}:${L}`;
+const loadLS = n => { const v = DS.day === day ? DS.states[stateKey(n)] : null; return v ? JSON.parse(JSON.stringify(v)) : null; };
+const saveLS = (n, v) => {
+  if (DS.day !== day) DS = { day, states: {} };     // nouveau jour : on oublie les parties des jours précédents
+  DS.states[stateKey(n)] = JSON.parse(JSON.stringify(v));
+  if (scores) scores.saveProgress(DS);
+};
+
+async function refresh() {
+  const d = await window.QWScores.rpc("get_daily_state");
+  day = d.date; total = Number(d.total) || 0; counts = d.counts || {};
+  today = {}; (d.today || []).forEach(r => { today[r.level] = r; });
+}
+function pickItem(n) {
+  const c = (counts[String(n)] || []).map(Number);
+  const arr = Array.from({ length: 15 }, (_, i) => c[i] || 0);
+  const min = Math.min(...arr);
+  const pool = arr.map((v, i) => v === min ? i : -1).filter(i => i >= 0);
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+function rpcError(e) {
+  const m = String(e && (e.message || e.details || ""));
+  if (/LEVEL_LOCKED/.test(m)) return t("locked");
+  if (/ITEM_ALREADY_SEEN/.test(m)) return t("seen");
+  if (/AUTH_REQUIRED/.test(m)) return t("expired");
+  return t("server");
+}
+
+/* ---------- Accueil ---------- */
+function dateLabel() { try { return new Date(day + "T12:00:00").toLocaleDateString(L === "en" ? "en-GB" : "fr-FR", { weekday: "long", day: "numeric", month: "long" }); } catch { return day; } }
+function untilMidnight() {
+  const p = new Intl.DateTimeFormat("fr-FR", { timeZone: "Europe/Paris", hour: "2-digit", minute: "2-digit", second: "2-digit", hourCycle: "h23" }).formatToParts(new Date());
+  const g = k => Number(p.find(x => x.type === k)?.value || 0);
+  const left = 86400 - (g("hour") * 3600 + g("minute") * 60 + g("second"));
+  return `${Math.floor(left / 3600)} h ${String(Math.floor(left % 3600 / 60)).padStart(2, "0")} min`;
+}
+function renderHome(msg = "", cls = "") {
+  view = "home"; clearInterval(clockT);
+  const doneAll = LEVELS.every(Lv => today[Lv.n]?.finished);
+  const dayScore = LEVELS.reduce((a, Lv) => a + (today[Lv.n]?.finished ? Number(today[Lv.n].score) || 0 : 0), 0);
+  app.innerHTML = `
+    <h1>${t("title")}</h1>
+    <p class="muted dateline">${esc(dateLabel())}</p>
+    <div class="total"><div><span class="small">${t("today")}</span><b>${dayScore} / 1000</b></div><div><span class="small">${t("totalHub")}</span><b>${total}</b></div>${doneAll ? `<div><span class="small">${t("nextIn")}</span><b id="clock">${untilMidnight()}</b></div>` : ""}</div>
+    <div class="levels">${LEVELS.map(Lv => {
+      const r = today[Lv.n], prevDone = Lv.n === 1 || today[Lv.n - 1]?.finished, done = r?.finished, started = r && !done;
+      return `<article class="card level ${done ? "done" : ""} ${!prevDone ? "locked" : ""}">
+        <div class="row between"><span class="num" aria-hidden="true">${done ? "✓" : Lv.n}</span><span class="small muted">${t("upTo", { n: Lv.max })}</span></div>
+        <h2>${t("levelN", { n: Lv.n, name: Lv.name })}</h2><p class="small">${Lv.desc}</p>
+        <p class="st">${done ? t("doneScore", { n: Number(r.score) || 0 }) : started ? t("inProgress") : prevDone ? t("availableL") : t("lockedL")}</p>
+        ${done ? `<button class="btn" type="button" disabled>${t("tomorrow")}</button>` : `<button class="btn primary" type="button" data-action="play" data-n="${Lv.n}" ${prevDone && !busy ? "" : "disabled"}>${started ? t("resume") : t("play")} →</button>`}
+      </article>`; }).join("")}</div>
+    <p class="warn" style="margin-top:16px">${t("rules")}</p>
+    <p class="status ${cls}" role="status">${esc(msg)}</p>`;
+  if (doneAll) clockT = setInterval(() => { const c = document.getElementById("clock"); if (c) c.textContent = untilMidnight(); }, 30000);
+}
+async function play(n) {
+  if (busy) return;
+  busy = true; renderHome(t("preparing"));
+  try {
+    const existing = today[n];
+    const item = existing ? Number(existing.item) : pickItem(n);
+    const r = await window.QWScores.rpc("start_daily_level", { p_level: n, p_item: item });
+    today[n] = { level: n, item: Number(r.item), score: r.score, finished: !!r.finished };
+    busy = false;
+    if (today[n].finished) { renderHome(); return; }
+    const ls = existing ? loadLS(n) : null;           // état sauvegardé seulement si le niveau était déjà commencé côté serveur
+    if (ls && ls.item === today[n].item && ls.done) { await finish(n, ls.score, ls); return; }
+    [null, startRiddle, startHangman, startCrossword][n](today[n].item, ls && ls.item === today[n].item ? ls : null);
+  } catch (e) { console.error(e); busy = false; renderHome(rpcError(e), "err"); }
+}
+async function finish(n, score, st) {
+  st.done = true; st.score = score; saveLS(n, st);
+  const el = document.getElementById("finishStatus");
+  if (el) { el.className = "status"; el.textContent = t("saving"); }
+  try {
+    const r = await window.QWScores.rpc("finish_daily_level", { p_level: n, p_score: score });
+    total = Number(r.total) || total; today[n] = Object.assign(today[n] || {}, { finished: true, score: Number(r.score) });
+    if (el) { el.className = "status ok"; el.textContent = t("savedOk", { n: total }); const nb = document.getElementById("nextBtn"); if (nb) nb.disabled = false; }
+    else renderHome(t("savedShort"), "ok");
+  } catch (e) {
+    console.error(e);
+    if (el) { el.className = "status err"; el.innerHTML = `${esc(rpcError(e))} <button class="btn" type="button" data-action="retry" data-n="${n}">${t("retry")}</button>`; }
+    else renderHome(rpcError(e), "err");
+  }
+}
+function resultHTML(n, score, title, body) {
+  const next = LEVELS[n];
+  return `<section class="card result" style="margin-top:16px">
+    <p class="eyebrow">${t("levelU", { n, name: LEVELS[n - 1].name.toUpperCase() })}</p><h2>${esc(title)}</h2>
+    <p class="pts">${score}<span style="font-size:20px"> / ${LEVELS[n - 1].max} pts</span></p>
+    <div class="explain" style="margin:14px 0">${body}</div>
+    <p class="status" id="finishStatus" role="status"></p>
+    <div class="row" style="justify-content:center">${next ? `<button class="btn primary" type="button" id="nextBtn" data-action="play" data-n="${next.n}" disabled>${t("nextLevel", { n: next.n, name: next.name })}</button>` : ""}<button class="btn" type="button" data-action="home">${t("backDay")}</button></div>
+  </section>`;
+}
+
+/* ---------- Niveau 1 : énigme (200 pts) ---------- */
+function startRiddle(item, st) {
+  view = "riddle";
+  const R = RD[item];
+  st = st || { item, tries: 0, hint: false, wrong: [] };
+  saveLS(1, st);
+  const first = R.a[0];
+  const render = (msg = "") => {
+    const left = 3 - st.tries;
+    app.innerHTML = `<section class="card" style="margin-top:16px">
+      <div class="row between"><span class="eyebrow">${t("rdLabel")}</span><span class="lives" aria-label="${t("triesLeft", { n: left })}">${"●".repeat(left)}${"○".repeat(3 - left)}</span></div>
+      <p class="riddle">${esc(R.q)}</p>
+      <p class="small muted">${t("expectedLen", { n: norm(first).length })}</p>
+      <div class="pattern" aria-hidden="true">${Array.from(first).map(ch => /[\s-]/.test(ch) ? `<span class="gap"></span>` : `<span></span>`).join("")}</div>
+      ${st.hint ? `<p class="warn">${esc(t("hintTxt", { h: R.hint }))}</p>` : ""}
+      <form id="rf" class="row" autocomplete="off"><label class="sr" for="ans">${t("yourAnswer")}</label><input id="ans" class="answer" maxlength="40" autocapitalize="characters" spellcheck="false" placeholder="${t("yourAnswer")}" style="flex:1 1 260px" required>
+      <button class="btn primary" type="submit">${t("validate")}</button></form>
+      <div class="row" style="margin-top:12px"><button class="btn" type="button" id="hintBtn" ${st.hint ? "disabled" : ""}>${t("hintBtn")}</button><span class="small muted">${t("ignore")}</span></div>
+      ${st.wrong.length ? `<p class="small" style="margin-top:12px">${t("already")} ${st.wrong.map(w => `<s>${esc(w)}</s>`).join(", ")}</p>` : ""}
+      <p class="status err" role="alert">${esc(msg)}</p></section>`;
+    const input = document.getElementById("ans"); input.focus();
+    document.getElementById("hintBtn").onclick = () => { st.hint = true; saveLS(1, st); render(); };
+    document.getElementById("rf").onsubmit = e => {
+      e.preventDefault();
+      const v = input.value.trim(); if (!norm(v)) return;
+      if (R.a.some(a => norm(a) === norm(v))) return end(true);
+      st.tries++; st.wrong.push(v); saveLS(1, st);
+      if (st.tries >= 3) return end(false);
+      render(t("notIt", { n: 3 - st.tries }));
+    };
+  };
+  const end = ok => {
+    view = "result";
+    const score = ok ? Math.max(30, 200 - st.tries * 50 - (st.hint ? 40 : 0)) : 0;
+    app.innerHTML = resultHTML(1, score, ok ? t("rdOk") : t("rdKo"), `<p><b>${esc(t("answerIs", { a: first }))}</b></p><p style="margin:0">${esc(R.e)}</p>`);
+    finish(1, score, st);
+  };
+  render();
+}
+
+/* ---------- Niveau 2 : pendu (300 pts) ---------- */
+const MAX_ERR = 7;
+function gallows(err) {
+  const parts = [`<line x1="20" y1="230" x2="180" y2="230"/>`, `<line x1="50" y1="230" x2="50" y2="20"/><line x1="50" y1="20" x2="140" y2="20"/>`, `<line x1="140" y1="20" x2="140" y2="50"/>`,
+    `<circle cx="140" cy="70" r="20"/>`, `<line x1="140" y1="90" x2="140" y2="150"/>`, `<line x1="140" y1="105" x2="115" y2="130"/><line x1="140" y1="105" x2="165" y2="130"/>`, `<line x1="140" y1="150" x2="118" y2="190"/><line x1="140" y1="150" x2="162" y2="190"/>`];
+  return `<svg viewBox="0 0 200 250" role="img" aria-label="${t("gallowsAria", { n: err, m: MAX_ERR })}"><g stroke="#111" stroke-width="6" stroke-linecap="round" fill="none">${parts.slice(0, err).join("")}</g>${err >= MAX_ERR ? `<text x="100" y="245" text-anchor="middle" font-size="16" font-weight="900" fill="#a40000">${t("lost")}</text>` : ""}</svg>`;
+}
+function startHangman(item, st) {
+  view = "hangman";
+  const H = HG[item], W = H.w;
+  st = st || { item, guessed: [] };
+  saveLS(2, st);
+  const errors = () => st.guessed.filter(l => !W.includes(l)).length;
+  const won = () => [...W].every(l => st.guessed.includes(l));
+  const render = () => {
+    const err = errors(), over = won() || err >= MAX_ERR;
+    app.innerHTML = `<section class="card" style="margin-top:16px">
+      <div class="row between"><span class="eyebrow">${t("hgLabel")}</span><span class="small" aria-live="polite">${t("errors", { n: err, m: MAX_ERR })}</span></div>
+      <div class="hang">${gallows(err)}<div>
+        <p><b>${t("clue")}</b> ${esc(H.c)}</p>
+        <div class="word" aria-label="${t("wordAria", { n: W.length })}">${[...W].map(l => `<span class="${over && !st.guessed.includes(l) ? "miss" : ""}">${st.guessed.includes(l) || over ? l : ""}</span>`).join("")}</div>
+        <p class="small muted">${t("hgHelp", { n: W.length })}</p>
+      </div></div>
+      <div class="keys" role="group" aria-label="${t("letters")}">${"ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("").map(l => { const g = st.guessed.includes(l); return `<button type="button" class="key ${g ? (W.includes(l) ? "hit" : "miss") : ""}" data-l="${l}" ${g || over ? "disabled" : ""} aria-label="${t("letterAria", { l })}">${l}</button>`; }).join("")}</div>
+    </section>`;
+    app.querySelectorAll(".key").forEach(b => b.onclick = () => guess(b.dataset.l));
+  };
+  const guess = l => {
+    if (view !== "hangman" || st.guessed.includes(l)) return;
+    st.guessed.push(l); saveLS(2, st);
+    if (won() || errors() >= MAX_ERR) return end();
+    render(); app.querySelector(".key:not(:disabled)")?.focus({ preventScroll: true });
+  };
+  const end = () => {
+    view = "result";
+    document.removeEventListener("keydown", onKey);
+    const ok = won(), err = errors(), score = ok ? Math.max(40, 300 - err * 35) : 0;
+    app.innerHTML = resultHTML(2, score, ok ? t("hgOk") : t("hgKo"), `<p><b>${esc(t("wordWas", { w: W }))}</b></p><p style="margin:0">${esc(H.c)}. ${ok ? t("withErr", { n: err }) : ""}</p>`);
+    finish(2, score, st);
+  };
+  const onKey = e => { if (view !== "hangman" || e.ctrlKey || e.metaKey || e.altKey) return; const l = norm(e.key); if (/^[A-Z]$/.test(l)) { e.preventDefault(); guess(l); } };
+  document.addEventListener("keydown", onKey);
+  render();
+}
+
+/* ---------- Niveau 3 : mots croisés (500 pts) ---------- */
+function startCrossword(item, st) {
+  view = "crossword";
+  const G = GR[item], H = G.h, Wd = G.w;
+  const sol = {};
+  G.entries.forEach(e => { [...e.w].forEach((ch, i) => { sol[`${e.r + (e.d === "D" ? i : 0)},${e.c + (e.d === "A" ? i : 0)}`] = ch; }); });
+  let num = 0; const numbers = {};
+  for (let r = 0; r < H; r++) for (let c = 0; c < Wd; c++) if (G.entries.some(e => e.r === r && e.c === c)) numbers[`${r},${c}`] = ++num;
+  const entries = G.entries.map(e => ({ ...e, num: numbers[`${e.r},${e.c}`], cells: [...e.w].map((_, i) => `${e.r + (e.d === "D" ? i : 0)},${e.c + (e.d === "A" ? i : 0)}`) }));
+  st = st || { item, fill: {}, reveals: [] };
+  saveLS(3, st);
+  let cur = entries[0], pos = cur.cells[0];
+  const cs = `min(${Math.floor(560 / Math.max(H, Wd))}px, calc((100vw - ${84 + (Wd - 1) * 2}px) / ${Wd}))`;
+  const across = entries.filter(e => e.d === "A").sort((a, b) => a.num - b.num), down = entries.filter(e => e.d === "D").sort((a, b) => a.num - b.num);
+  const solved = e => e.cells.every(k => (st.fill[k] || "") === sol[k]);
+  app.innerHTML = `<section class="card" style="margin-top:16px">
+    <div class="row between"><span class="eyebrow">${t("cwLabel")}</span><span class="small">${t("cells", { n: Object.keys(sol).length })}</span></div>
+    <p class="small muted">${t("cwHelp")}</p>
+    <div class="curClue" id="curClue" aria-live="polite"></div>
+    <div class="cw">
+      <div class="grid" id="grid" style="--cs:${cs};grid-template-columns:repeat(${Wd},var(--cs))">${Array.from({ length: H * Wd }, (_, i) => { const r = Math.floor(i / Wd), c = i % Wd, k = `${r},${c}`; return sol[k] ? `<div class="cell on" data-k="${k}">${numbers[k] ? `<span class="n">${numbers[k]}</span>` : ""}<input maxlength="2" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="${t("cellAria", { r: r + 1, c: c + 1 })}" data-k="${k}"></div>` : `<div class="cell"></div>`; }).join("")}</div>
+      <div class="clues"><div><h3>${t("across")}</h3><ol>${across.map(e => `<li data-e="${entries.indexOf(e)}" tabindex="0" role="button"><b>${e.num}.</b> ${esc(e.clue)} <span class="muted">(${e.w.length})</span></li>`).join("")}</ol></div>
+      <div><h3>${t("down")}</h3><ol>${down.map(e => `<li data-e="${entries.indexOf(e)}" tabindex="0" role="button"><b>${e.num}.</b> ${esc(e.clue)} <span class="muted">(${e.w.length})</span></li>`).join("")}</ol></div></div>
+    </div>
+    <div class="row" style="margin-top:16px"><button class="btn" type="button" id="reveal"></button><button class="btn primary" type="button" id="validate">${t("validateGrid")}</button></div>
+    <p class="status" id="cwStatus" role="status"></p></section>`;
+  const grid = document.getElementById("grid");
+  const input = k => grid.querySelector(`input[data-k="${k}"]`);
+  const paint = () => {
+    grid.querySelectorAll(".cell.on").forEach(c => { const k = c.dataset.k; c.classList.toggle("inword", cur.cells.includes(k)); c.classList.toggle("cur", k === pos); c.classList.toggle("rev", st.reveals.includes(k)); const v = st.fill[k] || ""; const inp = c.querySelector("input"); if (inp.value !== v) inp.value = v; inp.readOnly = st.reveals.includes(k); });
+    app.querySelectorAll(".clues li").forEach(li => { const e = entries[+li.dataset.e]; li.classList.toggle("cur", e === cur); li.classList.toggle("ok", solved(e)); });
+    const rb = document.getElementById("reveal"); rb.textContent = t("reveal", { n: 3 - st.reveals.length }); rb.disabled = st.reveals.length >= 3;
+    const cc = document.getElementById("curClue"); if (cc) cc.innerHTML = `<b>${cur.num}. ${cur.d === "A" ? t("across") : t("down")}</b> — ${esc(cur.clue)} <span class="muted">(${cur.w.length})</span>`;
+  };
+  const focus = k => { pos = k; paint(); input(k)?.focus(); };
+  const entryFor = (k, d) => entries.find(e => e.d === d && e.cells.includes(k));
+  const select = k => {
+    if (k === pos && entryFor(k, cur.d === "A" ? "D" : "A") && cur.cells.includes(k)) cur = entryFor(k, cur.d === "A" ? "D" : "A");
+    else if (!cur.cells.includes(k)) cur = entryFor(k, cur.d) || entryFor(k, cur.d === "A" ? "D" : "A");
+    focus(k);
+  };
+  const step = dir => { const i = cur.cells.indexOf(pos) + dir; if (i >= 0 && i < cur.cells.length) focus(cur.cells[i]); };
+  grid.addEventListener("mousedown", e => { const c = e.target.closest(".cell.on"); if (c) { e.preventDefault(); select(c.dataset.k); } });
+  grid.addEventListener("focusin", e => { const k = e.target.dataset?.k; if (k && k !== pos) { if (!cur.cells.includes(k)) cur = entryFor(k, cur.d) || entryFor(k, cur.d === "A" ? "D" : "A"); pos = k; paint(); } });
+  grid.addEventListener("input", e => {
+    const k = e.target.dataset.k; if (!k) return;
+    if (st.reveals.includes(k)) { e.target.value = st.fill[k]; return; }
+    const v = norm(e.target.value).replace(/[0-9]/g, "").slice(-1);
+    st.fill[k] = v; e.target.value = v; saveLS(3, st);
+    if (v) step(1); else paint();
+  });
+  grid.addEventListener("keydown", e => {
+    const k = e.target.dataset?.k; if (!k) return;
+    const [r, c] = k.split(",").map(Number);
+    const mv = { ArrowLeft: [0, -1, "A"], ArrowRight: [0, 1, "A"], ArrowUp: [-1, 0, "D"], ArrowDown: [1, 0, "D"] }[e.key];
+    if (mv) { e.preventDefault(); const nk = `${r + mv[0]},${c + mv[1]}`; if (sol[nk]) { cur = entryFor(nk, mv[2]) || entryFor(nk, mv[2] === "A" ? "D" : "A"); focus(nk); } return; }
+    if (e.key === "Backspace" && !e.target.value) { e.preventDefault(); step(-1); if (!st.reveals.includes(pos)) { st.fill[pos] = ""; saveLS(3, st); paint(); } return; }
+    if (/^[a-zA-ZÀ-ÿ]$/.test(e.key) && !st.reveals.includes(k)) { e.preventDefault(); st.fill[k] = norm(e.key); saveLS(3, st); step(1); paint(); }
+  });
+  const pickClue = li => { cur = entries[+li.dataset.e]; focus(cur.cells.find(k => !st.fill[k]) || cur.cells[0]); };
+  app.querySelectorAll(".clues li").forEach(li => { li.addEventListener("click", () => pickClue(li)); li.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); pickClue(li); } }); });
+  document.getElementById("reveal").onclick = () => {
+    if (st.reveals.length >= 3) return;
+    const k = cur.cells.find(x => (st.fill[x] || "") !== sol[x]) || Object.keys(sol).find(x => (st.fill[x] || "") !== sol[x]);
+    if (!k) return;
+    st.fill[k] = sol[k]; st.reveals.push(k); saveLS(3, st); focus(k);
+  };
+  document.getElementById("validate").onclick = () => {
+    const keys = Object.keys(sol), empty = keys.filter(k => !st.fill[k]).length;
+    if (empty && !confirm(t("confirmEmpty", { n: empty }))) return;
+    if (!empty && !confirm(t("confirmFull"))) return;
+    const good = keys.filter(k => st.fill[k] === sol[k]).length;
+    const score = Math.max(0, Math.round(500 * good / keys.length) - 30 * st.reveals.length);
+    view = "result";
+    grid.querySelectorAll(".cell.on").forEach(c => { const k = c.dataset.k; const i = c.querySelector("input"); i.value = sol[k]; i.readOnly = true; c.classList.remove("inword", "cur"); c.classList.add(st.fill[k] === sol[k] ? "good" : "bad"); });
+    const gridHTML = grid.outerHTML.replace('id="grid"', "");
+    app.innerHTML = resultHTML(3, score, good === keys.length ? t("cwPerfect") : t("cwDone"), `<p>${t("cwRes", { g: good, t: keys.length })}${st.reveals.length ? t("revealed", { n: st.reveals.length }) : ""}. ${t("cwLegend")}</p><div style="display:flex;justify-content:center;overflow:auto">${gridHTML}</div>`);
+    finish(3, score, st);
+  };
+  paint();
+  focus(cur.cells.find(k => !st.fill[k]) || cur.cells[0]);
+}
+
+/* ---------- Actions ---------- */
+document.addEventListener("click", e => {
+  const b = e.target.closest("[data-action]"); if (!b || b.disabled) return;
+  const a = b.dataset.action;
+  if (a === "play") play(+b.dataset.n);
+  if (a === "home") renderHome();
+  if (a === "retry") { const n = +b.dataset.n, st = loadLS(n); if (st) finish(n, st.score, st); }
+});
+
+// Partie en cours pas encore enregistrée sur le serveur : demander confirmation avant de quitter.
+window.addEventListener("beforeunload", e => { if (window.QWScores?.isSyncing()) { e.preventDefault(); e.returnValue = ""; } });
+window.addEventListener("DOMContentLoaded", async () => {
+  if (!window.QWScores) { app.innerHTML = `<p class="status err">${t("server")}</p>`; return; }
+  const ready = await window.QWScores.boot("daily", { progress: true });
+  if (!ready) return;
+  user = ready.user; scores = ready.scores;
+  if (ready.progress && ready.progress.states && typeof ready.progress.states === "object") DS = { day: ready.progress.day || null, states: ready.progress.states };
+  try {
+    await refresh();
+    for (const Lv of LEVELS) { const r = today[Lv.n]; if (r && !r.finished) { const ls = loadLS(Lv.n); if (ls && ls.done && ls.item === Number(r.item)) await finish(Lv.n, ls.score, ls); } }
+    renderHome();
+  } catch (e) {
+    window.QWScores.showLoadError(e, t("notConfigured"));
+  }
+}, { once: true });
+})();
+</script>
+</body>
+</html>
