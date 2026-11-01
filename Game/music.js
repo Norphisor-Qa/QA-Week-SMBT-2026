@@ -15,6 +15,9 @@
  *   « A+ » : texte et boutons agrandis (éléments portant la classe .qw-z)
  *   « Animations » : coupe les animations (mouvements, clignotements)
  * API : QWMusic.play(), QWMusic.stop(), QWMusic.toggle(), QWMusic.isOn()
+ *
+ * Petits écrans : le menu « ⚙ Réglages » s'ouvre en position fixe, calculée pour rester
+ * TOUJOURS entièrement visible à l'écran (quel que soit l'endroit où se trouve le bouton).
  */
 (() => {
   "use strict";
@@ -24,13 +27,12 @@
   const TXT = lang === "en"
     ? { on: "♪ Music: on", off: "♪ Music: off", big: "A+ Larger text", calm: "Animations: off", anim: "Animations: on", bar: "Comfort settings", gear: "⚙ Settings" }
     : { on: "♪ Musique : oui", off: "♪ Musique : non", big: "A+ Texte agrandi", calm: "Animations : non", anim: "Animations : oui", bar: "Réglages de confort", gear: "⚙ Réglages" };
-
   /* ---------- Préférences ---------- */
   const get = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v === "1"; } catch { return d; } };
   const set = (k, v) => { try { localStorage.setItem(k, v ? "1" : "0"); } catch { /* rien */ } };
   const prefersReduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   let on = get("qw-music", false), big = get("qw-big", false), calm = get("qw-calm", prefersReduced);
-
+  const SMALL = "(max-width:820px)";
   const style = document.createElement("style");
   style.textContent = `
     html.qw-large .qw-z{zoom:1.18}
@@ -43,14 +45,16 @@
     .qw-set{position:relative;display:inline-flex}
     .qw-gear{display:none}
     .qw-panel{display:inline-flex;gap:6px;flex-wrap:wrap;align-items:center}
-    /* Petits écrans : les réglages sont regroupés dans un menu « ⚙ Réglages » */
-    @media(max-width:820px){
+    /* Petits écrans : les réglages sont regroupés dans un menu « ⚙ Réglages ».
+       Le menu est en position FIXE ; sa place exacte est calculée en JavaScript (placePanel)
+       pour ne jamais dépasser du bord gauche ou droit de l'écran. */
+    @media${SMALL}{
       .qw-gear{display:inline-flex;white-space:nowrap}
-      .qw-panel{display:none;position:absolute;top:calc(100% + 6px);right:0;z-index:9500;flex-direction:column;align-items:stretch;
-        min-width:220px;padding:10px;background:#fff;border:2px solid #000;border-radius:14px;box-shadow:0 10px 30px #0006}
-      .qw-float .qw-panel{top:auto;bottom:calc(100% + 6px);left:0;right:auto}
+      .qw-panel{display:none;position:fixed;z-index:9500;flex-direction:column;align-items:stretch;flex-wrap:nowrap;
+        box-sizing:border-box;width:min(280px,calc(100vw - 16px));max-height:calc(100vh - 16px);overflow-y:auto;
+        padding:10px;background:#fff;border:2px solid #000;border-radius:14px;box-shadow:0 10px 30px #0006}
       .qw-set.open .qw-panel{display:flex}
-      .qw-panel button,.qw-panel .qw-extra{width:100%;justify-content:flex-start;text-align:left}
+      .qw-panel button,.qw-panel .qw-extra{width:100%;justify-content:flex-start;text-align:left;box-sizing:border-box}
     }`;
   document.head.appendChild(style);
   const applyPrefs = () => {
@@ -58,7 +62,6 @@
     document.documentElement.classList.toggle("qw-calm", calm);
   };
   applyPrefs();
-
   /* ---------- Morceaux ---------- */
   // Notes MIDI (60 = do central). null = silence. Une mesure = 8 croches.
   const SONGS = {
@@ -96,7 +99,6 @@
   const SONG = SONGS[TRACK] || SONGS.hub;
   const STEP = 60 / SONG.bpm / 2, BEAT = STEP * 2;
   const hz = n => 440 * Math.pow(2, (n - 69) / 12);
-
   let ctx = null, master = null, timer = 0, nextTime = 0, step = 0;
   function note(freq, start, dur, type, vol) {
     const o = ctx.createOscillator(), g = ctx.createGain();
@@ -135,7 +137,6 @@
   function stop() { clearInterval(timer); timer = 0; if (ctx && ctx.state === "running") ctx.suspend(); }
   function setOn(v) { on = v; set("qw-music", on); if (on) play(); else stop(); render(); }
   document.addEventListener("visibilitychange", () => { if (document.hidden) { if (timer) stop(); } else if (on && ctx) play(); });
-
   /* ---------- Barre de boutons ---------- */
   let bMusic, bBig, bCalm;
   function render() {
@@ -149,21 +150,49 @@
     const slot = document.getElementById("qw-music-slot");
     const bar = document.createElement("div");
     bar.className = "qw-bar qw-set" + (slot ? "" : " qw-float");
-    const gear = mk(() => { const o = bar.classList.toggle("open"); gear.setAttribute("aria-expanded", String(o)); });
+    const panel = document.createElement("div");
+
+    /* Place le menu sous le bouton (ou au-dessus s'il n'y a pas la place), aligné sur le bouton,
+       puis le décale pour qu'il reste entièrement visible avec une marge de 8 px. */
+    function placePanel() {
+      if (!bar.classList.contains("open") || !matchMedia(SMALL).matches) return;
+      const M = 8, vw = document.documentElement.clientWidth, vh = window.innerHeight;
+      const r = gear.getBoundingClientRect();
+      const w = panel.offsetWidth, h = panel.offsetHeight;
+      // Aligné à gauche du bouton si le bouton est dans la moitié gauche de l'écran, sinon à droite.
+      let left = r.left + r.width / 2 < vw / 2 ? r.left : r.right - w;
+      left = Math.max(M, Math.min(left, vw - w - M));
+      let top = r.bottom + 6;
+      if (top + h > vh - M && r.top - 6 - h >= M) top = r.top - 6 - h;   // pas de place dessous : au-dessus
+      top = Math.max(M, Math.min(top, vh - h - M));
+      panel.style.left = left + "px";
+      panel.style.top = top + "px";
+    }
+    function setOpen(o) {
+      bar.classList.toggle("open", o);
+      gear.setAttribute("aria-expanded", String(o));
+      if (o) placePanel();
+      else { panel.style.left = ""; panel.style.top = ""; }
+    }
+
+    const gear = mk(() => setOpen(!bar.classList.contains("open")));
     gear.className = "qw-gear"; gear.setAttribute("aria-expanded", "false"); gear.setAttribute("aria-label", TXT.gear.replace("⚙ ", ""));
     gear.innerHTML = `<span aria-hidden="true">⚙</span><span class="qw-gear-txt"> ${TXT.gear.replace("⚙ ", "")}</span>`;
-    const panel = document.createElement("div");
     panel.className = "qw-panel"; panel.setAttribute("role", "group"); panel.setAttribute("aria-label", TXT.bar);
     bMusic = mk(() => setOn(!on));
-    bBig = mk(() => { big = !big; set("qw-big", big); applyPrefs(); render(); });
+    bBig = mk(() => { big = !big; set("qw-big", big); applyPrefs(); render(); placePanel(); });
     bCalm = mk(() => { calm = !calm; set("qw-calm", calm); applyPrefs(); render(); });
     panel.append(bMusic, bBig, bCalm);
     // Boutons propres à un jeu (ex. effets sonores) : classe « qw-extra » → rangés dans le même menu
     document.querySelectorAll(".qw-extra").forEach(el => panel.append(el));
     bar.append(gear, panel);
     (slot || document.body).appendChild(bar);
-    document.addEventListener("click", e => { if (!bar.contains(e.target) && bar.classList.contains("open")) { bar.classList.remove("open"); gear.setAttribute("aria-expanded", "false"); } });
-    document.addEventListener("keydown", e => { if (e.key === "Escape" && bar.classList.contains("open")) { bar.classList.remove("open"); gear.setAttribute("aria-expanded", "false"); gear.focus(); } });
+    document.addEventListener("click", e => { if (!bar.contains(e.target) && bar.classList.contains("open")) setOpen(false); });
+    document.addEventListener("keydown", e => { if (e.key === "Escape" && bar.classList.contains("open")) { setOpen(false); gear.focus(); } });
+    // Rotation de l'écran, redimensionnement, défilement : le menu reste collé au bouton et visible.
+    window.addEventListener("resize", placePanel);
+    window.addEventListener("orientationchange", placePanel);
+    window.addEventListener("scroll", placePanel, { passive: true });
     render();
     // Le son ne peut démarrer qu'après une action du joueur.
     if (on) {
@@ -174,6 +203,5 @@
   }
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount, { once: true });
   else mount();
-
   window.QWMusic = Object.freeze({ play: () => setOn(true), stop: () => setOn(false), toggle: () => setOn(!on), isOn: () => on, isCalm: () => calm });
 })();
