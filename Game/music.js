@@ -113,7 +113,7 @@
     if (!AC) return;
     if (!ctx) {
       ctx = new AC();
-      master = ctx.createGain(); master.gain.value = 0.3;
+      master = ctx.createGain(); master.gain.value = 0.7;
       const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2400;
       master.connect(lp); lp.connect(ctx.destination);
     }
