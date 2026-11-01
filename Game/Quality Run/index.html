@@ -1393,8 +1393,11 @@ const ZS=10,ZFAR=85,GRAV=32,JUMPV=11.5,QUIZ_EVERY=20,WALL=3.6,CEIL=5.4;
 function resize(){
   DPR=Math.min(2,window.devicePixelRatio||1);W=innerWidth;H=innerHeight;
   cv.width=W*DPR;cv.height=H*DPR;ctx.setTransform(DPR,0,0,DPR,0,0);
-  horizon=H*0.36;groundY=H*0.92;cx=W/2;
-  laneW=Math.min(W*0.27,H*0.30,240);U=laneW*0.55;
+  cx=W/2;
+  if(H>W*1.15){ /* téléphone en portrait : caméra rapprochée */
+    horizon=H*0.44;groundY=H*0.86;laneW=Math.min(W*0.42,190);
+  }else{horizon=H*0.36;groundY=H*0.92;laneW=Math.min(W*0.27,H*0.30,240);}
+  U=laneW*0.55;
 }
 addEventListener('resize',resize);resize();
 
@@ -1728,7 +1731,7 @@ function overheadSign(z,k){
 
 function drawScene(){
   const zN=-2.6,Z=ZFAR+10,t=performance.now()/1000;
-  ctx.fillStyle='#cdd5dc';ctx.fillRect(0,0,W,H);
+  ctx.fillStyle=H>W*1.15?'#2b3138':'#cdd5dc';ctx.fillRect(0,0,W,H);
   const bl=proj(-WALL,Z,0),br=proj(WALL,Z,0),tl=proj(-WALL,Z,CEIL),tr=proj(WALL,Z,CEIL);
   // plafond
   let g=ctx.createLinearGradient(0,0,0,tl.y);g.addColorStop(0,'#1f252c');g.addColorStop(1,'#59636e');
