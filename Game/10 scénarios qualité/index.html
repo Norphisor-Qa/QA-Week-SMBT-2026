@@ -71,10 +71,12 @@ dialog::backdrop{background:#000c;backdrop-filter:blur(3px)}
 .zone.good{background:#dcfce7;color:#14532d;border:3px solid #16a34a}
 .zone.bad{background:#fee2e2;color:#7f1d1d;border:3px solid #dc2626;text-decoration:line-through}
 .zone.missed{background:#fef9c3;border:3px dashed #ca8a04;color:#713f12}
-.verdicts{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:12px}
+.verdicts{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .verdicts .btn{flex-direction:column;align-items:flex-start;justify-content:center;text-align:left;gap:0}
 .verdicts .btn.on{background:var(--yellow);color:#111;border-color:var(--yellow)}
 .verdicts small{display:block;font-weight:500;font-size:12px;opacity:.85}
+.hint{background:#2a2410;border-left:4px solid var(--yellow);border-radius:8px;padding:8px 12px;font-weight:700;margin:12px 0 0}
+.why{background:#111827;border-left:4px solid var(--yellow);border-radius:8px;padding:10px 12px;margin:10px 0 0;font-size:15px}
 .choice{display:block;width:100%;text-align:left;margin-top:8px;justify-content:flex-start}
 .choice.on{background:var(--yellow);color:#111;border-color:var(--yellow)}
 .stars{color:var(--yellow);font-size:44px;letter-spacing:6px;text-align:center}
@@ -118,284 +120,467 @@ dialog::backdrop{background:#000c;backdrop-filter:blur(3px)}
 "use strict";
 (() => {
 /*
- * Format des preuves : [[texte]] = zone suspecte à entourer · ((texte)) = zone cliquable sans écart.
+ * Format des preuves :
+ *   [[texte]] = L'ÉCART de la preuve (1 au maximum par preuve) · ((texte)) = élément cliquable sans écart.
+ *   answer : "E" = Écart · "C" = Fait compatible avec le dossier · "H" = Hors périmètre du dossier.
+ *   Règle : answer "E" ⇔ exactement une zone [[...]] ; answer "C" ou "H" ⇔ aucune zone [[...]].
+ *   x : explication affichée dans la correction (pourquoi il fallait entourer ou non).
  * Les versions FR et EN doivent garder le même ordre de zones, d'objets et de réponses.
- * answer : "A" = Anomalie, "V" = À vérifier, "C" = Cohérent.
  */
 const CASES = {
 fr: [
   { doc: "QT-25A349-01", family: "Tige RY", lot: "25A349", kind: "doc",
     facts: [
-      { obj: "ticket", title: "Ticket de quarantaine", text: "Pièces signalées : [[4 sur 36]]. Pièces identifiées : ((07)), ((12)), ((19)). [[Quatrième pièce non identifiée]].", answer: "A" },
-      { obj: "photo", title: "Photos du défaut", text: "Photos jointes : [[aucun numéro de pièce visible]]. Retouche réalisée le ((02/10)) : [[liste des pièces traitées absente]].", answer: "A" },
-      { obj: "record", title: "Bon de commande", text: "Référence ((PFX17315)) · Commande ((A75843)) · Lot ((25A349)) : concordent avec l’ordre de fabrication.", answer: "C" }
+      { obj: "ticket", title: "Ticket de quarantaine", answer: "E",
+        text: "Pièces signalées : ((4 sur 36)). Pièces identifiées : ((07)), ((12)), ((19)), [[quatrième pièce non identifiée]].",
+        x: "4 pièces sont signalées mais seulement 3 numéros sont donnés : la quatrième pièce n’est pas tracée. Les numéros 07, 12 et 19 sont corrects." },
+      { obj: "photo", title: "Photos du défaut", answer: "E",
+        text: "Photos jointes : ((3 photos)). Retouche réalisée le ((02/10)) : [[aucune liste des pièces retouchées]].",
+        x: "On ne sait pas quelles pièces ont été retouchées : le lien entre défaut et retouche manque. La date de retouche seule n’est pas un écart." },
+      { obj: "record", title: "Bon de commande", answer: "C",
+        text: "Référence ((PFX17315)) · Commande ((A75843)) · Lot ((25A349)) : identiques à l’ordre de fabrication.",
+        x: "Les trois références correspondent à l’ordre de fabrication : rien à entourer." }
     ],
     risk: "Traçabilité des pièces et de la retouche non démontrée.",
     decision: "Maintenir sous statut contrôlé et demander un complément traçable.",
     why: "Sans lien entre défaut, pièce et retouche, la clôture est prématurée." },
   { doc: "RC-2098 AC", family: "Tige TR", lot: "5390BC", kind: "doc",
     facts: [
-      { obj: "binder", title: "Plan de contrôle", text: "Plan : ((AQL 2,5)) en cours de production et [[contrôle final à 100 %]]. RC final : [[échantillon 5/40]].", answer: "A" },
-      { obj: "gauge", title: "Instrument de mesure", text: "Résolution de l’instrument : [[0,01 mm]]. Résultat recopié dans le RC : [[8,1234 mm]].", answer: "A" },
-      { obj: "record", title: "En-tête du rapport", text: "Lot ((5390BC)) · Matière ((Ti6Al4V)) · Formulaire ((révision AC)) : concordent.", answer: "C" }
+      { obj: "binder", title: "Plan de contrôle", answer: "E",
+        text: "Plan : ((AQL 2,5)) en production et ((contrôle final à 100 %)). RC final : [[échantillon de 5 pièces sur 40]].",
+        x: "Le plan exige un contrôle final à 100 %, le RC n’en montre que 5 sur 40 : c’est l’écart. L’AQL 2,5 concerne la production, il n’est pas en cause." },
+      { obj: "gauge", title: "Instrument de mesure", answer: "E",
+        text: "Résolution de l’instrument : ((0,01 mm)). Résultat recopié dans le RC : [[8,1234 mm]].",
+        x: "Un instrument au 0,01 mm ne peut pas donner 4 décimales : la valeur a été mal recopiée. La résolution de l’instrument est normale." },
+      { obj: "screen", title: "Planning de maintenance", answer: "H",
+        text: "Rectifieuse ((R-3)) : maintenance préventive prévue le ((14/11)).",
+        x: "Cette machine et cette date ne concernent pas le lot 5390BC : information hors périmètre, rien à entourer." }
     ],
     risk: "Contrôle différent de la stratégie prévue.",
     decision: "Ne pas approuver le RC avant alignement.",
     why: "Un rapport rempli ne démontre pas que la bonne stratégie a été appliquée." },
   { doc: "FMER-00968-FR AB", family: "Tige TR 2+", lot: "25C284", kind: "doc",
     facts: [
-      { obj: "screen", title: "Écran de la machine", text: "Programme attendu ((27260)) · programme chargé [[27250]].", answer: "A" },
-      { obj: "tray", title: "Kit d’outillage", text: "Kit attendu ((00968)) · kit enregistré sur la FMER [[00966]].", answer: "A" },
-      { obj: "record", title: "Fiche de réglage", text: "Machine ((INT-7)) · pression ((18 bar)) pour une plage ((16–20 bar)).", answer: "C" }
+      { obj: "screen", title: "Écran de la machine", answer: "E",
+        text: "Programme attendu ((27260)) · programme chargé [[27250]].",
+        x: "Le programme chargé n’est pas celui attendu : on démarrerait avec la mauvaise géométrie." },
+      { obj: "tray", title: "Kit d’outillage", answer: "E",
+        text: "Kit attendu ((00968)) · kit enregistré sur la FMER [[00966]].",
+        x: "Le kit enregistré ne correspond pas au kit attendu : la configuration n’est pas maîtrisée." },
+      { obj: "record", title: "Fiche de réglage", answer: "C",
+        text: "Machine ((INT-7)) · pression ((18 bar)) pour une plage ((16–20 bar)).",
+        x: "18 bar est bien dans la plage 16–20 bar : réglage conforme, rien à entourer." }
     ],
     risk: "Démarrage avec une configuration non maîtrisée.",
     decision: "Arrêter la mise en route et clarifier la configuration.",
-    why: "Aucune pièce n’est encore usinée : prévenir le démarrage, sans inventer un défaut produit." },
+    why: "Aucune pièce n’est encore usinée : on empêche le démarrage, sans inventer un défaut produit." },
   { doc: "MOP-0014", family: "Tige RB", lot: "5387BC", kind: "doc",
     facts: [
-      { obj: "ticket", title: "Ticket de quarantaine", text: "QT ouvert le ((29/09)). Première signature de l’opération de retouche le [[27/09]], avant l’ouverture du QT.", answer: "A" },
-      { obj: "record", title: "Feuille de suivi", text: "Même opération signée à nouveau le [[30/09]], [[sans correction ni justification]].", answer: "A" },
-      { obj: "screen", title: "Matrice de compétences", text: "Contrôle post-retouche ((présent)) · opérateurs ((qualifiés)) sur le poste.", answer: "C" }
+      { obj: "ticket", title: "Ticket de quarantaine", answer: "E",
+        text: "QT ouvert le ((29/09)). Première signature de la retouche le [[27/09]], avant l’ouverture du QT.",
+        x: "Une retouche ne peut pas être signée deux jours avant l’ouverture du QT : date erronée ou antidatée. La date d’ouverture du 29/09 est correcte." },
+      { obj: "record", title: "Feuille de suivi", answer: "E",
+        text: "Même opération signée à nouveau le ((30/09)), [[sans correction ni justification]].",
+        x: "Une deuxième signature sans correction ni justification brouille l’historique. La date du 30/09 seule n’est pas le problème." },
+      { obj: "screen", title: "Matrice de compétences", answer: "C",
+        text: "Opérateurs ((qualifiés)) sur le poste · contrôle après retouche ((présent)).",
+        x: "Qualification et contrôle sont en place : rien à entourer." }
     ],
     risk: "Historique réel des opérations non démontré.",
     decision: "Maintenir en attente et obtenir une correction traçable.",
     why: "Ne pas effacer ni antidater. Établir si une ou deux opérations ont réellement eu lieu." },
   { doc: "NUE-EC094 C", family: "Tige TR", lot: "3176BD", kind: "doc",
     facts: [
-      { obj: "binder", title: "Notice au poste", text: "Copie au poste : [[révision B]] (chanfrein seul). Révision en vigueur : ((C)), qui ajoute ((la profondeur L19)).", answer: "A" },
-      { obj: "gauge", title: "Moyen de contrôle", text: "Moyen déclaré ((EC094-02)) · moyen réellement utilisé [[EC094-01]], statut d’étalonnage [[indisponible]].", answer: "V" },
-      { obj: "record", title: "Relevé de mesure", text: "Valeur mesurée ((6,04 mm)) pour des limites fictives ((5,96–6,16 mm)).", answer: "C" }
+      { obj: "binder", title: "Notice au poste", answer: "E",
+        text: "Copie au poste : [[révision B]]. Révision en vigueur : ((C)), qui ajoute ((la profondeur L19)).",
+        x: "La copie au poste est en révision B alors que la C est en vigueur : la profondeur L19 n’est pas contrôlée." },
+      { obj: "record", title: "Relevé de mesure", answer: "C",
+        text: "Valeur mesurée ((6,04 mm)) pour des limites fictives ((5,96–6,16 mm)).",
+        x: "6,04 mm est dans les limites : fait compatible. Attention, un bon résultat ne prouve pas que la bonne instruction a été suivie." },
+      { obj: "photo", title: "Affichage sécurité", answer: "H",
+        text: "Consigne EPI : ((lunettes obligatoires)) au poste ((EC094)).",
+        x: "Consigne de sécurité valable, mais sans lien avec la conformité du lot : hors périmètre." }
     ],
     risk: "Fiabilité du résultat non démontrée.",
-    decision: "Suspendre l’acceptation et vérifier moyen et instruction.",
-    why: "La valeur est dans les limites, mais cela ne démontre pas une méthode applicable. Un statut inconnu n’est pas une preuve d’invalidité." },
+    decision: "Suspendre l’acceptation et mettre la bonne révision au poste.",
+    why: "La valeur est dans les limites, mais la méthode appliquée n’est pas la bonne : la cote L19 n’a pas été contrôlée." },
   { doc: "QT-26A142-02", family: "Ancillaire RY", lot: "26A142", kind: "tech",
     facts: [
-      { obj: "tray", title: "Pièce 01", text: "Pièce 01 : [[engagement incomplet]] confirmé avec ((deux moyens applicables)).", answer: "A" },
-      { obj: "label", title: "Bac du lot", text: "[[9 autres pièces non contrôlées]] dans le bac : étendue du défaut [[inconnue]].", answer: "V" },
-      { obj: "gauge", title: "Moyens de contrôle", text: "Moyens ((EC117-03)) et ((EC117-04)) : étalonnage ((valide)).", answer: "C" }
+      { obj: "tray", title: "Pièce 01", answer: "E",
+        text: "Pièce 01 : [[engagement incomplet]] confirmé avec ((deux moyens applicables)).",
+        x: "Le défaut est confirmé avec deux moyens adaptés : l’engagement incomplet est l’écart." },
+      { obj: "gauge", title: "Moyens de contrôle", answer: "C",
+        text: "Moyens ((EC117-03)) et ((EC117-04)) : étalonnage ((valide)).",
+        x: "Les deux moyens sont étalonnés : la mesure est fiable, rien à entourer." },
+      { obj: "label", title: "Bac rouge", answer: "C",
+        text: "Bac ((BLOQUÉ)) contenant les ((10 pièces)) du lot ((26A142)).",
+        x: "Le lot est bien isolé et identifié : c’est le confinement attendu, rien à entourer." }
     ],
     risk: "Défaut fonctionnel confirmé, étendue inconnue.",
-    decision: "Isoler les 10 pièces et étendre le contrôle individuellement.",
-    why: "Une pièce défaillante ne prouve pas que les dix le sont. Le confinement précède la disposition." },
+    decision: "Garder les 10 pièces isolées et les contrôler une par une.",
+    why: "Une pièce défaillante ne prouve pas que les dix le sont. On confine, puis on contrôle avant de décider." },
   { doc: "RC FAI-2114", family: "Tige TR 2+", lot: "6842BD", kind: "tech",
     facts: [
-      { obj: "record", title: "Rapport de première pièce", text: "Cote L10 : ((3,15 ±0,05 mm)). Mesures A6 : [[3,22]] ; [[3,21]] ; [[3,22]] mm.", answer: "A" },
-      { obj: "screen", title: "Mesure CAN", text: "Mesure CAN : ((3,17 mm)), mais [[méthode absente du RC]] et [[adéquation non démontrée]].", answer: "V" },
-      { obj: "binder", title: "Dossier de lot", text: "Rapports : même lot ((6842BD)), unités ((mm)).", answer: "C" }
+      { obj: "record", title: "Rapport de première pièce", answer: "E",
+        text: "Cote L10 : ((3,15 ±0,05 mm)). Mesure A6 : [[3,22 mm]].",
+        x: "Limite haute = 3,15 + 0,05 = 3,20 mm : 3,22 mm dépasse. La cote nominale n’est pas en cause." },
+      { obj: "screen", title: "Mesure CAN", answer: "C",
+        text: "Mesure CAN sur la même pièce : ((3,17 mm)).",
+        x: "3,17 mm est dans la tolérance : fait compatible. Mais cette mesure favorable n’annule pas le dépassement A6." },
+      { obj: "binder", title: "Archives", answer: "H",
+        text: "Rapport FAI de la ((Tige RB)), lot ((5387BC)), archivé en ((2025)).",
+        x: "Autre famille, autre lot : hors périmètre, rien à entourer." }
     ],
     risk: "Acceptation injustifiée sur la seule mesure favorable.",
-    decision: "Maintenir en investigation et démontrer l’adéquation des méthodes.",
-    why: "La limite haute est 3,20 mm. La mesure CAN ne supprime pas les dépassements A6." },
+    decision: "Maintenir en investigation et comparer les deux méthodes de mesure.",
+    why: "La limite haute est 3,20 mm. La mesure CAN ne supprime pas le dépassement A6." },
   { doc: "FMER-00921-FR", family: "Tige TR taille 2", lot: "25B517", kind: "tech",
     facts: [
-      { obj: "tray", title: "Porte-outil", text: "Outil prévu : ((OF0023FZ)) (neuf). Outil installé : [[OF0066FZ]] (ancien).", answer: "A" },
-      { obj: "screen", title: "Suivi des cotes", text: "Valeurs successives : ((2,03)) → ((2,05)) → ((2,06)) → ((2,08)) → [[2,09]] mm, [[en hausse continue]].", answer: "V" },
-      { obj: "record", title: "Fiche de contrôle", text: "Limites ((2,00–2,10 mm)) : aucune valeur disponible ne les dépasse.", answer: "C" }
+      { obj: "tray", title: "Porte-outil", answer: "E",
+        text: "Outil prévu : ((OF0023FZ)) (neuf). Outil installé : [[OF0066FZ]] (ancien).",
+        x: "L’outil installé est l’ancien au lieu du neuf prévu : la configuration ne respecte pas la FMER." },
+      { obj: "record", title: "Fiche de contrôle", answer: "C",
+        text: "Valeurs ((2,03)) → ((2,06)) → ((2,09)) mm pour des limites ((2,00–2,10 mm)).",
+        x: "Toutes les valeurs sont dans les limites : fait compatible. La hausse est un signal à surveiller, pas une non-conformité." },
+      { obj: "label", title: "Bac rouge", answer: "H",
+        text: "Pièces du lot ((25B099)), autre référence, en attente de décision ((depuis le 20/10)).",
+        x: "Autre lot, autre référence : hors périmètre de ce dossier." }
     ],
     risk: "Dérive potentielle et impact de configuration non évalué.",
-    decision: "Arrêter, sécuriser les 5 pièces et évaluer la configuration.",
-    why: "La tendance appelle une évaluation ; elle ne prouve pas que les cinq pièces sont dimensionnellement non conformes." },
+    decision: "Arrêter, sécuriser les 5 pièces et évaluer l’impact de l’outil.",
+    why: "La tendance appelle une évaluation, mais ne prouve pas que les pièces sont hors tolérance." },
   { doc: "MOP-2049-FIN", family: "Tige TR", lot: "5390BC", kind: "tech",
     facts: [
-      { obj: "binder", title: "Mode opératoire", text: "MOP historique : raccord en ((zone A)). Nouveau flux : [[zone B]], [[non décrite dans la MOP]].", answer: "A" },
-      { obj: "photo", title: "Photo de la première pièce", text: "Première pièce : [[variation de forme]] observée, [[sans mesure complémentaire]].", answer: "V" },
-      { obj: "record", title: "Page de garde de la MOP", text: "La MOP mentionne bien la famille ((Tige TR)) et la ((finition)).", answer: "C" }
+      { obj: "binder", title: "Mode opératoire", answer: "E",
+        text: "MOP : raccord en ((zone A)). Nouveau flux : [[zone B non décrite dans la MOP]].",
+        x: "La zone B n’est pas décrite : l’opérateur travaille sans instruction validée." },
+      { obj: "record", title: "Page de garde de la MOP", answer: "C",
+        text: "La MOP mentionne la famille ((Tige TR)) et l’opération de ((finition)).",
+        x: "La famille et l’opération sont les bonnes : rien à entourer. Mais cela ne couvre pas la zone B." },
+      { obj: "gauge", title: "Pied à coulisse", answer: "H",
+        text: "Pied à coulisse ((PC-112)) du poste voisin, étalonnage valide ((jusqu’en 03/2027)).",
+        x: "Instrument d’un autre poste, non utilisé pour ce dossier : hors périmètre." }
     ],
-    risk: "Altération potentielle par une finition non adaptée.",
-    decision: "Suspendre, adapter l’instruction et évaluer la première pièce.",
-    why: "La bonne famille ne démontre pas l’applicabilité au nouveau flux." },
+    risk: "Altération potentielle par une finition non décrite.",
+    decision: "Suspendre, mettre à jour la MOP et contrôler la première pièce.",
+    why: "La bonne famille ne démontre pas que la MOP s’applique au nouveau flux." },
   { doc: "NUE-EC102", family: "Tige TR", lot: "25C317", kind: "tech",
     facts: [
-      { obj: "gauge", title: "Gabarit utilisé", text: "12 pièces contrôlées avec [[EC102-01]]. Gabarit applicable selon la NUE : ((EC102-02)).", answer: "A" },
-      { obj: "record", title: "Relevé des butées", text: "Butées relevées : [[5,90]] et ((5,96)) mm. Limite basse fictive : ((5,96 mm)).", answer: "A" },
-      { obj: "screen", title: "Statut des gabarits", text: "Gabarits ((valides)) · gestuelle ((correcte)).", answer: "C" }
+      { obj: "gauge", title: "Gabarit utilisé", answer: "E",
+        text: "12 pièces contrôlées avec [[EC102-01]]. Gabarit applicable selon la NUE : ((EC102-02)).",
+        x: "Le gabarit utilisé n’est pas celui prévu par la NUE : les résultats ne sont pas exploitables." },
+      { obj: "record", title: "Relevé des butées", answer: "E",
+        text: "Butées relevées : [[5,90 mm]] et ((5,96 mm)). Limite basse fictive : ((5,96 mm)).",
+        x: "5,90 mm est sous la limite basse. 5,96 mm est pile à la limite, donc acceptable." },
+      { obj: "screen", title: "Statut des gabarits", answer: "C",
+        text: "Gabarits ((valides)) · gestuelle ((correcte)).",
+        x: "Gabarits valides et gestuelle correcte : rien à entourer. Un gabarit valide peut quand même être le mauvais." }
     ],
     risk: "Résultats potentiellement inexploitables avec le mauvais gabarit.",
     decision: "Isoler les 12 pièces et recontrôler avec EC102-02.",
     why: "Un moyen étalonné peut être inadapté. Les pièces ne sont pas automatiquement non conformes." },
   { doc: "ETQ-LBL-3310", family: "Glénosphère 36", lot: "26B208", kind: "doc",
     facts: [
-      { obj: "label", title: "Étiquette produit", text: "Lot imprimé sur l’étiquette : [[26B280]]. Lot de l’ordre de fabrication : ((26B208)).", answer: "A" },
-      { obj: "record", title: "Bon de conditionnement", text: "Quantité étiquetée ((40)) · quantité de l’ordre de fabrication ((40)) · référence ((GL-36-STD)).", answer: "C" },
-      { obj: "binder", title: "Check-list vide de ligne", text: "Check-list de vide de ligne [[non signée]] ; absence d’étiquettes du lot précédent [[non vérifiée]].", answer: "V" }
+      { obj: "label", title: "Étiquette produit", answer: "E",
+        text: "Lot imprimé sur l’étiquette : [[26B280]]. Lot de l’ordre de fabrication : ((26B208)).",
+        x: "26B280 au lieu de 26B208 : deux chiffres inversés suffisent à rompre la traçabilité." },
+      { obj: "record", title: "Bon de conditionnement", answer: "C",
+        text: "Quantité étiquetée ((40)) · quantité de l’OF ((40)) · référence ((GL-36-STD)).",
+        x: "Quantités et référence concordent : rien à entourer." },
+      { obj: "binder", title: "Check-list vide de ligne", answer: "E",
+        text: "Check-list de vide de ligne du ((lot précédent)) : [[non signée]].",
+        x: "Sans signature, rien ne prouve que les étiquettes de l’ancien lot ont été retirées." }
     ],
     risk: "Erreur d’identification du produit (étiquetage et traçabilité).",
     decision: "Bloquer le conditionnement, isoler les produits étiquetés et contrôler 100 % des étiquettes.",
     why: "Une seule étiquette erronée rompt la traçabilité. Le vide de ligne doit être démontré avant de reprendre." },
   { doc: "QT-26C051-01", family: "Insert PE", lot: "26C051", kind: "tech",
     facts: [
-      { obj: "photo", title: "Photo des sachets", text: "Sachets scellés : [[canal dans la soudure]] visible sur ((3)) sachets sur ((60)).", answer: "A" },
-      { obj: "screen", title: "Écran de la scelleuse", text: "Température ((185 °C)) pour une plage ((180–190 °C)) ; enregistrement des paramètres [[interrompu 14 min]] pendant la série.", answer: "V" },
-      { obj: "ticket", title: "Ticket de quarantaine", text: "Sachets isolés : ((3)), identifiés ((par numéro de série)).", answer: "C" }
+      { obj: "photo", title: "Photo des sachets", answer: "E",
+        text: "Sachets scellés : [[canal dans la soudure]] sur ((3)) sachets sur ((60)).",
+        x: "Un canal dans la soudure ouvre la barrière stérile : écart visible." },
+      { obj: "screen", title: "Écran de la scelleuse", answer: "E",
+        text: "Température ((185 °C)) pour une plage ((180–190 °C)) ; enregistrement [[interrompu 14 min]].",
+        x: "La température est correcte, mais pendant 14 min rien ne prouve que les paramètres étaient respectés." },
+      { obj: "ticket", title: "Ticket de quarantaine", answer: "C",
+        text: "Sachets isolés : ((3)), identifiés ((par numéro de série)).",
+        x: "Les 3 sachets sont isolés et identifiés : rien à entourer." }
     ],
     risk: "Intégrité de la barrière stérile non démontrée.",
     decision: "Isoler toute la série scellée pendant l’interruption et réaliser un test d’intégrité.",
     why: "Trois défauts visibles confirment un écart. L’interruption d’enregistrement empêche de prouver que le reste de la série est conforme." },
   { doc: "MAT-HAB-07", family: "Vis 6,5", lot: "26A877", kind: "doc",
     facts: [
-      { obj: "screen", title: "Matrice d’habilitation", text: "Opérateur ((J.M.)) : habilitation au contrôle visuel [[expirée le 15/03]].", answer: "A" },
-      { obj: "record", title: "Fiche de contrôle visuel", text: "Contrôle visuel de [[25 pièces]] signé par J.M. le [[02/04]].", answer: "A" },
-      { obj: "binder", title: "Instruction de contrôle", text: "Instruction de contrôle visuel ((révision D)) en vigueur au poste.", answer: "C" }
+      { obj: "screen", title: "Matrice d’habilitation", answer: "E",
+        text: "Opérateur ((J.M.)) : habilitation au contrôle visuel [[expirée le 15/03]].",
+        x: "L’habilitation de J.M. était expirée au moment du contrôle du 02/04." },
+      { obj: "record", title: "Fiche de contrôle visuel", answer: "C",
+        text: "Contrôle de ((25 pièces)) signé par ((J.M.)) le ((02/04)).",
+        x: "La fiche est bien remplie : l’écart vient de l’habilitation (autre preuve), pas de la fiche elle-même." },
+      { obj: "photo", title: "Planning des congés", answer: "H",
+        text: "Planning des congés de ((novembre)) affiché au poste.",
+        x: "Information d’organisation sans lien avec le lot : hors périmètre." }
     ],
     risk: "Contrôle réalisé par une personne non habilitée : résultat non démontré.",
     decision: "Faire recontrôler les 25 pièces par un opérateur habilité et traiter l’habilitation.",
-    why: "Le contrôle n’est pas forcément faux, mais il n’est pas démontré. On recontrôle avant de libérer, sans conclure à un défaut produit." },
+    why: "Le contrôle n’est pas forcément faux, mais il n’est pas démontré. On recontrôle avant de libérer." },
   { doc: "CDM-TI-4410", family: "Tige humérale", lot: "26D112", kind: "doc",
     facts: [
-      { obj: "binder", title: "Certificat matière", text: "Certificat fournisseur : nuance ((Ti6Al4V ELI)), coulée [[H7731]]. Bon de réception : coulée [[H7713]].", answer: "A" },
-      { obj: "record", title: "Contrôle de réception", text: "Dimensions des barres ((conformes)) · quantité ((12 barres)) · fournisseur ((agréé)).", answer: "C" },
-      { obj: "tray", title: "Barres en stock", text: "[[Marquage effacé]] sur ((2)) barres : [[correspondance avec la coulée non vérifiable]].", answer: "V" }
+      { obj: "binder", title: "Certificat matière", answer: "E",
+        text: "Certificat : nuance ((Ti6Al4V ELI)), coulée ((H7731)). Bon de réception : coulée [[H7713]].",
+        x: "Le bon de réception indique H7713 au lieu de H7731 : la matière n’est plus reliée à son certificat." },
+      { obj: "record", title: "Contrôle de réception", answer: "C",
+        text: "Dimensions des barres ((conformes)) · quantité ((12 barres)) · fournisseur ((agréé)).",
+        x: "Dimensions, quantité et fournisseur sont corrects : rien à entourer." },
+      { obj: "tray", title: "Barres en stock", answer: "E",
+        text: "Sur ((2)) barres : [[marquage effacé]].",
+        x: "Sans marquage, impossible de relier ces barres à leur coulée." }
     ],
     risk: "Traçabilité de la matière non démontrée.",
     decision: "Mettre la matière en quarantaine et obtenir une clarification documentée du fournisseur.",
     why: "Une inversion de chiffres peut être une simple erreur de saisie, mais elle doit être corrigée et prouvée avant l’usinage." },
   { doc: "NET-LAV-12", family: "Calotte humérale", lot: "26C390", kind: "tech",
     facts: [
-      { obj: "screen", title: "Écran de la laveuse", text: "Cycle ((n° 4412)) : conductivité du rinçage final [[42 µS/cm]] pour un critère ((≤ 30 µS/cm)).", answer: "A" },
-      { obj: "photo", title: "Photo après séchage", text: "[[Traces blanchâtres]] sur ((2 pièces sur 24)) ; [[origine non déterminée]].", answer: "V" },
-      { obj: "record", title: "Fiche de charge", text: "Charge ((24 pièces)) · lot ((26C390)) · opérateur ((habilité)).", answer: "C" }
+      { obj: "screen", title: "Écran de la laveuse", answer: "E",
+        text: "Cycle ((n° 4412)) : conductivité du rinçage final [[42 µS/cm]] pour un critère ((≤ 30 µS/cm)).",
+        x: "42 µS/cm dépasse le critère de 30 µS/cm : le rinçage n’est pas conforme." },
+      { obj: "record", title: "Fiche de charge", answer: "C",
+        text: "Charge ((24 pièces)) · lot ((26C390)) · opérateur ((habilité)).",
+        x: "Charge, lot et opérateur sont corrects : rien à entourer." },
+      { obj: "label", title: "Bac rouge", answer: "H",
+        text: "Inserts ((PE)) du lot ((26C051)) en attente d’un test d’intégrité.",
+        x: "Autre produit, autre lot : hors périmètre." }
     ],
     risk: "Propreté des pièces non démontrée (résidus possibles).",
-    decision: "Bloquer la charge, relaver selon la procédure et analyser l’origine des traces.",
-    why: "Un critère de rinçage dépassé est un écart établi. Les traces doivent être analysées avant de conclure sur leur nature." }
+    decision: "Bloquer la charge, la relaver selon la procédure et analyser l’origine de l’écart.",
+    why: "Un critère de rinçage dépassé est un écart établi : on ne libère pas sans nouveau lavage conforme." }
 ],
 en: [
   { doc: "QT-25A349-01", family: "RY stem", lot: "25A349", kind: "doc",
     facts: [
-      { obj: "ticket", title: "Quarantine ticket", text: "Parts reported: [[4 out of 36]]. Parts identified: ((07)), ((12)), ((19)). [[Fourth part not identified]].", answer: "A" },
-      { obj: "photo", title: "Defect photos", text: "Attached photos: [[no part number visible]]. Rework done on ((02/10)): [[list of reworked parts missing]].", answer: "A" },
-      { obj: "record", title: "Purchase order", text: "Reference ((PFX17315)) · Order ((A75843)) · Lot ((25A349)): match the work order.", answer: "C" }
+      { obj: "ticket", title: "Quarantine ticket", answer: "E",
+        text: "Parts reported: ((4 out of 36)). Parts identified: ((07)), ((12)), ((19)), [[fourth part not identified]].",
+        x: "4 parts are reported but only 3 numbers are given: the fourth part is not traced. Numbers 07, 12 and 19 are fine." },
+      { obj: "photo", title: "Defect photos", answer: "E",
+        text: "Attached photos: ((3 photos)). Rework done on ((02/10)): [[no list of reworked parts]].",
+        x: "We do not know which parts were reworked: the link between defect and rework is missing. The rework date alone is not a deviation." },
+      { obj: "record", title: "Purchase order", answer: "C",
+        text: "Reference ((PFX17315)) · Order ((A75843)) · Lot ((25A349)): identical to the work order.",
+        x: "All three references match the work order: nothing to circle." }
     ],
     risk: "Traceability of the parts and the rework not demonstrated.",
     decision: "Keep under controlled status and request traceable additional information.",
     why: "Without a link between defect, part and rework, closing the case is premature." },
   { doc: "RC-2098 AC", family: "TR stem", lot: "5390BC", kind: "doc",
     facts: [
-      { obj: "binder", title: "Control plan", text: "Plan: ((AQL 2.5)) during production and [[100% final inspection]]. Final report: [[sample 5/40]].", answer: "A" },
-      { obj: "gauge", title: "Measuring instrument", text: "Instrument resolution: [[0.01 mm]]. Result copied into the report: [[8.1234 mm]].", answer: "A" },
-      { obj: "record", title: "Report header", text: "Lot ((5390BC)) · Material ((Ti6Al4V)) · Form ((revision AC)): consistent.", answer: "C" }
+      { obj: "binder", title: "Control plan", answer: "E",
+        text: "Plan: ((AQL 2.5)) during production and ((100% final inspection)). Final report: [[sample of 5 parts out of 40]].",
+        x: "The plan requires 100% final inspection; the report shows only 5 out of 40: that is the deviation. AQL 2.5 applies to production and is not in question." },
+      { obj: "gauge", title: "Measuring instrument", answer: "E",
+        text: "Instrument resolution: ((0.01 mm)). Result copied into the report: [[8.1234 mm]].",
+        x: "A 0.01 mm instrument cannot give 4 decimals: the value was copied incorrectly. The instrument resolution itself is normal." },
+      { obj: "screen", title: "Maintenance schedule", answer: "H",
+        text: "Grinder ((R-3)): preventive maintenance planned on ((14/11)).",
+        x: "This machine and date do not concern lot 5390BC: out of scope, nothing to circle." }
     ],
     risk: "Inspection differs from the planned strategy.",
     decision: "Do not approve the report until it is aligned.",
     why: "A completed report does not prove that the right strategy was applied." },
   { doc: "FMER-00968-FR AB", family: "TR 2+ stem", lot: "25C284", kind: "doc",
     facts: [
-      { obj: "screen", title: "Machine screen", text: "Expected program ((27260)) · loaded program [[27250]].", answer: "A" },
-      { obj: "tray", title: "Tooling kit", text: "Expected kit ((00968)) · kit recorded on the setup sheet [[00966]].", answer: "A" },
-      { obj: "record", title: "Setting sheet", text: "Machine ((INT-7)) · pressure ((18 bar)) for a range of ((16–20 bar)).", answer: "C" }
+      { obj: "screen", title: "Machine screen", answer: "E",
+        text: "Expected program ((27260)) · loaded program [[27250]].",
+        x: "The loaded program is not the expected one: we would start with the wrong geometry." },
+      { obj: "tray", title: "Tooling kit", answer: "E",
+        text: "Expected kit ((00968)) · kit recorded on the setup sheet [[00966]].",
+        x: "The recorded kit does not match the expected kit: the configuration is not under control." },
+      { obj: "record", title: "Setting sheet", answer: "C",
+        text: "Machine ((INT-7)) · pressure ((18 bar)) for a range of ((16–20 bar)).",
+        x: "18 bar is within the 16–20 bar range: correct setting, nothing to circle." }
     ],
     risk: "Start-up with an uncontrolled configuration.",
     decision: "Stop the start-up and clarify the configuration.",
     why: "No part has been machined yet: prevent the start-up, without inventing a product defect." },
   { doc: "MOP-0014", family: "RB stem", lot: "5387BC", kind: "doc",
     facts: [
-      { obj: "ticket", title: "Quarantine ticket", text: "Ticket opened on ((29/09)). First signature of the rework operation on [[27/09]], before the ticket was opened.", answer: "A" },
-      { obj: "record", title: "Traveller sheet", text: "Same operation signed again on [[30/09]], [[with no correction or justification]].", answer: "A" },
-      { obj: "screen", title: "Skills matrix", text: "Post-rework inspection ((present)) · operators ((qualified)) for the station.", answer: "C" }
+      { obj: "ticket", title: "Quarantine ticket", answer: "E",
+        text: "Ticket opened on ((29/09)). First signature of the rework on [[27/09]], before the ticket was opened.",
+        x: "A rework cannot be signed two days before the ticket was opened: wrong or backdated date. The opening date of 29/09 is fine." },
+      { obj: "record", title: "Traveller sheet", answer: "E",
+        text: "Same operation signed again on ((30/09)), [[with no correction or justification]].",
+        x: "A second signature with no correction or justification blurs the history. The 30/09 date alone is not the problem." },
+      { obj: "screen", title: "Skills matrix", answer: "C",
+        text: "Operators ((qualified)) for the station · post-rework inspection ((present)).",
+        x: "Qualification and inspection are in place: nothing to circle." }
     ],
     risk: "Actual operation history not demonstrated.",
     decision: "Keep on hold and obtain a traceable correction.",
     why: "Do not erase or backdate. Establish whether one or two operations actually took place." },
   { doc: "NUE-EC094 C", family: "TR stem", lot: "3176BD", kind: "doc",
     facts: [
-      { obj: "binder", title: "Manual at the station", text: "Copy at the station: [[revision B]] (chamfer only). Current revision: ((C)), which adds ((the L19 depth)).", answer: "A" },
-      { obj: "gauge", title: "Inspection device", text: "Declared device ((EC094-02)) · device actually used [[EC094-01]], calibration status [[unavailable]].", answer: "V" },
-      { obj: "record", title: "Measurement record", text: "Measured value ((6.04 mm)) for fictitious limits of ((5.96–6.16 mm)).", answer: "C" }
+      { obj: "binder", title: "Manual at the station", answer: "E",
+        text: "Copy at the station: [[revision B]]. Current revision: ((C)), which adds ((the L19 depth)).",
+        x: "The copy at the station is revision B while C is current: the L19 depth is not inspected." },
+      { obj: "record", title: "Measurement record", answer: "C",
+        text: "Measured value ((6.04 mm)) for fictitious limits of ((5.96–6.16 mm)).",
+        x: "6.04 mm is within limits: consistent fact. But a good result does not prove the right instruction was followed." },
+      { obj: "photo", title: "Safety notice", answer: "H",
+        text: "PPE rule: ((safety glasses required)) at station ((EC094)).",
+        x: "A valid safety rule, but unrelated to the lot’s conformity: out of scope." }
     ],
     risk: "Reliability of the result not demonstrated.",
-    decision: "Suspend acceptance and check the device and the instruction.",
-    why: "The value is within limits, but that does not prove an applicable method. An unknown status is not proof of invalidity." },
+    decision: "Suspend acceptance and put the right revision at the station.",
+    why: "The value is within limits, but the wrong method was applied: the L19 dimension was not inspected." },
   { doc: "QT-26A142-02", family: "RY instrument", lot: "26A142", kind: "tech",
     facts: [
-      { obj: "tray", title: "Part 01", text: "Part 01: [[incomplete engagement]] confirmed with ((two applicable devices)).", answer: "A" },
-      { obj: "label", title: "Lot bin", text: "[[9 other parts not inspected]] in the bin: extent of the defect [[unknown]].", answer: "V" },
-      { obj: "gauge", title: "Inspection devices", text: "Devices ((EC117-03)) and ((EC117-04)): calibration ((valid)).", answer: "C" }
+      { obj: "tray", title: "Part 01", answer: "E",
+        text: "Part 01: [[incomplete engagement]] confirmed with ((two applicable devices)).",
+        x: "The defect is confirmed with two suitable devices: the incomplete engagement is the deviation." },
+      { obj: "gauge", title: "Inspection devices", answer: "C",
+        text: "Devices ((EC117-03)) and ((EC117-04)): calibration ((valid)).",
+        x: "Both devices are calibrated: the measurement is reliable, nothing to circle." },
+      { obj: "label", title: "Red bin", answer: "C",
+        text: "((ON HOLD)) bin containing the ((10 parts)) of lot ((26A142)).",
+        x: "The lot is properly isolated and identified: this is the expected containment, nothing to circle." }
     ],
     risk: "Functional defect confirmed, extent unknown.",
-    decision: "Isolate the 10 parts and extend inspection to each part.",
-    why: "One failed part does not prove that all ten are defective. Containment comes before disposition." },
+    decision: "Keep the 10 parts isolated and inspect them one by one.",
+    why: "One failed part does not prove all ten are defective. Contain first, then inspect before deciding." },
   { doc: "RC FAI-2114", family: "TR 2+ stem", lot: "6842BD", kind: "tech",
     facts: [
-      { obj: "record", title: "First article report", text: "Dimension L10: ((3.15 ±0.05 mm)). A6 measurements: [[3.22]]; [[3.21]]; [[3.22]] mm.", answer: "A" },
-      { obj: "screen", title: "CMM measurement", text: "CMM measurement: ((3.17 mm)), but [[method missing from the report]] and [[suitability not demonstrated]].", answer: "V" },
-      { obj: "binder", title: "Lot file", text: "Reports: same lot ((6842BD)), units ((mm)).", answer: "C" }
+      { obj: "record", title: "First article report", answer: "E",
+        text: "Dimension L10: ((3.15 ±0.05 mm)). A6 measurement: [[3.22 mm]].",
+        x: "Upper limit = 3.15 + 0.05 = 3.20 mm: 3.22 mm exceeds it. The nominal dimension is not in question." },
+      { obj: "screen", title: "CMM measurement", answer: "C",
+        text: "CMM measurement on the same part: ((3.17 mm)).",
+        x: "3.17 mm is within tolerance: consistent fact. But this favourable value does not cancel the A6 exceedance." },
+      { obj: "binder", title: "Archives", answer: "H",
+        text: "FAI report for the ((RB stem)), lot ((5387BC)), archived in ((2025)).",
+        x: "Different family, different lot: out of scope, nothing to circle." }
     ],
     risk: "Unjustified acceptance based only on the favourable measurement.",
-    decision: "Keep under investigation and demonstrate the methods are suitable.",
-    why: "The upper limit is 3.20 mm. The CMM value does not cancel the A6 exceedances." },
+    decision: "Keep under investigation and compare the two measurement methods.",
+    why: "The upper limit is 3.20 mm. The CMM value does not cancel the A6 exceedance." },
   { doc: "FMER-00921-FR", family: "TR stem size 2", lot: "25B517", kind: "tech",
     facts: [
-      { obj: "tray", title: "Tool holder", text: "Planned tool: ((OF0023FZ)) (new). Installed tool: [[OF0066FZ]] (old).", answer: "A" },
-      { obj: "screen", title: "Dimension trend", text: "Successive values: ((2.03)) → ((2.05)) → ((2.06)) → ((2.08)) → [[2.09]] mm, [[steadily rising]].", answer: "V" },
-      { obj: "record", title: "Inspection sheet", text: "Limits ((2.00–2.10 mm)): no available value exceeds them.", answer: "C" }
+      { obj: "tray", title: "Tool holder", answer: "E",
+        text: "Planned tool: ((OF0023FZ)) (new). Installed tool: [[OF0066FZ]] (old).",
+        x: "The old tool is installed instead of the planned new one: the configuration does not follow the setup sheet." },
+      { obj: "record", title: "Inspection sheet", answer: "C",
+        text: "Values ((2.03)) → ((2.06)) → ((2.09)) mm for limits of ((2.00–2.10 mm)).",
+        x: "All values are within limits: consistent fact. The rise is a signal to watch, not a non-conformity." },
+      { obj: "label", title: "Red bin", answer: "H",
+        text: "Parts from lot ((25B099)), another reference, awaiting decision ((since 20/10)).",
+        x: "Different lot, different reference: out of scope for this case." }
     ],
     risk: "Potential drift and configuration impact not assessed.",
-    decision: "Stop, secure the 5 parts and assess the configuration.",
-    why: "The trend calls for an assessment; it does not prove the five parts are dimensionally non-conforming." },
+    decision: "Stop, secure the 5 parts and assess the impact of the tool.",
+    why: "The trend calls for an assessment, but does not prove the parts are out of tolerance." },
   { doc: "MOP-2049-FIN", family: "TR stem", lot: "5390BC", kind: "tech",
     facts: [
-      { obj: "binder", title: "Operating procedure", text: "Historical procedure: blending in ((zone A)). New flow: [[zone B]], [[not described in the procedure]].", answer: "A" },
-      { obj: "photo", title: "First part photo", text: "First part: [[shape variation]] observed, [[with no additional measurement]].", answer: "V" },
-      { obj: "record", title: "Procedure cover page", text: "The procedure does mention the ((TR stem)) family and ((finishing)).", answer: "C" }
+      { obj: "binder", title: "Operating procedure", answer: "E",
+        text: "Procedure: blending in ((zone A)). New flow: [[zone B not described in the procedure]].",
+        x: "Zone B is not described: the operator works without a validated instruction." },
+      { obj: "record", title: "Procedure cover page", answer: "C",
+        text: "The procedure mentions the ((TR stem)) family and the ((finishing)) operation.",
+        x: "The family and operation are right: nothing to circle. But this does not cover zone B." },
+      { obj: "gauge", title: "Calliper", answer: "H",
+        text: "Calliper ((PC-112)) from the next station, calibration valid ((until 03/2027)).",
+        x: "Instrument from another station, not used for this case: out of scope." }
     ],
-    risk: "Potential damage from an unsuitable finishing operation.",
-    decision: "Suspend, update the instruction and assess the first part.",
+    risk: "Potential damage from an undescribed finishing operation.",
+    decision: "Suspend, update the procedure and inspect the first part.",
     why: "The right product family does not prove the procedure applies to the new flow." },
   { doc: "NUE-EC102", family: "TR stem", lot: "25C317", kind: "tech",
     facts: [
-      { obj: "gauge", title: "Gauge used", text: "12 parts inspected with [[EC102-01]]. Gauge required by the manual: ((EC102-02)).", answer: "A" },
-      { obj: "record", title: "Stop readings", text: "Stop readings: [[5.90]] and ((5.96)) mm. Fictitious lower limit: ((5.96 mm)).", answer: "A" },
-      { obj: "screen", title: "Gauge status", text: "Gauges ((valid)) · handling ((correct)).", answer: "C" }
+      { obj: "gauge", title: "Gauge used", answer: "E",
+        text: "12 parts inspected with [[EC102-01]]. Gauge required by the manual: ((EC102-02)).",
+        x: "The gauge used is not the one required by the manual: the results cannot be used." },
+      { obj: "record", title: "Stop readings", answer: "E",
+        text: "Stop readings: [[5.90 mm]] and ((5.96 mm)). Fictitious lower limit: ((5.96 mm)).",
+        x: "5.90 mm is below the lower limit. 5.96 mm is exactly at the limit, so acceptable." },
+      { obj: "screen", title: "Gauge status", answer: "C",
+        text: "Gauges ((valid)) · handling ((correct)).",
+        x: "Valid gauges and correct handling: nothing to circle. A valid gauge can still be the wrong one." }
     ],
     risk: "Results potentially unusable with the wrong gauge.",
     decision: "Isolate the 12 parts and re-inspect with EC102-02.",
     why: "A calibrated device can still be unsuitable. The parts are not automatically non-conforming." },
   { doc: "ETQ-LBL-3310", family: "Glenosphere 36", lot: "26B208", kind: "doc",
     facts: [
-      { obj: "label", title: "Product label", text: "Lot printed on the label: [[26B280]]. Work order lot: ((26B208)).", answer: "A" },
-      { obj: "record", title: "Packaging record", text: "Quantity labelled ((40)) · work order quantity ((40)) · reference ((GL-36-STD)).", answer: "C" },
-      { obj: "binder", title: "Line clearance checklist", text: "Line clearance checklist [[not signed]]; absence of labels from the previous lot [[not checked]].", answer: "V" }
+      { obj: "label", title: "Product label", answer: "E",
+        text: "Lot printed on the label: [[26B280]]. Work order lot: ((26B208)).",
+        x: "26B280 instead of 26B208: two swapped digits are enough to break traceability." },
+      { obj: "record", title: "Packaging record", answer: "C",
+        text: "Quantity labelled ((40)) · work order quantity ((40)) · reference ((GL-36-STD)).",
+        x: "Quantities and reference match: nothing to circle." },
+      { obj: "binder", title: "Line clearance checklist", answer: "E",
+        text: "Line clearance checklist for the ((previous lot)): [[not signed]].",
+        x: "Without a signature, nothing proves the labels from the previous lot were removed." }
     ],
     risk: "Product misidentification (labelling and traceability).",
     decision: "Stop packaging, isolate the labelled products and check 100% of the labels.",
     why: "A single wrong label breaks traceability. Line clearance must be demonstrated before restarting." },
   { doc: "QT-26C051-01", family: "PE insert", lot: "26C051", kind: "tech",
     facts: [
-      { obj: "photo", title: "Pouch photo", text: "Sealed pouches: [[channel in the seal]] visible on ((3)) pouches out of ((60)).", answer: "A" },
-      { obj: "screen", title: "Sealer screen", text: "Temperature ((185 °C)) for a range of ((180–190 °C)); parameter recording [[interrupted for 14 min]] during the batch.", answer: "V" },
-      { obj: "ticket", title: "Quarantine ticket", text: "Pouches isolated: ((3)), identified ((by serial number)).", answer: "C" }
+      { obj: "photo", title: "Pouch photo", answer: "E",
+        text: "Sealed pouches: [[channel in the seal]] on ((3)) pouches out of ((60)).",
+        x: "A channel in the seal opens the sterile barrier: visible deviation." },
+      { obj: "screen", title: "Sealer screen", answer: "E",
+        text: "Temperature ((185 °C)) for a range of ((180–190 °C)); recording [[interrupted for 14 min]].",
+        x: "The temperature is right, but for 14 minutes nothing proves the parameters were met." },
+      { obj: "ticket", title: "Quarantine ticket", answer: "C",
+        text: "Pouches isolated: ((3)), identified ((by serial number)).",
+        x: "The 3 pouches are isolated and identified: nothing to circle." }
     ],
     risk: "Sterile barrier integrity not demonstrated.",
     decision: "Isolate the whole batch sealed during the interruption and run an integrity test.",
     why: "Three visible defects confirm a deviation. The recording gap means the rest of the batch cannot be shown to conform." },
   { doc: "MAT-HAB-07", family: "6.5 screw", lot: "26A877", kind: "doc",
     facts: [
-      { obj: "screen", title: "Qualification matrix", text: "Operator ((J.M.)): visual inspection qualification [[expired on 15/03]].", answer: "A" },
-      { obj: "record", title: "Visual inspection sheet", text: "Visual inspection of [[25 parts]] signed by J.M. on [[02/04]].", answer: "A" },
-      { obj: "binder", title: "Inspection instruction", text: "Visual inspection instruction ((revision D)) current at the station.", answer: "C" }
+      { obj: "screen", title: "Qualification matrix", answer: "E",
+        text: "Operator ((J.M.)): visual inspection qualification [[expired on 15/03]].",
+        x: "J.M.’s qualification had expired at the time of the 02/04 inspection." },
+      { obj: "record", title: "Visual inspection sheet", answer: "C",
+        text: "Inspection of ((25 parts)) signed by ((J.M.)) on ((02/04)).",
+        x: "The sheet is properly filled in: the deviation comes from the qualification (other evidence), not the sheet itself." },
+      { obj: "photo", title: "Holiday schedule", answer: "H",
+        text: "((November)) holiday schedule posted at the station.",
+        x: "Organisational information unrelated to the lot: out of scope." }
     ],
     risk: "Inspection performed by an unqualified person: result not demonstrated.",
     decision: "Have the 25 parts re-inspected by a qualified operator and address the qualification.",
-    why: "The inspection is not necessarily wrong, but it is not demonstrated. Re-inspect before release, without concluding there is a product defect." },
+    why: "The inspection is not necessarily wrong, but it is not demonstrated. Re-inspect before release." },
   { doc: "CDM-TI-4410", family: "Humeral stem", lot: "26D112", kind: "doc",
     facts: [
-      { obj: "binder", title: "Material certificate", text: "Supplier certificate: grade ((Ti6Al4V ELI)), heat [[H7731]]. Goods receipt: heat [[H7713]].", answer: "A" },
-      { obj: "record", title: "Incoming inspection", text: "Bar dimensions ((compliant)) · quantity ((12 bars)) · supplier ((approved)).", answer: "C" },
-      { obj: "tray", title: "Bars in stock", text: "[[Marking worn off]] on ((2)) bars: [[link to the heat cannot be checked]].", answer: "V" }
+      { obj: "binder", title: "Material certificate", answer: "E",
+        text: "Certificate: grade ((Ti6Al4V ELI)), heat ((H7731)). Goods receipt: heat [[H7713]].",
+        x: "The goods receipt shows H7713 instead of H7731: the material is no longer linked to its certificate." },
+      { obj: "record", title: "Incoming inspection", answer: "C",
+        text: "Bar dimensions ((compliant)) · quantity ((12 bars)) · supplier ((approved)).",
+        x: "Dimensions, quantity and supplier are correct: nothing to circle." },
+      { obj: "tray", title: "Bars in stock", answer: "E",
+        text: "On ((2)) bars: [[marking worn off]].",
+        x: "Without marking, these bars cannot be linked to their heat." }
     ],
     risk: "Material traceability not demonstrated.",
     decision: "Quarantine the material and obtain a documented clarification from the supplier.",
     why: "Swapped digits may just be a typing error, but it must be corrected and proven before machining." },
   { doc: "NET-LAV-12", family: "Humeral head", lot: "26C390", kind: "tech",
     facts: [
-      { obj: "screen", title: "Washer screen", text: "Cycle ((no. 4412)): final rinse conductivity [[42 µS/cm]] for a criterion of ((≤ 30 µS/cm)).", answer: "A" },
-      { obj: "photo", title: "Photo after drying", text: "[[Whitish marks]] on ((2 parts out of 24)); [[origin not determined]].", answer: "V" },
-      { obj: "record", title: "Load sheet", text: "Load ((24 parts)) · lot ((26C390)) · operator ((qualified)).", answer: "C" }
+      { obj: "screen", title: "Washer screen", answer: "E",
+        text: "Cycle ((no. 4412)): final rinse conductivity [[42 µS/cm]] for a criterion of ((≤ 30 µS/cm)).",
+        x: "42 µS/cm exceeds the 30 µS/cm criterion: the rinse is not compliant." },
+      { obj: "record", title: "Load sheet", answer: "C",
+        text: "Load ((24 parts)) · lot ((26C390)) · operator ((qualified)).",
+        x: "Load, lot and operator are correct: nothing to circle." },
+      { obj: "label", title: "Red bin", answer: "H",
+        text: "((PE)) inserts from lot ((26C051)) awaiting an integrity test.",
+        x: "Different product, different lot: out of scope." }
     ],
     risk: "Part cleanliness not demonstrated (possible residues).",
-    decision: "Hold the load, rewash according to the procedure and analyse the origin of the marks.",
-    why: "An exceeded rinse criterion is an established deviation. The marks must be analysed before concluding on their nature." }
+    decision: "Hold the load, rewash according to the procedure and analyse the origin of the deviation.",
+    why: "An exceeded rinse criterion is an established deviation: do not release without a new compliant wash." }
 ]
 };
 
@@ -405,7 +590,7 @@ const T = {
     skip: "Aller au jeu", howTo: "COMMENT JOUER",
     notice: "Simulation pédagogique. Produits, lots, documents, mesures et décisions fictifs. Ne pas utiliser pour décider de la conformité ou de la sécurité d’un dispositif médical réel.",
     sub: "ENQUÊTE AU POSTE DE TRAVAIL",
-    intro: "Fouille le poste, ouvre les documents à la loupe, entoure les écarts, puis va voir le responsable qualité pour décider.",
+    intro: "Fouille le poste, ouvre les documents à la loupe, entoure l’écart s’il y en a un, puis va voir le responsable qualité pour décider.",
     mode: "Mode", modeA: "Accompagné : les preuves sont signalées", modeE: "Expert : à toi de trouver les preuves",
     random: "▶ DOSSIER ALÉATOIRE",
     lockedCase: "Verrouillé", lockHint: "Il faut {need} ★ au total",
@@ -419,39 +604,41 @@ const T = {
     examined: ", examiné ({v})", door: "Porte du bureau du responsable qualité", doorLocked: ", examine d’abord les 3 preuves",
     sceneAria: "Poste de travail à explorer", decorAria: "Élément du décor", resp1: "RESP.", resp2: "QUALITÉ", blocked: "BLOQUÉ", quarantine: "QUARANTAINE",
     sceneHint: "Touchez un objet de la scène ou un bouton ci-dessous.", objListTitle: "Objets du poste", nothing: "{o} : rien à signaler pour ce dossier.",
-    invAria: "Dossier d’enquête", proof: "Preuve {n}", zonesCircled: "{n} zone(s) entourée(s)",
+    invAria: "Dossier d’enquête", proof: "Preuve {n}", circled: "Entouré : « {z} »", noCircle: "Rien d’entouré",
     toFindA: "À trouver sur le poste (repère ?)", toFind: "À trouver sur le poste",
     goDoor: "🚪 Aller voir le responsable qualité", office: "Bureau du responsable", ranked: "{n}/3 preuves classées",
-    loupeHelp: "① Clique sur les éléments soulignés pour <b>entourer</b> ceux qui posent problème (ou rien si tout est cohérent). ② Qualifie la preuve.",
+    loupeHelp: "① Si un élément pose problème, clique dessus pour l’<b>entourer</b> (1 seul par preuve) : la preuve passe en « Écart ». ② Sinon, choisis « Fait compatible avec le dossier » ou « Hors périmètre du dossier ».",
+    needZone: "Pour un écart, entoure l’élément qui pose problème dans le document.",
     qualify: "Qualifier la preuve", rank: "📁 CLASSER DANS LE DOSSIER", close: "Fermer",
     rankedMsg: "Preuve classée : <b>{v}</b>. Encore {n} preuve(s) à examiner.",
     allRanked: "<b>Toutes les preuves sont classées.</b> Va frapper à la porte du responsable qualité pour décider (tu peux encore rouvrir une preuve depuis le dossier).",
     doorWait: "Le responsable attend les 3 preuves classées avant de te recevoir.",
     officeTitle: "Bureau du responsable qualité", officeQ: "« Alors, qu’est-ce que les preuves démontrent ? Et que fait-on maintenant ? »",
+    oneChoice: "Choisis 1 réponse pour chacun des 3 points.", oneEach: "(1 choix)", answered: "{n}/3 points répondus",
     q1: "1. Risque principal", q2: "2. Décision immédiate", q3: "3. Justification",
     rNone: "Aucun risque : poursuivre le flux.", rPatient: "Danger patient démontré.",
     dRelease: "Libérer immédiatement.", dScrap: "Rebuter tout le lot sans investigation.",
     jSigned: "Une signature ou un moyen valide suffit.", jExpected: "Les preuves imposent une action maîtrisée avant de conclure au-delà des faits.", jAssume: "Une hypothèse probable remplace les preuves.",
     validate: "VALIDER MA DÉCISION", back: "Retourner au poste",
     starsLbl: "{n} étoile(s) sur 3", ptsHub: "{s} points · {h} / 500 points hub",
-    resLine: "{h}/3 qualifications correctes · {g}/{t} écarts entourés · {b} zone(s) entourée(s) à tort · {f} faux signalement(s)",
+    resLine: "{h}/3 qualifications correctes · {g}/{t} écarts bien entourés · {b} élément(s) entouré(s) à tort",
     correction: "Correction des preuves",
     legendZ: "<span class=\"zone good\">vert</span> écart bien entouré · <span class=\"zone missed\">jaune</span> écart manqué · <span class=\"zone bad\">rouge</span> entouré à tort",
-    yourChoice: "Ton choix", expected: "Attendu", reasoning: "Raisonnement qualité",
+    yourChoice: "Ton choix", expected: "Attendu", whyLbl: "💡 Pourquoi :", reasoning: "Raisonnement qualité",
     expRisk: "Risque attendu :", expDec: "Décision attendue :", justif: "Justification :", right: "correcte ✓", wrong: "à revoir ✗",
     before: "Avant une décision réelle : vérifier les documents applicables, l’étendue concernée et les preuves traçables. Le confinement n’est pas la disposition finale.",
     howScore: "Comment le score est calculé",
-    scoreRules: "+100 par qualification correcte · +25 par écart entouré · −15 par zone entourée à tort · +40 risque · +50 décision · +30 justification · +25 sans faux signalement · −40 par faux signalement « Anomalie » · −50 pour un rebut sans investigation. Le score est ramené sur 500 points hub par dossier ; le hub reçoit la somme de tes 10 meilleurs dossiers (5 000 max).",
+    scoreRules: "+100 par qualification correcte · +25 par écart bien entouré · −15 par élément entouré à tort · −40 par « Écart » signalé à tort · +25 sans signalement à tort · +40 risque · +50 décision · +30 justification · −50 pour un rebut sans investigation. Le score est ramené sur 500 points hub par dossier ; le hub reçoit la somme de tes 10 meilleurs dossiers (5 000 max).",
     nextCase: "DOSSIER SUIVANT ▶", replayCase: "↻ REJOUER CE DOSSIER",
     saveNA: "Score non enregistré : service de scores indisponible.", saving: "Enregistrement du score…",
     saved: "Points hub enregistrés : {n}", saveErr: "Enregistrement non confirmé : il sera renvoyé automatiquement à la prochaine ouverture du jeu.",
     notBetter: "Résultat inférieur à ton meilleur sur ce dossier : rien de nouveau à enregistrer.",
     helpTitle: "Comment jouer",
     h1: "<b>Explore le poste</b> : clique sur les objets (classeur, tickets épinglés, écran, instruments, bacs…). En mode accompagné, les preuves sont repérées par un <b>?</b> jaune.",
-    h2: "<b>À la loupe</b> : clique sur les éléments soulignés pour entourer ceux qui posent problème. N’entoure rien si tout est cohérent.",
-    h3: "<b>Qualifie</b> chaque preuve : Anomalie (écart établi), À vérifier (information insuffisante), Cohérent ou Non applicable, puis classe-la dans le dossier.",
-    h4: "<b>Décide</b> : une fois les 3 preuves classées, ouvre la porte du responsable qualité et choisis le risque, la décision et la justification.",
-    glossary: "<b>QT</b> ticket de quarantaine · <b>RC</b> rapport de contrôle · <b>FMER</b> feuille de mise en route · <b>MOP</b> mode opératoire · <b>NUE</b> notice d’utilisation d’un équipement · <b>FAI</b> contrôle de première pièce · <b>AQL</b> méthode d’échantillonnage du plan, pas un pourcentage du lot. Dans OF0023FZ et OF0066FZ, « OF » désigne ici des identifiants d’outils.",
+    h2: "<b>À la loupe</b> : chaque preuve contient <b>au maximum 1 écart</b>. Si tu le vois, clique dessus pour l’entourer.",
+    h3: "<b>Qualifie</b> chaque preuve : <b>Écart</b>, <b>Fait compatible avec le dossier</b> ou <b>Hors périmètre du dossier</b>, puis classe-la dans le dossier.",
+    h4: "<b>Décide</b> : une fois les 3 preuves classées, ouvre la porte du responsable qualité et choisis 1 réponse pour chaque point (risque, décision, justification). La correction explique chaque preuve.",
+    glossary: "<b>QT</b> ticket de quarantaine · <b>RC</b> rapport de contrôle · <b>FMER</b> feuille de mise en route · <b>MOP</b> mode opératoire · <b>NUE</b> notice d’utilisation d’un équipement · <b>FAI</b> contrôle de première pièce · <b>CAN</b> machine de mesure tridimensionnelle · <b>AQL</b> méthode d’échantillonnage du plan, pas un pourcentage du lot. Dans OF0023FZ et OF0066FZ, « OF » désigne ici des identifiants d’outils.",
     defs: "Définitions pédagogiques propres au jeu, non réglementaires.", gotIt: "COMPRIS",
     abandon: "Abandonner cette enquête ?", noService: "Service de scores indisponible : rechargez la page.",
     poster: "Affiche 5S : trier, ranger, nettoyer, standardiser, maintenir. Utile au poste… mais sans lien avec ce dossier.",
@@ -464,7 +651,7 @@ const T = {
     skip: "Skip to game", howTo: "HOW TO PLAY",
     notice: "Training simulation. Products, lots, documents, measurements and decisions are fictitious. Do not use to decide on the conformity or safety of a real medical device.",
     sub: "WORKSTATION INVESTIGATION",
-    intro: "Search the workstation, inspect documents under the magnifier, circle the deviations, then go and see the quality manager to decide.",
+    intro: "Search the workstation, inspect documents under the magnifier, circle the deviation if there is one, then go and see the quality manager to decide.",
     mode: "Mode", modeA: "Guided: evidence is highlighted", modeE: "Expert: find the evidence yourself",
     random: "▶ RANDOM CASE",
     lockedCase: "Locked", lockHint: "{need} ★ needed in total",
@@ -478,39 +665,41 @@ const T = {
     examined: ", inspected ({v})", door: "Quality manager’s office door", doorLocked: ", inspect the 3 pieces of evidence first",
     sceneAria: "Workstation to explore", decorAria: "Decor item", resp1: "QUALITY", resp2: "MANAGER", blocked: "ON HOLD", quarantine: "QUARANTINE",
     sceneHint: "Tap an object in the scene or a button below.", objListTitle: "Workstation objects", nothing: "{o}: nothing to report for this case.",
-    invAria: "Investigation file", proof: "Evidence {n}", zonesCircled: "{n} area(s) circled",
+    invAria: "Investigation file", proof: "Evidence {n}", circled: "Circled: “{z}”", noCircle: "Nothing circled",
     toFindA: "Find it at the workstation (marker ?)", toFind: "Find it at the workstation",
     goDoor: "🚪 Go and see the quality manager", office: "Manager’s office", ranked: "{n}/3 pieces of evidence filed",
-    loupeHelp: "① Click the underlined items to <b>circle</b> the ones that are a problem (or none if everything is consistent). ② Classify the evidence.",
+    loupeHelp: "① If an item is a problem, click it to <b>circle</b> it (only 1 per piece of evidence): the evidence becomes a “Deviation”. ② Otherwise, choose “Fact consistent with the case” or “Outside the scope of the case”.",
+    needZone: "For a deviation, circle the problem item in the document.",
     qualify: "Classify the evidence", rank: "📁 FILE IN THE CASE", close: "Close",
     rankedMsg: "Evidence filed: <b>{v}</b>. {n} more to inspect.",
     allRanked: "<b>All the evidence is filed.</b> Knock on the quality manager’s door to decide (you can still reopen evidence from the file).",
     doorWait: "The manager wants the 3 pieces of evidence filed before seeing you.",
     officeTitle: "Quality manager’s office", officeQ: "“So, what does the evidence show? And what do we do now?”",
+    oneChoice: "Choose 1 answer for each of the 3 points.", oneEach: "(1 choice)", answered: "{n}/3 points answered",
     q1: "1. Main risk", q2: "2. Immediate decision", q3: "3. Justification",
     rNone: "No risk: continue the flow.", rPatient: "Hazard to patients demonstrated.",
     dRelease: "Release immediately.", dScrap: "Scrap the whole lot without investigation.",
     jSigned: "A signature or a valid device is enough.", jExpected: "The evidence requires a controlled action before drawing conclusions beyond the facts.", jAssume: "A likely hypothesis replaces evidence.",
     validate: "CONFIRM MY DECISION", back: "Back to the workstation",
     starsLbl: "{n} star(s) out of 3", ptsHub: "{s} points · {h} / 500 hub points",
-    resLine: "{h}/3 correct classifications · {g}/{t} deviations circled · {b} area(s) circled wrongly · {f} false report(s)",
+    resLine: "{h}/3 correct classifications · {g}/{t} deviations correctly circled · {b} item(s) circled wrongly",
     correction: "Evidence review",
     legendZ: "<span class=\"zone good\">green</span> deviation correctly circled · <span class=\"zone missed\">yellow</span> deviation missed · <span class=\"zone bad\">red</span> circled wrongly",
-    yourChoice: "Your choice", expected: "Expected", reasoning: "Quality reasoning",
+    yourChoice: "Your choice", expected: "Expected", whyLbl: "💡 Why:", reasoning: "Quality reasoning",
     expRisk: "Expected risk:", expDec: "Expected decision:", justif: "Justification:", right: "correct ✓", wrong: "to review ✗",
     before: "Before any real decision: check the applicable documents, the scope concerned and traceable evidence. Containment is not the final disposition.",
     howScore: "How the score is calculated",
-    scoreRules: "+100 per correct classification · +25 per deviation circled · −15 per area circled wrongly · +40 risk · +50 decision · +30 justification · +25 with no false report · −40 per false “Anomaly” report · −50 for scrapping without investigation. The score is converted to up to 500 hub points per case; the hub receives the sum of your 10 best cases (5,000 max).",
+    scoreRules: "+100 per correct classification · +25 per deviation correctly circled · −15 per item circled wrongly · −40 per false “Deviation” · +25 with no false deviation · +40 risk · +50 decision · +30 justification · −50 for scrapping without investigation. The score is converted to up to 500 hub points per case; the hub receives the sum of your 10 best cases (5,000 max).",
     nextCase: "NEXT CASE ▶", replayCase: "↻ REPLAY THIS CASE",
     saveNA: "Score not saved: score service unavailable.", saving: "Saving score…",
     saved: "Hub points saved: {n}", saveErr: "Save not confirmed: it will be resent automatically the next time you open the game.",
     notBetter: "Lower than your best on this case: nothing new to save.",
     helpTitle: "How to play",
     h1: "<b>Explore the workstation</b>: click on objects (binders, pinned tickets, screen, instruments, bins…). In guided mode, evidence is marked with a yellow <b>?</b>.",
-    h2: "<b>Under the magnifier</b>: click the underlined items to circle the ones that are a problem. Circle nothing if everything is consistent.",
-    h3: "<b>Classify</b> each piece of evidence: Anomaly (deviation established), To verify (insufficient information), Consistent or Not applicable, then file it.",
-    h4: "<b>Decide</b>: once the 3 pieces of evidence are filed, open the quality manager’s door and choose the risk, decision and justification.",
-    glossary: "<b>QT</b> quarantine ticket · <b>RC</b> inspection report · <b>FMER</b> setup sheet · <b>MOP</b> operating procedure · <b>NUE</b> equipment user manual · <b>FAI</b> first article inspection · <b>AQL</b> the plan’s sampling method, not a percentage of the lot · <b>CMM</b> coordinate measuring machine. In OF0023FZ and OF0066FZ, “OF” is a tool identifier.",
+    h2: "<b>Under the magnifier</b>: each piece of evidence contains <b>at most 1 deviation</b>. If you spot it, click it to circle it.",
+    h3: "<b>Classify</b> each piece of evidence: <b>Deviation</b>, <b>Fact consistent with the case</b> or <b>Outside the scope of the case</b>, then file it.",
+    h4: "<b>Decide</b>: once the 3 pieces of evidence are filed, open the quality manager’s door and choose 1 answer for each point (risk, decision, justification). The review explains each piece of evidence.",
+    glossary: "<b>QT</b> quarantine ticket · <b>RC</b> inspection report · <b>FMER</b> setup sheet · <b>MOP</b> operating procedure · <b>NUE</b> equipment user manual · <b>FAI</b> first article inspection · <b>CMM</b> coordinate measuring machine · <b>AQL</b> the plan’s sampling method, not a percentage of the lot. In OF0023FZ and OF0066FZ, “OF” is a tool identifier.",
     defs: "Training definitions specific to the game, not regulatory.", gotIt: "GOT IT",
     abandon: "Abandon this investigation?", noService: "Score service unavailable: reload the page.",
     poster: "5S poster: sort, set in order, shine, standardize, sustain. Useful at the station… but unrelated to this case.",
@@ -521,12 +710,15 @@ const T = {
   }
 };
 const t = (k, v) => I.t(T, k, v);
-const LABELS = { A: { fr: ["Anomalie", "Écart établi par les preuves"], en: ["Anomaly", "Deviation established by evidence"] },
-  V: { fr: ["À vérifier", "Information insuffisante pour conclure"], en: ["To verify", "Not enough information to conclude"] },
-  C: { fr: ["Cohérent", "Fait compatible avec le dossier"], en: ["Consistent", "Fact consistent with the case"] },
-  N: { fr: ["Non applicable", "Hors périmètre du dossier"], en: ["Not applicable", "Outside the scope of the case"] } };
+/* Les 3 qualifications possibles d'une preuve */
+const VERDICTS = ["C", "H", "E"];
+const LABELS = {
+  C: { fr: ["Fait compatible avec le dossier", "Rien à entourer"], en: ["Fact consistent with the case", "Nothing to circle"] },
+  H: { fr: ["Hors périmètre du dossier", "Sans lien avec ce dossier"], en: ["Outside the scope of the case", "Unrelated to this case"] },
+  E: { fr: ["Écart", "Entoure l’élément en écart"], en: ["Deviation", "Circle the deviation"] }
+};
 const SEP = L === "en" ? ": " : " : ";
-const lbl = code => (LABELS[code][L] || LABELS[code].fr)[0];
+const lbl = code => (LABELS[code] ? (LABELS[code][L] || LABELS[code].fr)[0] : "—");
 const CS = CASES[L] || CASES.fr;
 const SLOTS = {
   binder: { x: 70, y: 112, w: 150, h: 112 }, ticket: { x: 300, y: 92, w: 110, h: 130 }, photo: { x: 430, y: 100, w: 110, h: 115 },
@@ -534,7 +726,6 @@ const SLOTS = {
   tray: { x: 70, y: 372, w: 150, h: 60 }, label: { x: 778, y: 455, w: 95, h: 130 }
 };
 const DECOR = [{ id: "poster", x: 610, y: 80, w: 115, h: 140 }, { id: "mug", x: 392, y: 388, w: 38, h: 46 }, { id: "clock", x: 790, y: 60, w: 64, h: 64 }];
-const KEY = "shoulder-qa-pnc-v2";
 const content = document.getElementById("content"), modal = document.getElementById("modal"), toastEl = document.getElementById("toast");
 const esc = v => String(v).replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 const fmt = n => Number(n).toLocaleString(L === "en" ? "en-GB" : "fr-FR");
@@ -547,8 +738,7 @@ I.mount(document.getElementById("topBtns"));
 const DEFAULT_P = () => ({ mode: "accompagne", best: {}, stars: {}, hub: {}, done: 0, last: null });
 const NORMALIZE = () => { P.hub = P.hub || {}; P.stars = P.stars || {}; P.best = P.best || {}; };
 let P = DEFAULT_P();
-/* Progression rattachée au COMPTE dans Supabase (table game_progress) : rien n'est conservé dans le navigateur.
-   Un autre joueur sur le même PC ou téléphone repart donc toujours de sa propre progression. */
+/* Progression rattachée au COMPTE dans Supabase (table game_progress) : rien n'est conservé dans le navigateur. */
 function loadProgress(saved) {
   P = DEFAULT_P();
   if (saved && typeof saved === "object") P = Object.assign(P, saved);
@@ -557,8 +747,7 @@ function loadProgress(saved) {
 }
 const saveLocal = () => { if (scores) scores.saveProgress(P); };
 const hubTotal = () => Object.values(P.hub).map(b => Math.min(500, Number(b) || 0)).sort((a, b) => b - a).slice(0, 10).reduce((a, b) => a + b, 0);
-/* Déblocage au TOTAL d'étoiles : dossiers 1 à 3 ouverts, puis le dossier N demande N − 1 étoiles au total
-   (3 étoiles pour le dossier 4, 4 pour le dossier 5…). */
+/* Déblocage au TOTAL d'étoiles : dossiers 1 à 3 ouverts, puis le dossier N demande N − 1 étoiles au total. */
 const START_UNLOCKED = 3;
 const totalStars = () => Object.values(P.stars).reduce((a, b) => a + (Number(b) || 0), 0);
 const starsNeeded = n => n <= START_UNLOCKED ? 0 : n - 1;
@@ -578,9 +767,11 @@ function parseZones(text) {
   if (last < text.length) parts.push({ t: text.slice(last) });
   return parts;
 }
+const badZone = f => parseZones(f.text).find(p => p.bad);           // l'écart de la preuve (ou undefined)
+const zoneText = (f, z) => (parseZones(f.text).find(p => p.zone === z) || {}).t || "";
 function maxCase(c) {
-  const zt = c.facts.reduce((a, f) => a + parseZones(f.text).filter(p => p.bad).length, 0);
-  return 300 + zt * 25 + 40 + 50 + 30 + 25;
+  const nE = c.facts.filter(f => badZone(f)).length;
+  return 300 + nE * 25 + 25 + 40 + 50 + 30;
 }
 
 /* ---------- Accueil ---------- */
@@ -611,7 +802,8 @@ function renderHome() {
 /* ---------- Scène ---------- */
 function startCase(i) {
   const c = CS[i];
-  G = { i, c, verdict: {}, marks: c.facts.map(() => new Set()), risk: "", decision: "", reason: "", seconds: 0, finished: false, saveMsg: "", saveErr: false, draft: null };
+  // marks[k] = numéro de la zone entourée pour la preuve k (−1 = rien) : 1 seul écart par preuve
+  G = { i, c, verdict: {}, marks: c.facts.map(() => -1), risk: "", decision: "", reason: "", seconds: 0, finished: false, saveMsg: "", saveErr: false, draft: null };
   P.last = i; saveLocal();
   renderScene(t("briefing", { doc: esc(c.doc), fam: esc(c.family), lot: esc(c.lot) }));
   clearInterval(timer);
@@ -681,7 +873,7 @@ function renderScene(bubble) {
         : `<button class="btn" type="button" data-action="nothing" data-o="${obj}">🔍 ${esc(t("obj" + obj))}</button>`; }).join("")}</div>
     <div class="inventory" aria-label="${t("invAria")}">
       ${G.c.facts.map((f, k) => G.verdict[k]
-        ? `<button class="slot filled" type="button" data-action="inspect" data-k="${k}"><span class="small muted">${t("proof", { n: k + 1 })} · ${esc(f.title)}</span><span class="v">${esc(lbl(G.verdict[k]))}</span><span class="small">${t("zonesCircled", { n: G.marks[k].size })}</span></button>`
+        ? `<button class="slot filled" type="button" data-action="inspect" data-k="${k}"><span class="small muted">${t("proof", { n: k + 1 })} · ${esc(f.title)}</span><span class="v">${esc(lbl(G.verdict[k]))}</span><span class="small">${G.marks[k] >= 0 ? esc(t("circled", { z: zoneText(f, G.marks[k]) })) : t("noCircle")}</span></button>`
         : `<div class="slot"><span class="small muted">${t("proof", { n: k + 1 })}</span><span>${P.mode === "accompagne" ? t("toFindA") : t("toFind")}</span></div>`).join("")}
       <button class="slot door ${ready ? "ready" : ""}" type="button" data-action="door">${ready ? t("goDoor") : `${t("office")}<br><span class="small muted">${t("ranked", { n: Object.keys(G.verdict).length })}</span>`}</button>
     </div>`;
@@ -692,25 +884,38 @@ let current = -1;
 function inspect(k) {
   current = k;
   const f = G.c.facts[k];
-  if (!G.draft || G.draft.k !== k) G.draft = { k, verdict: G.verdict[k] || "" };
-  const parts = parseZones(f.text);
+  if (!G.draft || G.draft.k !== k) G.draft = { k, verdict: G.verdict[k] || "", mark: G.marks[k] };
+  const d = G.draft, parts = parseZones(f.text);
+  const needZone = d.verdict === "E" && d.mark < 0;
   openModal(`🔍 ${f.title}`, `
     <div class="paper"><div class="head"><span>${esc(G.c.doc)}</span><span>${esc(G.c.family)} · ${t("lot")} ${esc(G.c.lot)}</span></div>
-      <p style="margin:0">${parts.map(p => p.zone === undefined ? esc(p.t) : `<button type="button" class="zone ${G.marks[k].has(p.zone) ? "marked" : ""}" data-action="zone" data-z="${p.zone}" aria-pressed="${G.marks[k].has(p.zone)}">${esc(p.t)}</button>`).join("")}</p>
+      <p style="margin:0">${parts.map(p => p.zone === undefined ? esc(p.t) : `<button type="button" class="zone ${d.mark === p.zone ? "marked" : ""}" data-action="zone" data-z="${p.zone}" aria-pressed="${d.mark === p.zone}">${esc(p.t)}</button>`).join("")}</p>
       ${f.obj === "ticket" || f.obj === "label" ? `<span class="stamp">${t("blocked")}</span>` : ""}
     </div>
     <p class="small muted" style="margin-top:12px">${t("loupeHelp")}</p>
-    <div class="verdicts" role="group" aria-label="${t("qualify")}">${["A", "V", "C", "N"].map(code => { const [l, d] = LABELS[code][L] || LABELS[code].fr; return `<button type="button" class="btn ${G.draft.verdict === code ? "on" : ""}" data-action="verdict" data-l="${code}" aria-pressed="${G.draft.verdict === code}">${esc(l)}<small>${esc(d)}</small></button>`; }).join("")}</div>
-    <div class="row" style="margin-top:14px"><button class="btn primary" type="button" data-action="rank" ${G.draft.verdict ? "" : "disabled"}>${t("rank")}</button><button class="btn" type="button" data-action="close">${t("close")}</button></div>`);
+    <div class="verdicts" role="radiogroup" aria-label="${t("qualify")}">${VERDICTS.map(code => { const [l, ds] = LABELS[code][L] || LABELS[code].fr; return `<button type="button" class="btn ${d.verdict === code ? "on" : ""}" role="radio" data-action="verdict" data-l="${code}" aria-checked="${d.verdict === code}">${esc(l)}<small>${esc(ds)}</small></button>`; }).join("")}</div>
+    ${needZone ? `<p class="hint" role="status">${t("needZone")}</p>` : ""}
+    <div class="row" style="margin-top:14px"><button class="btn primary" type="button" data-action="rank" ${d.verdict && !needZone ? "" : "disabled"}>${t("rank")}</button><button class="btn" type="button" data-action="close">${t("close")}</button></div>`);
 }
+/* Un seul élément entouré par preuve : entourer = « Écart » ; recliquer = désentourer. */
 function toggleZone(z) {
-  const m = G.marks[current]; m.has(z) ? m.delete(z) : m.add(z);
+  const d = G.draft;
+  d.mark = d.mark === z ? -1 : z;
+  if (d.mark >= 0) d.verdict = "E";
   inspect(current);
   modal.querySelector(`[data-z="${z}"]`)?.focus();
 }
+function setVerdict(code) {
+  const d = G.draft;
+  d.verdict = code;
+  if (code !== "E") d.mark = -1;   // compatible ou hors périmètre : rien n'est entouré
+  inspect(current);
+  modal.querySelector(".verdicts .on")?.focus();
+}
 function rank() {
-  if (!G.draft || !G.draft.verdict) return;
-  G.verdict[current] = G.draft.verdict; G.draft = null;
+  const d = G.draft;
+  if (!d || !d.verdict || (d.verdict === "E" && d.mark < 0)) return;
+  G.verdict[current] = d.verdict; G.marks[current] = d.mark; G.draft = null;
   closeModal();
   const left = 3 - Object.keys(G.verdict).length;
   renderScene(left ? t("rankedMsg", { v: esc(lbl(G.verdict[current])), n: left }) : t("allRanked"));
@@ -728,22 +933,27 @@ function shuffleOnce(key, arr) {
 }
 function renderDecision() {
   const c = G.c;
-  const block = (title, name, opts) => `<fieldset class="panel" style="margin-top:12px"><legend><b>${title}</b></legend>${opts.map(([id, txt]) => `<button type="button" class="btn choice ${G[name] === id ? "on" : ""}" data-action="choose" data-name="${name}" data-v="${id}" aria-pressed="${G[name] === id}">${esc(txt)}</button>`).join("")}</fieldset>`;
+  const n = [G.risk, G.decision, G.reason].filter(Boolean).length;
+  const block = (title, name, opts) => `<fieldset class="panel" style="margin-top:12px" role="radiogroup"><legend><b>${title}</b> <span class="small muted">${t("oneEach")}</span></legend>${opts.map(([id, txt]) => `<button type="button" class="btn choice ${G[name] === id ? "on" : ""}" role="radio" data-action="choose" data-name="${name}" data-v="${id}" aria-checked="${G[name] === id}">${esc(txt)}</button>`).join("")}</fieldset>`;
   openModal(t("officeTitle"), `
     <p class="muted">${t("officeQ")}</p>
+    <p class="hint">${t("oneChoice")}</p>
     ${block(t("q1"), "risk", shuffleOnce("risk", [["none", t("rNone")], ["expected", c.risk], ["patient", t("rPatient")]]))}
     ${block(t("q2"), "decision", shuffleOnce("decision", [["release", t("dRelease")], ["scrap", t("dScrap")], ["expected", c.decision]]))}
     ${block(t("q3"), "reason", shuffleOnce("reason", [["signed", t("jSigned")], ["expected", t("jExpected")], ["assume", t("jAssume")]]))}
-    <div class="row" style="margin-top:14px"><button class="btn primary" type="button" data-action="validate" ${G.risk && G.decision && G.reason ? "" : "disabled"}>${t("validate")}</button><button class="btn" type="button" data-action="close">${t("back")}</button></div>`);
+    <p class="small muted" style="margin-top:12px" role="status">${t("answered", { n })}</p>
+    <div class="row" style="margin-top:8px"><button class="btn primary" type="button" data-action="validate" ${n === 3 ? "" : "disabled"}>${t("validate")}</button><button class="btn" type="button" data-action="close">${t("back")}</button></div>`);
 }
 
 /* ---------- Score et débriefing ---------- */
 function result() {
   const c = G.c; let hits = 0, falseFlags = 0, zoneGood = 0, zoneBad = 0, zoneTotal = 0;
   c.facts.forEach((f, k) => {
+    const bad = badZone(f), m = G.marks[k];
     if (G.verdict[k] === f.answer) hits++;
-    if (G.verdict[k] === "A" && f.answer !== "A") falseFlags++;
-    parseZones(f.text).forEach(p => { if (p.zone === undefined) return; if (p.bad) zoneTotal++; if (G.marks[k].has(p.zone)) p.bad ? zoneGood++ : zoneBad++; });
+    if (G.verdict[k] === "E" && f.answer !== "E") falseFlags++;
+    if (bad) zoneTotal++;
+    if (m >= 0) { if (bad && bad.zone === m) zoneGood++; else zoneBad++; }
   });
   const score = Math.max(0, hits * 100 + zoneGood * 25 - zoneBad * 15 + (G.risk === "expected" ? 40 : 0) + (G.decision === "expected" ? 50 : 0) + (G.reason === "expected" ? 30 : 0) + (falseFlags === 0 ? 25 : 0) - falseFlags * 40 - (G.decision === "scrap" ? 50 : 0));
   const hub = Math.min(500, Math.round(score / maxCase(c) * 500));
@@ -761,7 +971,7 @@ function validate() {
   if (r.score > (Number(P.best[G.i]) || 0)) P.best[G.i] = r.score;
   const before = unlockedCount();
   P.stars[G.i] = Math.max(Number(P.stars[G.i]) || 0, r.stars);
-  G.unlocked = unlockedCount() > before ? unlockedCount() - 1 : -1;   // index du dernier dossier débloqué
+  G.unlocked = unlockedCount() > before ? unlockedCount() - 1 : -1;
   newUnlock = G.unlocked;
   saveLocal();
   closeModal(true);
@@ -769,10 +979,11 @@ function validate() {
   if (improved) saveRemote(); else { G.saveMsg = t("notBetter"); updateSave(); }
 }
 function zonesHTML(f, k) {
+  const m = G.marks[k];
   return parseZones(f.text).map(p => {
     if (p.zone === undefined) return esc(p.t);
-    const m = G.marks[k].has(p.zone);
-    const cls = p.bad ? (m ? "good" : "missed") : (m ? "bad" : "");
+    const marked = m === p.zone;
+    const cls = p.bad ? (marked ? "good" : "missed") : (marked ? "bad" : "");
     return cls ? `<span class="zone ${cls}">${esc(p.t)}</span>` : esc(p.t);
   }).join("");
 }
@@ -783,14 +994,15 @@ function renderDebrief() {
     <section class="panel">
       <p class="stars" aria-label="${t("starsLbl", { n: r.stars })}">${"★".repeat(r.stars)}${"☆".repeat(3 - r.stars)}</p>
       <p class="score">${t("ptsHub", { s: r.score, h: r.hub })}</p>
-      <p style="text-align:center">${t("resLine", { h: r.hits, g: r.zoneGood, t: r.zoneTotal, b: r.zoneBad, f: r.falseFlags })}</p>
+      <p style="text-align:center">${t("resLine", { h: r.hits, g: r.zoneGood, t: r.zoneTotal, b: r.zoneBad })}</p>
       <p class="save" id="saveStatus" role="status"></p>
       ${G.unlocked >= 0 ? `<p class="unlockInfo" style="text-align:center">${t("unlockedNew", { doc: esc(CS[G.unlocked].doc) })}</p>` : ""}
     </section>
     <h2 style="margin-top:18px">${t("correction")}</h2>
     <p class="small muted">${t("legendZ")}</p>
     ${c.facts.map((f, k) => `<article class="panel" style="margin-top:10px"><p class="small muted">${t("proof", { n: k + 1 })} · ${esc(f.title)}</p><div class="paper" style="font-size:15px">${zonesHTML(f, k)}</div>
-      <p style="margin-top:10px">${t("yourChoice")}${SEP}<b class="${G.verdict[k] === f.answer ? "ok" : "ko"}">${esc(lbl(G.verdict[k]))}</b> · ${t("expected")}${SEP}<b>${esc(lbl(f.answer))}</b></p></article>`).join("")}
+      <p style="margin-top:10px">${t("yourChoice")}${SEP}<b class="${G.verdict[k] === f.answer ? "ok" : "ko"}">${esc(lbl(G.verdict[k]))}</b> · ${t("expected")}${SEP}<b>${esc(lbl(f.answer))}</b></p>
+      <p class="why"><b>${t("whyLbl")}</b> ${esc(f.x)}</p></article>`).join("")}
     <section class="panel" style="margin-top:14px;border-color:#ffb50080">
       <h3>${t("reasoning")}</h3><p>${esc(c.why)}</p>
       <p><b>${t("expRisk")}</b> ${esc(c.risk)} <span class="${G.risk === "expected" ? "ok" : "ko"}">${G.risk === "expected" ? "✓" : "✗"}</span></p>
@@ -842,14 +1054,14 @@ function pickRandom() {
 function act(el) {
   const a = el.dataset.action;
   if (a === "help") return help();
-  if (a === "close") return closeModal();
+  if (a === "close") { if (G) G.draft = null; return closeModal(); }
   if (a === "random") { closeModal(true); return startCase(pickRandom()); }
   if (a === "case") { if (!isUnlocked(+el.dataset.i)) { toast(t("lockedToast", { need: starsNeeded(+el.dataset.i + 1), s: totalStars() })); return; } closeModal(true); return startCase(+el.dataset.i); }
   if (a === "home") { if (G && !G.finished && Object.keys(G.verdict).length && !confirm(t("abandon"))) return; return renderHome(); }
   if (!G) return;
   if (a === "inspect") { G.draft = null; return inspect(+el.dataset.k); }
   if (a === "zone") return toggleZone(+el.dataset.z);
-  if (a === "verdict") { if (!G.draft) return; G.draft.verdict = el.dataset.l; inspect(current); modal.querySelector(".verdicts .on")?.focus(); return; }
+  if (a === "verdict") { if (G.draft) setVerdict(el.dataset.l); return; }
   if (a === "rank") return rank();
   if (a === "decor") return renderScene(esc(t(el.dataset.id)));
   if (a === "nothing") return renderScene(esc(t("nothing", { o: t("obj" + el.dataset.o) })));
@@ -862,6 +1074,7 @@ document.addEventListener("keydown", e => {
   const el = e.target.closest && e.target.closest("g.hs[data-action]");
   if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); act(el); }
 });
+modal.addEventListener("cancel", () => { if (G) G.draft = null; });   // touche Échap : brouillon abandonné
 content.addEventListener("change", e => { if (e.target.id === "mode") { P.mode = e.target.value === "expert" ? "expert" : "accompagne"; saveLocal(); } });
 window.addEventListener("beforeunload", e => { if ((G && !G.finished && Object.keys(G.verdict).length) || saving || window.QWScores?.isSyncing()) { e.preventDefault(); e.returnValue = ""; } });
 
@@ -872,7 +1085,6 @@ window.addEventListener("DOMContentLoaded", async () => {
   if (!r) return;
   scores = r.scores; remoteBest = r.best;
   loadProgress(r.progress);
-  // Progression du compte (serveur) plus avancée que le score enregistré (envoi interrompu) : on resynchronise.
   if (r.progress && remoteBest < hubTotal()) { try { remoteBest = await scores.saveBestScore(hubTotal()); } catch (e) { console.warn(e); } }
   if (!G) renderHome();
 }, { once: true });
