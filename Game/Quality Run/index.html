@@ -1432,7 +1432,8 @@ function box3D(lx,z,w,h0,h1,d,col){
   poly(f,g,shade(col,.5),Math.max(1,2*f[0].s));
   return{x:f[0].x,y:f[3].y,w:f[1].x-f[0].x,h:f[0].y-f[3].y,s:f[0].s};
 }
-
+/* Contexte audio des bruitages (créé au premier clic) */
+let AC=null;
 /* Volume des bruitages : 1 = d'origine, 0.5 = moitié, 0 = muet */
 const SFX_VOL = 0.4;
 function beep(f,d=0.12,type='sine',v=0.07){
