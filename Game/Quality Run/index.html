@@ -1324,7 +1324,7 @@ const TR={
   speedLbl:"Vitesse :",spNormal:"Normale",spSlow:"Tranquille (plus lente)",pauseBtn:"⏸ Pause",
   hub:"Retour au hub",pauseTxt:"Appuyez sur P ou sur le bouton pour reprendre.",resume:"Reprendre ▶",over:"🏁 Fin de la partie !",restart:"Rejouer ↻",
   go:"C'est parti ▶",loading:"Chargement…",na:"Service indisponible",naShort:"Indisponible",reload:"Rechargez la page.",
-  bestLine:"Vos points hub : {h} (meilleure course ÷ 3, max 5 000)",good:"✅ Bonne réponse ! +250",bad:"❌ Mauvaise réponse – l'explication sera donnée à la fin",
+  bestLine:"Vos points hub : {h} (meilleure course ÷ 5, max 5 000)",good:"✅ Bonne réponse ! +250",bad:"❌ Mauvaise réponse – l'explication sera donnée à la fin",
   startToast:"Évitez les problèmes qualité et ramassez les ✔ !",shield:"🛡 Bouclier : « {l} » évité !",heart:"❤ +¼ de vie !",shieldOn:"🛡 Bouclier ! Protégé pendant 6 s",
   sScore:"Score",sHub:"Points hub",sRecord:"Record (hub)",sDist:"Distance",sOk:"Bonnes réponses",sCoins:"✔ ramassés",sHits:"Chocs",
   noQ:"Aucune question rencontrée pendant cette partie. Courez plus longtemps pour en voir !",corr:"📚 Correction des questions",perfect:"Parfait : aucune erreur ! 🏆",
@@ -1338,7 +1338,7 @@ const TR={
   speedLbl:"Speed:",spNormal:"Normal",spSlow:"Relaxed (slower)",pauseBtn:"⏸ Pause",
   hub:"Back to hub",pauseTxt:"Press P or the button to resume.",resume:"Resume ▶",over:"🏁 Game over!",restart:"Play again ↻",
   go:"Let's go ▶",loading:"Loading…",na:"Service unavailable",naShort:"Unavailable",reload:"Reload the page.",
-  bestLine:"Your hub points: {h} (best run ÷ 3, max 5,000)",good:"✅ Correct! +250",bad:"❌ Wrong answer – the explanation will be shown at the end",
+  bestLine:"Your hub points: {h} (best run ÷ 5, max 5,000)",good:"✅ Correct! +250",bad:"❌ Wrong answer – the explanation will be shown at the end",
   startToast:"Avoid quality issues and pick up the ✔!",shield:"🛡 Shield: “{l}” avoided!",heart:"❤ +¼ life!",shieldOn:"🛡 Shield! Protected for 6 s",
   sScore:"Score",sHub:"Hub points",sRecord:"Best (hub)",sDist:"Distance",sOk:"Correct answers",sCoins:"✔ collected",sHits:"Crashes",
   noQ:"No questions came up during this run. Run longer to see some!",corr:"📚 Answers",perfect:"Perfect: no mistakes! 🏆",
@@ -1351,7 +1351,7 @@ document.title='Quality Run | Quality Week 2026';
 window.QWI18N.mount(document.getElementById('langSlot'));
 const QUESTIONS=JSON.parse(document.getElementById(LANG==='en'?'qdata-en':'qdata').textContent);
 /* Barème commun : points hub = meilleure course ÷ 3, plafonnés à 5 000 */
-const toHub=raw=>Math.min(5000,Math.floor(Math.max(0,raw)/3));
+const toHub=raw=>Math.min(5000,Math.floor(Math.max(0,raw)/5));
 /* Vitesse « tranquille » : accessible à tous (moins de réflexes nécessaires) */
 let SLOW=false;try{SLOW=localStorage.getItem('qw-run-slow')==='1';}catch(e){}
 function renderSpeed(){document.querySelectorAll('.speed button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.speed==='slow')===SLOW)));}
