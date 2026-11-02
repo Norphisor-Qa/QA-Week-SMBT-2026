@@ -39,9 +39,9 @@
     : { on: "♪ Musique : oui", off: "♪ Musique : non", big: "A+ Texte agrandi", calm: "Animations : non", anim: "Animations : oui", bar: "Réglages de confort", gear: "⚙ Réglages" };
 
   /* ---------- Réglages audio (modifiables) ---------- */
-  const VOL = 0.35;      // volume de la musique (0 à 1)
-  const FADE_IN = 1.5;   // durée du fondu à l'ouverture, en secondes
-  const FADE_OUT = 1.0;  // durée du fondu à l'arrêt, en secondes
+  const VOL = 0.45;      // volume de la musique (0 à 1)
+  const FADE_IN = 0.5;   // durée du fondu à l'ouverture, en secondes
+  const FADE_OUT = 0.5;  // durée du fondu à l'arrêt, en secondes
   const FADE_HIDE = 0.3; // fondu rapide quand l'onglet est masqué
   const FILES = { hub: "hub.wav", crush: "crush.wav", run: "run.wav", scenarios: "scenarios.wav", daily: "daily.wav" };
   const BASE = new URL("music/", (script && script.src) || location.href).href;
