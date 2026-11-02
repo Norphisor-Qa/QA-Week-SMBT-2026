@@ -1433,10 +1433,17 @@ function box3D(lx,z,w,h0,h1,d,col){
   return{x:f[0].x,y:f[3].y,w:f[1].x-f[0].x,h:f[0].y-f[3].y,s:f[0].s};
 }
 
-/* Son */
-let AC=null;
-function beep(f,d=0.12,type='sine',v=0.07){if(!AC)return;const o=AC.createOscillator(),g=AC.createGain();o.type=type;o.frequency.value=f;g.gain.value=v;g.gain.exponentialRampToValueAtTime(0.0001,AC.currentTime+d);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+d);}
-
+/* Volume des bruitages : 1 = d'origine, 0.5 = moitié, 0 = muet */
+const SFX_VOL = 0.4;
+function beep(f,d=0.12,type='sine',v=0.07){
+  if(!AC||SFX_VOL<=0)return;
+  const o=AC.createOscillator(),g=AC.createGain(),t=AC.currentTime;
+  o.type=type;o.frequency.value=f;
+  g.gain.setValueAtTime(v*SFX_VOL,t);
+  g.gain.exponentialRampToValueAtTime(0.0001,t+d);
+  o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d);
+}
+  
 /* Particules */
 let parts=[];
 function burst(x,y,color,n=14,spd=220){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=rand(spd*.3,spd);parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,life:rand(.4,.8),max:.8,color,r:rand(2,5)});}}
