@@ -1,10 +1,20 @@
 /*
  * Quality Week 2026 — barre « confort » partagée : musique + accessibilité.
  *
- * MUSIQUE LIBRE DE DROITS : chaque morceau est composé dans ce fichier (accords, mélodie,
- * tempo) et joué par le navigateur (Web Audio). Aucun fichier audio, aucune œuvre existante :
- * pas de droits d'auteur. Un morceau différent par page :
- *   hub · crush · run · scenarios · daily
+ * MUSIQUE : chaque page lit un fichier MP3 libre de droits placé dans le dossier « music/ »
+ * (à côté de ce fichier). Si le fichier est absent ou illisible, la page joue à la place
+ * le morceau généré par le navigateur (Web Audio, composé dans ce fichier : aucun droit d'auteur).
+ *
+ *   Fichiers attendus :  music/hub.mp3 · crush.mp3 · run.mp3 · scenarios.mp3 · daily.mp3
+ *   Crédits / licences (à compléter pour chaque morceau) :
+ *     hub.mp3       — « Titre », Auteur, Pixabay Content License — URL
+ *     crush.mp3     — « Titre », Auteur, Pixabay Content License — URL
+ *     run.mp3       — « Titre », Auteur, Pixabay Content License — URL
+ *     scenarios.mp3 — « Titre », Auteur, Pixabay Content License — URL
+ *     daily.mp3     — « Titre », Auteur, Pixabay Content License — URL
+ *
+ * FONDU : la musique monte progressivement au lancement (FADE_IN) et descend
+ * progressivement à l'arrêt (FADE_OUT). Le fondu s'applique aux MP3 comme à la musique générée.
  *
  * Chargement :
  *   hub  : <script src="./Game/music.js" data-track="hub" defer></script>
@@ -14,7 +24,7 @@
  * ACCESSIBILITÉ (préférences mémorisées et partagées entre toutes les pages) :
  *   « A+ » : texte et boutons agrandis (éléments portant la classe .qw-z)
  *   « Animations » : coupe les animations (mouvements, clignotements)
- * API : QWMusic.play(), QWMusic.stop(), QWMusic.toggle(), QWMusic.isOn()
+ * API : QWMusic.play(), QWMusic.stop(), QWMusic.toggle(), QWMusic.isOn(), QWMusic.isCalm()
  *
  * Petits écrans : le menu « ⚙ Réglages » s'ouvre en position fixe, calculée pour rester
  * TOUJOURS entièrement visible à l'écran (quel que soit l'endroit où se trouve le bouton).
@@ -27,6 +37,15 @@
   const TXT = lang === "en"
     ? { on: "♪ Music: on", off: "♪ Music: off", big: "A+ Larger text", calm: "Animations: off", anim: "Animations: on", bar: "Comfort settings", gear: "⚙ Settings" }
     : { on: "♪ Musique : oui", off: "♪ Musique : non", big: "A+ Texte agrandi", calm: "Animations : non", anim: "Animations : oui", bar: "Réglages de confort", gear: "⚙ Réglages" };
+
+  /* ---------- Réglages audio (modifiables) ---------- */
+  const VOL = 0.35;      // volume de la musique (0 à 1)
+  const FADE_IN = 1.5;   // durée du fondu à l'ouverture, en secondes
+  const FADE_OUT = 1.0;  // durée du fondu à l'arrêt, en secondes
+  const FADE_HIDE = 0.3; // fondu rapide quand l'onglet est masqué
+  const FILES = { hub: "hub.wav", crush: "crush.wav", run: "run.wav", scenarios: "scenarios.wav", daily: "daily.wav" };
+  const BASE = new URL("music/", (script && script.src) || location.href).href;
+
   /* ---------- Préférences ---------- */
   const get = (k, d) => { try { const v = localStorage.getItem(k); return v === null ? d : v === "1"; } catch { return d; } };
   const set = (k, v) => { try { localStorage.setItem(k, v ? "1" : "0"); } catch { /* rien */ } };
@@ -62,7 +81,8 @@
     document.documentElement.classList.toggle("qw-calm", calm);
   };
   applyPrefs();
-  /* ---------- Morceaux ---------- */
+
+  /* ---------- Morceaux générés (secours si le MP3 manque) ---------- */
   // Notes MIDI (60 = do central). null = silence. Une mesure = 8 croches.
   const SONGS = {
     hub: { // accueil : calme et lumineux, do majeur
@@ -99,14 +119,41 @@
   const SONG = SONGS[TRACK] || SONGS.hub;
   const STEP = 60 / SONG.bpm / 2, BEAT = STEP * 2;
   const hz = n => 440 * Math.pow(2, (n - 69) / 12);
-  let ctx = null, master = null, timer = 0, nextTime = 0, step = 0;
+
+  /* ---------- Moteur audio ----------
+     MP3 ───────────────────────────────┐
+     musique générée → synthBus → filtre ┴→ master (fondu) → haut-parleurs */
+  let ctx = null, master = null, synthBus = null, audio = null, useSynth = false;
+  let timer = 0, nextTime = 0, step = 0, stopTimer = 0, playing = false;
+
+  function ensureCtx() {
+    if (ctx) return true;
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (!AC) return false;
+    ctx = new AC();
+    master = ctx.createGain(); master.gain.value = 0;              // part du silence
+    master.connect(ctx.destination);
+    synthBus = ctx.createGain(); synthBus.gain.value = 0.3 / VOL;  // garde le niveau d'origine de la musique générée
+    const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2400;
+    synthBus.connect(lp); lp.connect(master);
+    return true;
+  }
+  // Fondu : rampe linéaire du volume général vers « target » en « dur » secondes.
+  function fadeTo(target, dur) {
+    const g = master.gain, now = ctx.currentTime;
+    g.cancelScheduledValues(now);
+    g.setValueAtTime(g.value, now);
+    g.linearRampToValueAtTime(target, now + Math.max(0.01, dur));
+  }
+
+  /* Musique générée */
   function note(freq, start, dur, type, vol) {
     const o = ctx.createOscillator(), g = ctx.createGain();
     o.type = type; o.frequency.setValueAtTime(freq, start);
     g.gain.setValueAtTime(0.0001, start);
     g.gain.exponentialRampToValueAtTime(vol, start + 0.02);
     g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
-    o.connect(g); g.connect(master); o.start(start); o.stop(start + dur + 0.05);
+    o.connect(g); g.connect(synthBus); o.start(start); o.stop(start + dur + 0.05);
   }
   function schedule() {
     while (nextTime < ctx.currentTime + 0.25) {
@@ -122,21 +169,52 @@
       nextTime += STEP; step++;
     }
   }
-  function play() {
-    const AC = window.AudioContext || window.webkitAudioContext;
-    if (!AC) return;
-    if (!ctx) {
-      ctx = new AC();
-      master = ctx.createGain(); master.gain.value = 0.3;
-      const lp = ctx.createBiquadFilter(); lp.type = "lowpass"; lp.frequency.value = 2400;
-      master.connect(lp); lp.connect(ctx.destination);
-    }
-    if (ctx.state === "suspended") ctx.resume();
-    clearInterval(timer); nextTime = ctx.currentTime + 0.08; timer = setInterval(schedule, 60);
+  function startSynth() { clearInterval(timer); nextTime = ctx.currentTime + 0.08; timer = setInterval(schedule, 60); }
+  function stopSynth() { clearInterval(timer); timer = 0; }
+
+  /* Fichier MP3 (créé une seule fois, branché sur « master » pour profiter du fondu) */
+  function loadFile() {
+    if (audio || useSynth) return;
+    audio = new Audio();
+    audio.loop = true; audio.preload = "auto";
+    audio.addEventListener("error", () => {           // fichier absent ou illisible → musique générée
+      useSynth = true; audio = null;
+      if (playing) startSynth();
+    }, { once: true });
+    audio.src = BASE + (FILES[TRACK] || FILES.hub);
+    try { ctx.createMediaElementSource(audio).connect(master); }
+    catch { audio.volume = VOL; }                     // navigateur très ancien : pas de fondu, volume fixe
   }
-  function stop() { clearInterval(timer); timer = 0; if (ctx && ctx.state === "running") ctx.suspend(); }
+
+  function play() {
+    if (!ensureCtx()) return;
+    clearTimeout(stopTimer); stopTimer = 0;           // annule un arrêt en cours de fondu
+    playing = true;
+    if (ctx.state === "suspended") ctx.resume();
+    loadFile();
+    if (useSynth) { if (!timer) startSynth(); }
+    else audio.play().catch(() => { /* attend une action du joueur */ });
+    fadeTo(VOL, FADE_IN);
+  }
+  function stop(dur = FADE_OUT) {
+    playing = false;
+    if (!ctx) return;
+    fadeTo(0, dur);
+    clearTimeout(stopTimer);
+    stopTimer = setTimeout(() => {                    // coupe vraiment une fois le fondu terminé
+      stopTimer = 0;
+      if (playing) return;
+      stopSynth();
+      if (audio) audio.pause();
+      if (ctx.state === "running") ctx.suspend();
+    }, dur * 1000 + 60);
+  }
   function setOn(v) { on = v; set("qw-music", on); if (on) play(); else stop(); render(); }
-  document.addEventListener("visibilitychange", () => { if (document.hidden) { if (timer) stop(); } else if (on && ctx) play(); });
+  document.addEventListener("visibilitychange", () => {
+    if (document.hidden) { if (playing) stop(FADE_HIDE); }
+    else if (on && ctx) play();
+  });
+
   /* ---------- Barre de boutons ---------- */
   let bMusic, bBig, bCalm;
   function render() {
@@ -159,11 +237,10 @@
       const M = 8, vw = document.documentElement.clientWidth, vh = window.innerHeight;
       const r = gear.getBoundingClientRect();
       const w = panel.offsetWidth, h = panel.offsetHeight;
-      // Aligné à gauche du bouton si le bouton est dans la moitié gauche de l'écran, sinon à droite.
       let left = r.left + r.width / 2 < vw / 2 ? r.left : r.right - w;
       left = Math.max(M, Math.min(left, vw - w - M));
       let top = r.bottom + 6;
-      if (top + h > vh - M && r.top - 6 - h >= M) top = r.top - 6 - h;   // pas de place dessous : au-dessus
+      if (top + h > vh - M && r.top - 6 - h >= M) top = r.top - 6 - h;
       top = Math.max(M, Math.min(top, vh - h - M));
       panel.style.left = left + "px";
       panel.style.top = top + "px";
@@ -183,20 +260,18 @@
     bBig = mk(() => { big = !big; set("qw-big", big); applyPrefs(); render(); placePanel(); });
     bCalm = mk(() => { calm = !calm; set("qw-calm", calm); applyPrefs(); render(); });
     panel.append(bMusic, bBig, bCalm);
-    // Boutons propres à un jeu (ex. effets sonores) : classe « qw-extra » → rangés dans le même menu
     document.querySelectorAll(".qw-extra").forEach(el => panel.append(el));
     bar.append(gear, panel);
     (slot || document.body).appendChild(bar);
     document.addEventListener("click", e => { if (!bar.contains(e.target) && bar.classList.contains("open")) setOpen(false); });
     document.addEventListener("keydown", e => { if (e.key === "Escape" && bar.classList.contains("open")) { setOpen(false); gear.focus(); } });
-    // Rotation de l'écran, redimensionnement, défilement : le menu reste collé au bouton et visible.
     window.addEventListener("resize", placePanel);
     window.addEventListener("orientationchange", placePanel);
     window.addEventListener("scroll", placePanel, { passive: true });
     render();
-    // Le son ne peut démarrer qu'après une action du joueur.
+    // Le son ne peut démarrer qu'après une action du joueur (règle des navigateurs).
     if (on) {
-      const resume = () => { if (on && !timer) play(); };
+      const resume = () => { if (on && !playing) play(); };
       document.addEventListener("pointerdown", resume, { once: true });
       document.addEventListener("keydown", resume, { once: true });
     }
