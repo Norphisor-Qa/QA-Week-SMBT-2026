@@ -69,10 +69,10 @@ I.apply(T);
 I.mount(document.getElementById("lang-slot"));
 
 const games = [
-  { id: "daily", title: { fr: "Défi du jour", en: "Daily challenge" }, desc: "dDaily", meta: "mDaily", icon: "☀", href: "./Game/Défi du jour/index.html", available: true },
-  { id: "quality-crush", title: { fr: "Quality Crush", en: "Quality Crush" }, desc: "dCrush", meta: "mCrush", icon: "◆", href: "./Game/Quality Crush/index.html", available: true },
-  { id: "quality-run", title: { fr: "Quality Run", en: "Quality Run" }, desc: "dRun", meta: "mRun", icon: "→", href: "./Game/Quality Run/index.html", available: true },
-  { id: "scenarios", title: { fr: "Scénarios qualité", en: "Quality scenarios" }, desc: "dScen", meta: "mScen", icon: "⌕", href: "./Game/10 scénarios qualité/index.html", available: true }
+  { id: "daily", title: { fr: "Défi du jour", en: "Daily challenge" }, desc: "dDaily", meta: "mDaily", icon: "☀", href: "./Game/Défi du jour/index.html", available: false },
+  { id: "quality-crush", title: { fr: "Quality Crush", en: "Quality Crush" }, desc: "dCrush", meta: "mCrush", icon: "◆", href: "./Game/Quality Crush/index.html", available: false },
+  { id: "quality-run", title: { fr: "Quality Run", en: "Quality Run" }, desc: "dRun", meta: "mRun", icon: "→", href: "./Game/Quality Run/index.html", available: false },
+  { id: "scenarios", title: { fr: "Scénarios qualité", en: "Quality scenarios" }, desc: "dScen", meta: "mScen", icon: "⌕", href: "./Game/10 scénarios qualité/index.html", available: false }
 ];
 let currentUser = null;
 let scoreMap = new Map();
