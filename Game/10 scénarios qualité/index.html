@@ -22,7 +22,6 @@ button,select{font:inherit}
 .muted{color:var(--muted)}.small{font-size:13px}
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:16px;padding:18px}
 .tag{background:#27272a;border-radius:99px;padding:5px 11px;font-size:12.5px;font-weight:700}
-select{background:#27272a;color:var(--text);border:1px solid #52525b;border-radius:10px;padding:10px;min-height:46px}
 .cases{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-top:14px}
 .caseCard{text-align:left;align-items:flex-start;flex-direction:column;min-height:120px;padding:14px;border-radius:14px}
 .caseCard b{font-size:15px}.caseCard .st{color:var(--yellow);letter-spacing:3px;font-size:18px}
@@ -1042,13 +1041,11 @@ const T = {
     notice: "Simulation pédagogique. Produits, lots, documents, mesures et décisions fictifs. Ne pas utiliser pour décider de la conformité ou de la sécurité d’un dispositif médical réel.",
     sub: "ENQUÊTE AU POSTE DE TRAVAIL",
     intro: "Fouille le poste, ouvre les documents à la loupe, entoure l’écart s’il y en a un, puis va voir le responsable qualité pour décider.",
-    mode: "Mode", modeA: "Accompagné : les preuves sont signalées", modeE: "Expert : à toi de trouver les preuves",
-    random: "▶ DOSSIER ALÉATOIRE",
     lockedCase: "Verrouillé", lockHint: "Il faut {need} ★ au total",
     unlockInfo: "{u} dossier(s) débloqué(s) sur {n} · tu as {s} ★. Prochain dossier : {need} ★ au total.",
     allUnlocked: "Tous les dossiers sont débloqués : bravo !",
     unlockedNew: "🔓 Nouveau dossier débloqué : {doc} !", lockedToast: "Dossier verrouillé : il faut {need} ★ au total (tu en as {s}). Rejoue un dossier pour gagner des étoiles.",
-    summary: "{d} enquête(s) terminée(s) · tes points hub : <b>{h}</b> / 5 000 (tes 10 meilleurs dossiers) · enregistré sur le hub : <b>{r}</b>",
+    summary: "{d} enquête(s) terminée(s) · tes points : <b>{h}</b> / 5 000 · étoiles : <b>{s}</b> / {m} ★",
     kDoc: "ÉCART DOCUMENTAIRE", kTech: "ÉCART TECHNIQUE", lot: "lot", starsAria: "{n} étoile(s)",
     bestCase: "Meilleur : {n} / 500 pts", unsolved: "Non résolu", dossiers: "⌂ Dossiers",
     briefing: "<b>Responsable qualité :</b> « Le dossier <b>{doc}</b> ({fam}, lot {lot}) attend ta revue. Trouve les 3 preuves sur le poste, examine-les à la loupe, puis viens me voir. »",
@@ -1056,7 +1053,7 @@ const T = {
     sceneAria: "Poste de travail à explorer", decorAria: "Élément du décor", resp1: "RESP.", resp2: "QUALITÉ", blocked: "BLOQUÉ", quarantine: "QUARANTAINE",
     sceneHint: "Touchez un objet de la scène ou un bouton ci-dessous.", objListTitle: "Objets du poste", nothing: "{o} : rien à signaler pour ce dossier.",
     invAria: "Dossier d’enquête", proof: "Preuve {n}", circled: "Entouré : « {z} »", noCircle: "Rien d’entouré",
-    toFindA: "À trouver sur le poste (repère ?)", toFind: "À trouver sur le poste",
+    toFind: "À trouver sur le poste (repère ?)",
     goDoor: "🚪 Aller voir le responsable qualité", office: "Bureau du responsable", ranked: "{n}/3 preuves classées",
     loupeHelp: "① Si un élément pose problème, clique dessus pour l’<b>entourer</b> (1 seul par preuve) : la preuve passe en « Écart ». ② Sinon, choisis « Fait compatible avec le dossier » ou « Hors périmètre du dossier ».",
     needZone: "Pour un écart, entoure l’élément qui pose problème dans le document.",
@@ -1071,7 +1068,7 @@ const T = {
     dRelease: "Libérer immédiatement.", dScrap: "Rebuter tout le lot sans investigation.",
     jSigned: "Une signature ou un moyen valide suffit.", jExpected: "Les preuves imposent une action maîtrisée avant de conclure au-delà des faits.", jAssume: "Une hypothèse probable remplace les preuves.",
     validate: "VALIDER MA DÉCISION", back: "Retourner au poste",
-    starsLbl: "{n} étoile(s) sur 3", ptsHub: "{s} points · {h} / 500 points hub",
+    starsLbl: "{n} étoile(s) sur 3", ptsHub: "{s} points · {h} / 500",
     resLine: "{h}/3 qualifications correctes · {g}/{t} écarts bien entourés · {b} élément(s) entouré(s) à tort",
     correction: "Correction des preuves",
     legendZ: "<span class=\"zone good\">vert</span> écart bien entouré · <span class=\"zone missed\">jaune</span> écart manqué · <span class=\"zone bad\">rouge</span> entouré à tort",
@@ -1079,13 +1076,13 @@ const T = {
     expRisk: "Risque attendu :", expDec: "Décision attendue :", justif: "Justification :", right: "correcte ✓", wrong: "à revoir ✗",
     before: "Avant une décision réelle : vérifier les documents applicables, l’étendue concernée et les preuves traçables. Le confinement n’est pas la disposition finale.",
     howScore: "Comment le score est calculé",
-    scoreRules: "+100 par qualification correcte · +25 par écart bien entouré · −15 par élément entouré à tort · −40 par « Écart » signalé à tort · +25 sans signalement à tort · +40 risque · +50 décision · +30 justification · −50 pour un rebut sans investigation. Le score est ramené sur 500 points hub par dossier ; le hub reçoit la somme de tes 10 meilleurs dossiers (5 000 max).",
+    scoreRules: "+100 par qualification correcte · +25 par écart bien entouré · −15 par élément entouré à tort · −40 par « Écart » signalé à tort · +25 sans signalement à tort · +40 risque · +50 décision · +30 justification · −50 pour un rebut sans investigation. Chaque dossier obtient un score sur 500. Tous les dossiers comptent de façon égale dans le total général de 5 000 points.",
     nextCase: "DOSSIER SUIVANT ▶", replayCase: "↻ REJOUER CE DOSSIER",
     saveNA: "Score non enregistré : service de scores indisponible.", saving: "Enregistrement du score…",
-    saved: "Points hub enregistrés : {n}", saveErr: "Enregistrement non confirmé : il sera renvoyé automatiquement à la prochaine ouverture du jeu.",
+    saved: "Points enregistrés : {n}", saveErr: "Enregistrement non confirmé : il sera renvoyé automatiquement à la prochaine ouverture du jeu.",
     notBetter: "Résultat inférieur à ton meilleur sur ce dossier : rien de nouveau à enregistrer.",
     helpTitle: "Comment jouer",
-    h1: "<b>Explore le poste</b> : clique sur les objets (classeur, tickets épinglés, écran, instruments, bacs…). En mode accompagné, les preuves sont repérées par un <b>?</b> jaune.",
+    h1: "<b>Explore le poste</b> : clique sur les objets (classeur, tickets épinglés, écran, instruments, bacs…). Les preuves sont repérées par un <b>?</b> jaune.",
     h2: "<b>À la loupe</b> : chaque preuve contient <b>au maximum 1 écart</b>. Si tu le vois, clique dessus pour l’entourer.",
     h3: "<b>Qualifie</b> chaque preuve : <b>Écart</b>, <b>Fait compatible avec le dossier</b> ou <b>Hors périmètre du dossier</b>, puis classe-la dans le dossier.",
     h4: "<b>Décide</b> : une fois les 3 preuves classées, ouvre la porte du responsable qualité et choisis 1 réponse pour chaque point (risque, décision, justification). La correction explique chaque preuve.",
@@ -1103,13 +1100,11 @@ const T = {
     notice: "Training simulation. Products, lots, documents, measurements and decisions are fictitious. Do not use to decide on the conformity or safety of a real medical device.",
     sub: "WORKSTATION INVESTIGATION",
     intro: "Search the workstation, inspect documents under the magnifier, circle the deviation if there is one, then go and see the quality manager to decide.",
-    mode: "Mode", modeA: "Guided: evidence is highlighted", modeE: "Expert: find the evidence yourself",
-    random: "▶ RANDOM CASE",
     lockedCase: "Locked", lockHint: "{need} ★ needed in total",
     unlockInfo: "{u} case(s) unlocked out of {n} · you have {s} ★. Next case: {need} ★ in total.",
     allUnlocked: "All cases are unlocked: well done!",
     unlockedNew: "🔓 New case unlocked: {doc}!", lockedToast: "Locked case: you need {need} ★ in total (you have {s}). Replay a case to earn stars.",
-    summary: "{d} investigation(s) completed · your hub points: <b>{h}</b> / 5,000 (your 10 best cases) · saved on the hub: <b>{r}</b>",
+    summary: "{d} investigation(s) completed · your points: <b>{h}</b> / 5,000 · stars: <b>{s}</b> / {m} ★",
     kDoc: "DOCUMENTATION DEVIATION", kTech: "TECHNICAL DEVIATION", lot: "lot", starsAria: "{n} star(s)",
     bestCase: "Best: {n} / 500 pts", unsolved: "Not solved", dossiers: "⌂ Cases",
     briefing: "<b>Quality manager:</b> “Case <b>{doc}</b> ({fam}, lot {lot}) is waiting for your review. Find the 3 pieces of evidence at the workstation, inspect them closely, then come and see me.”",
@@ -1117,7 +1112,7 @@ const T = {
     sceneAria: "Workstation to explore", decorAria: "Decor item", resp1: "QUALITY", resp2: "MANAGER", blocked: "ON HOLD", quarantine: "QUARANTINE",
     sceneHint: "Tap an object in the scene or a button below.", objListTitle: "Workstation objects", nothing: "{o}: nothing to report for this case.",
     invAria: "Investigation file", proof: "Evidence {n}", circled: "Circled: “{z}”", noCircle: "Nothing circled",
-    toFindA: "Find it at the workstation (marker ?)", toFind: "Find it at the workstation",
+    toFind: "Find it at the workstation (marker ?)",
     goDoor: "🚪 Go and see the quality manager", office: "Manager’s office", ranked: "{n}/3 pieces of evidence filed",
     loupeHelp: "① If an item is a problem, click it to <b>circle</b> it (only 1 per piece of evidence): the evidence becomes a “Deviation”. ② Otherwise, choose “Fact consistent with the case” or “Outside the scope of the case”.",
     needZone: "For a deviation, circle the problem item in the document.",
@@ -1132,7 +1127,7 @@ const T = {
     dRelease: "Release immediately.", dScrap: "Scrap the whole lot without investigation.",
     jSigned: "A signature or a valid device is enough.", jExpected: "The evidence requires a controlled action before drawing conclusions beyond the facts.", jAssume: "A likely hypothesis replaces evidence.",
     validate: "CONFIRM MY DECISION", back: "Back to the workstation",
-    starsLbl: "{n} star(s) out of 3", ptsHub: "{s} points · {h} / 500 hub points",
+    starsLbl: "{n} star(s) out of 3", ptsHub: "{s} points · {h} / 500",
     resLine: "{h}/3 correct classifications · {g}/{t} deviations correctly circled · {b} item(s) circled wrongly",
     correction: "Evidence review",
     legendZ: "<span class=\"zone good\">green</span> deviation correctly circled · <span class=\"zone missed\">yellow</span> deviation missed · <span class=\"zone bad\">red</span> circled wrongly",
@@ -1140,13 +1135,13 @@ const T = {
     expRisk: "Expected risk:", expDec: "Expected decision:", justif: "Justification:", right: "correct ✓", wrong: "to review ✗",
     before: "Before any real decision: check the applicable documents, the scope concerned and traceable evidence. Containment is not the final disposition.",
     howScore: "How the score is calculated",
-    scoreRules: "+100 per correct classification · +25 per deviation correctly circled · −15 per item circled wrongly · −40 per false “Deviation” · +25 with no false deviation · +40 risk · +50 decision · +30 justification · −50 for scrapping without investigation. The score is converted to up to 500 hub points per case; the hub receives the sum of your 10 best cases (5,000 max).",
+    scoreRules: "+100 per correct classification · +25 per deviation correctly circled · −15 per item circled wrongly · −40 per false “Deviation” · +25 with no false deviation · +40 risk · +50 decision · +30 justification · −50 for scrapping without investigation. Each case is scored out of 500. All cases count equally towards the overall total of 5,000 points.",
     nextCase: "NEXT CASE ▶", replayCase: "↻ REPLAY THIS CASE",
     saveNA: "Score not saved: score service unavailable.", saving: "Saving score…",
-    saved: "Hub points saved: {n}", saveErr: "Save not confirmed: it will be resent automatically the next time you open the game.",
+    saved: "Points saved: {n}", saveErr: "Save not confirmed: it will be resent automatically the next time you open the game.",
     notBetter: "Lower than your best on this case: nothing new to save.",
     helpTitle: "How to play",
-    h1: "<b>Explore the workstation</b>: click on objects (binders, pinned tickets, screen, instruments, bins…). In guided mode, evidence is marked with a yellow <b>?</b>.",
+    h1: "<b>Explore the workstation</b>: click on objects (binders, pinned tickets, screen, instruments, bins…). Evidence is marked with a yellow <b>?</b>.",
     h2: "<b>Under the magnifier</b>: each piece of evidence contains <b>at most 1 deviation</b>. If you spot it, click it to circle it.",
     h3: "<b>Classify</b> each piece of evidence: <b>Deviation</b>, <b>Fact consistent with the case</b> or <b>Outside the scope of the case</b>, then file it.",
     h4: "<b>Decide</b>: once the 3 pieces of evidence are filed, open the quality manager’s door and choose 1 answer for each point (risk, decision, justification). The review explains each piece of evidence.",
@@ -1186,8 +1181,8 @@ document.getElementById("gameName").textContent = L === "en" ? "Quality scenario
 document.getElementById("notice").textContent = t("notice");
 I.mount(document.getElementById("topBtns"));
 
-const DEFAULT_P = () => ({ mode: "accompagne", best: {}, stars: {}, hub: {}, done: 0, last: null });
-const NORMALIZE = () => { P.hub = P.hub || {}; P.stars = P.stars || {}; P.best = P.best || {}; };
+const DEFAULT_P = () => ({ best: {}, stars: {}, hub: {}, done: 0, last: null });
+const NORMALIZE = () => { P.hub = P.hub || {}; P.stars = P.stars || {}; P.best = P.best || {}; delete P.mode; };
 let P = DEFAULT_P();
 /* Progression rattachée au COMPTE dans Supabase (table game_progress) : rien n'est conservé dans le navigateur. */
 function loadProgress(saved) {
@@ -1197,9 +1192,20 @@ function loadProgress(saved) {
   NORMALIZE();
 }
 const saveLocal = () => { if (scores) scores.saveProgress(P); };
-const hubTotal = () => Object.values(P.hub).map(b => Math.min(500, Number(b) || 0)).sort((a, b) => b - a).slice(0, 10).reduce((a, b) => a + b, 0);
+
+/* Score général : chaque dossier vaut 500 points internes ; tous les dossiers comptent à parts égales sur 5 000. */
+const HUB_TOTAL_MAX = 5000;
+const CASE_SCORE_MAX = 500;
+const hubRawTotal = () => CS.reduce((sum, _, i) => sum + Math.min(CASE_SCORE_MAX, Number(P.hub[i]) || 0), 0);
+const hubTotal = () => {
+  const maximumRaw = CS.length * CASE_SCORE_MAX;
+  if (!maximumRaw) return 0;
+  return Math.min(HUB_TOTAL_MAX, Math.round(hubRawTotal() / maximumRaw * HUB_TOTAL_MAX));
+};
+
 /* Déblocage au TOTAL d'étoiles : dossiers 1 à 3 ouverts, puis le dossier N demande N − 1 étoiles au total. */
 const START_UNLOCKED = 3;
+const MAX_STARS = () => CS.length * 3;
 const totalStars = () => Object.values(P.stars).reduce((a, b) => a + (Number(b) || 0), 0);
 const starsNeeded = n => n <= START_UNLOCKED ? 0 : n - 1;
 const unlockedCount = () => Math.min(CS.length, Math.max(START_UNLOCKED, totalStars() + 1));
@@ -1233,12 +1239,7 @@ function renderHome() {
     <p class="brand">${t("sub")}</p>
     <p class="muted">${t("intro")}</p>
     <section class="panel">
-      <div class="row between">
-        <div class="row"><label for="mode"><b>${t("mode")}</b></label>
-          <select id="mode"><option value="accompagne" ${P.mode === "accompagne" ? "selected" : ""}>${t("modeA")}</option><option value="expert" ${P.mode === "expert" ? "selected" : ""}>${t("modeE")}</option></select></div>
-        <button class="btn primary" type="button" data-action="random">${t("random")}</button>
-      </div>
-      <p class="small muted" style="margin-top:10px">${t("summary", { d: P.done, h: fmt(hubTotal()), r: remoteBest === null ? "…" : fmt(remoteBest) })}</p>
+      <p class="small muted" style="margin:0">${t("summary", { d: P.done, h: fmt(hubTotal()), s: totalStars(), m: MAX_STARS() })}</p>
     </section>
     <p class="unlockInfo">${unlockedCount() >= CS.length ? t("allUnlocked") : t("unlockInfo", { u: unlockedCount(), n: CS.length, s: totalStars(), need: starsNeeded(unlockedCount() + 1) })}</p>
     <div class="cases">${CS.map((c, i) => { const st = Number(P.stars[i]) || 0;
@@ -1286,8 +1287,9 @@ function sceneSVG() {
     if (k < 0) { objs += `<g opacity=".55" aria-hidden="true">${drawObject(obj)}</g>`; continue; }
     const f = G.c.facts[k], seen = !!G.verdict[k];
     const mx = s.x + s.w - 6, my = s.y - 4;
-    const marker = seen ? `<g><circle cx="${mx}" cy="${my}" r="15" fill="#16a34a" stroke="#fff" stroke-width="3"/><path d="M${mx - 7} ${my}l5 5 9-10" stroke="#fff" stroke-width="3.5" fill="none"/></g>`
-      : P.mode === "accompagne" ? `<g class="marker"><circle cx="${mx}" cy="${my}" r="15" fill="#ffb500" stroke="#111" stroke-width="3"/><text x="${mx}" y="${my + 6}" text-anchor="middle" font-size="18" font-weight="900" fill="#111">?</text></g>` : "";
+    const marker = seen
+      ? `<g><circle cx="${mx}" cy="${my}" r="15" fill="#16a34a" stroke="#fff" stroke-width="3"/><path d="M${mx - 7} ${my}l5 5 9-10" stroke="#fff" stroke-width="3.5" fill="none"/></g>`
+      : `<g class="marker"><circle cx="${mx}" cy="${my}" r="15" fill="#ffb500" stroke="#111" stroke-width="3"/><text x="${mx}" y="${my + 6}" text-anchor="middle" font-size="18" font-weight="900" fill="#111">?</text></g>`;
     objs += `<g class="hs" role="button" tabindex="0" data-action="inspect" data-k="${k}" aria-label="${esc(t("obj" + obj))}${SEP}${esc(f.title)}${seen ? esc(t("examined", { v: lbl(G.verdict[k]) })) : ""}"><rect class="outline" x="${s.x - 10}" y="${s.y - 10}" width="${s.w + 20}" height="${s.h + 20}" rx="12"/>${drawObject(obj)}${marker}</g>`;
   }
   const decor = DECOR.map(d => {
@@ -1319,13 +1321,13 @@ function renderScene(bubble) {
     <div class="bubble" role="status">${G.bubble}</div>
     <p class="sceneHint">${t("sceneHint")}</p>
     <div class="sceneWrap">${sceneSVG()}</div>
-    <div class="objList" role="group" aria-label="${t("objListTitle")}">${Object.keys(SLOTS).map(obj => { const k = factAt(obj); const seen = k >= 0 && G.verdict[k]; const ev = k >= 0 && P.mode === "accompagne";
-      return k >= 0 ? `<button class="btn ${seen ? "done" : ev ? "ev" : ""}" type="button" data-action="inspect" data-k="${k}">${seen ? "✓" : ev ? "?" : "🔍"} ${esc(t("obj" + obj))}</button>`
+    <div class="objList" role="group" aria-label="${t("objListTitle")}">${Object.keys(SLOTS).map(obj => { const k = factAt(obj); const seen = k >= 0 && G.verdict[k];
+      return k >= 0 ? `<button class="btn ${seen ? "done" : "ev"}" type="button" data-action="inspect" data-k="${k}">${seen ? "✓" : "?"} ${esc(t("obj" + obj))}</button>`
         : `<button class="btn" type="button" data-action="nothing" data-o="${obj}">🔍 ${esc(t("obj" + obj))}</button>`; }).join("")}</div>
     <div class="inventory" aria-label="${t("invAria")}">
       ${G.c.facts.map((f, k) => G.verdict[k]
         ? `<button class="slot filled" type="button" data-action="inspect" data-k="${k}"><span class="small muted">${t("proof", { n: k + 1 })} · ${esc(f.title)}</span><span class="v">${esc(lbl(G.verdict[k]))}</span><span class="small">${G.marks[k] >= 0 ? esc(t("circled", { z: zoneText(f, G.marks[k]) })) : t("noCircle")}</span></button>`
-        : `<div class="slot"><span class="small muted">${t("proof", { n: k + 1 })}</span><span>${P.mode === "accompagne" ? t("toFindA") : t("toFind")}</span></div>`).join("")}
+        : `<div class="slot"><span class="small muted">${t("proof", { n: k + 1 })}</span><span>${t("toFind")}</span></div>`).join("")}
       <button class="slot door ${ready ? "ready" : ""}" type="button" data-action="door">${ready ? t("goDoor") : `${t("office")}<br><span class="small muted">${t("ranked", { n: Object.keys(G.verdict).length })}</span>`}</button>
     </div>`;
 }
@@ -1462,7 +1464,7 @@ function renderDebrief() {
       <p class="muted small">${t("before")}</p>
     </section>
     <details class="panel" style="margin-top:12px"><summary>${t("howScore")}</summary><p style="margin-top:10px" class="small">${t("scoreRules")}</p></details>
-    <div class="row" style="margin-top:14px"><button class="btn primary" type="button" data-action="random">${t("nextCase")}</button><button class="btn" type="button" data-action="case" data-i="${G.i}">${t("replayCase")}</button></div>`;
+    <div class="row" style="margin-top:14px"><button class="btn primary" type="button" data-action="next">${t("nextCase")}</button><button class="btn" type="button" data-action="case" data-i="${G.i}">${t("replayCase")}</button></div>`;
   updateSave(); content.focus({ preventScroll: true }); scrollTo({ top: 0 });
 }
 function updateSave() { const el = document.getElementById("saveStatus"); if (el) { el.textContent = G.saveMsg; el.classList.toggle("err", G.saveErr); } }
@@ -1493,12 +1495,14 @@ function help() {
   <p class="small">${t("glossary")}</p><p class="small muted">${t("defs")}</p>
   <button class="btn primary" type="button" data-action="close">${t("gotIt")}</button>`);
 }
-function pickRandom() {
-  let pool = CS.map((_, i) => i).filter(i => isUnlocked(i) && i !== P.last);
-  if (!pool.length) pool = CS.map((_, i) => i).filter(isUnlocked);
-  const unsolved = pool.filter(i => !P.hub[i]);
-  const from = unsolved.length ? unsolved : pool;
-  return from[Math.floor(Math.random() * from.length)];
+/* Dossier suivant dans l'ordre (premier dossier débloqué après le dossier en cours). */
+function nextCase() {
+  if (!G) return renderHome();
+  for (let offset = 1; offset <= CS.length; offset++) {
+    const index = (G.i + offset) % CS.length;
+    if (isUnlocked(index)) { closeModal(true); return startCase(index); }
+  }
+  renderHome();
 }
 
 /* ---------- Événements ---------- */
@@ -1506,7 +1510,7 @@ function act(el) {
   const a = el.dataset.action;
   if (a === "help") return help();
   if (a === "close") { if (G) G.draft = null; return closeModal(); }
-  if (a === "random") { closeModal(true); return startCase(pickRandom()); }
+  if (a === "next") return nextCase();
   if (a === "case") { if (!isUnlocked(+el.dataset.i)) { toast(t("lockedToast", { need: starsNeeded(+el.dataset.i + 1), s: totalStars() })); return; } closeModal(true); return startCase(+el.dataset.i); }
   if (a === "home") { if (G && !G.finished && Object.keys(G.verdict).length && !confirm(t("abandon"))) return; return renderHome(); }
   if (!G) return;
@@ -1526,7 +1530,6 @@ document.addEventListener("keydown", e => {
   if (el && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); act(el); }
 });
 modal.addEventListener("cancel", () => { if (G) G.draft = null; });   // touche Échap : brouillon abandonné
-content.addEventListener("change", e => { if (e.target.id === "mode") { P.mode = e.target.value === "expert" ? "expert" : "accompagne"; saveLocal(); } });
 window.addEventListener("beforeunload", e => { if ((G && !G.finished && Object.keys(G.verdict).length) || saving || window.QWScores?.isSyncing()) { e.preventDefault(); e.returnValue = ""; } });
 
 content.innerHTML = `<p class="panel">…</p>`;
