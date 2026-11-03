@@ -14,7 +14,7 @@ const T = {
     sDaily: "Jusqu’à 1 000 points par jour (énigme 200, pendu 300, mots croisés 500)",
     sCrush: "40, 70 ou 100 points par niveau réussi (1, 2 ou 3 étoiles), 50 niveaux",
     sRun: "Score de votre meilleure course ÷ 3, plafonné à 5 000 points",
-    sScen: "Jusqu’à 500 points par dossier, vos 10 meilleurs dossiers",
+    sScen: "Jusqu’à 166 points par dossier, vos 30 meilleurs dossiers",
     boardEyebrow: "CLASSEMENT GÉNÉRAL", boardTitle: "Les meilleurs scores cumulés",
     tagline: "La qualité se joue ensemble.", top: "Retour en haut ↑",
     available: "Disponible", soon: "Bientôt disponible", play: "Jouer →",
@@ -30,7 +30,7 @@ const T = {
     mDaily: "⏱ 5 à 10 min · clavier ou écran tactile · sans limite de temps",
     mCrush: "⏱ 2 à 4 min par niveau · souris, doigt ou clavier",
     mRun: "⏱ 2 à 5 min · réflexes : flèches ou glisser le doigt",
-    mScen: "⏱ 5 min par dossier · mode accompagné disponible"
+    mScen: "⏱ 5 min par dossier "
   },
   en: {
     pageTitle: "Quality Week 2026 | Mini-games", skip: "Skip to content", navLabel: "Main navigation",
@@ -43,7 +43,7 @@ const T = {
     sDaily: "Up to 1,000 points per day (riddle 200, hangman 300, crossword 500)",
     sCrush: "40, 70 or 100 points per level cleared (1, 2 or 3 stars), 50 levels",
     sRun: "Your best run score ÷ 3, capped at 5,000 points",
-    sScen: "Up to 500 points per case, your 10 best cases",
+    sScen: "Up to 166 points per case, your 30 best cases",
     boardEyebrow: "OVERALL LEADERBOARD", boardTitle: "Top cumulative scores",
     tagline: "Quality is a team game.", top: "Back to top ↑",
     available: "Available", soon: "Coming soon", play: "Play →",
@@ -59,7 +59,7 @@ const T = {
     mDaily: "⏱ 5 to 10 min · keyboard or touch screen · no time limit",
     mCrush: "⏱ 2 to 4 min per level · mouse, finger or keyboard",
     mRun: "⏱ 2 to 5 min · reflexes: arrow keys or swipe",
-    mScen: "⏱ 5 min per case · guided mode available"
+    mScen: "⏱ 5 min per case"
   }
 };
 const I = window.QWI18N;
