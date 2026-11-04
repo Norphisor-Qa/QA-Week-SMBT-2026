@@ -25,7 +25,7 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 .sbar{width:70px;height:10px;border-radius:5px;background:#ffffff25;overflow:hidden}
 #hShield{height:100%;width:0;background:linear-gradient(90deg,#66d9e8,#15aabf)}
 #hShieldBox{opacity:.35;transition:opacity .2s}#hShieldBox.on{opacity:1}
-#quiz{position:fixed;top:56px;left:50%;transform:translateX(-50%);width:min(800px,95vw);background:#fffffff5;border-radius:16px;padding:12px 16px 14px;box-shadow:0 12px 34px #0008;display:none;pointer-events:none;border-top:6px solid #7048e8}
+#quiz{position:fixed;top:56px;left:50%;transform:translateX(-50%);width:min(800px,95vw);background:#fffffff5;border-radius:16px;padding:12px 16px 14px;box-shadow:0 12px 34px #0008;display:none;pointer-events:none;border-top:6px solid #7048e8;z-index:30}
 #quiz .qh{font-size:13px;font-weight:800;color:#7048e8;text-transform:uppercase;letter-spacing:.5px}
 #qtext{font-size:clamp(16px,2.5vw,22px);font-weight:700;color:#10263d;margin:4px 0 10px}
 .opts{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
@@ -34,9 +34,13 @@ canvas{display:block;width:100vw;height:100vh;touch-action:none}
 .oA{background:linear-gradient(180deg,#339af0,#1c7ed6)}.oB{background:linear-gradient(180deg,#9775fa,#7048e8)}.oC{background:linear-gradient(180deg,#ff922b,#f76707)}
 #qbarw{height:7px;background:#dde4ee;border-radius:4px;margin-top:10px;overflow:hidden}
 #qbar{height:100%;width:0;background:linear-gradient(90deg,#20c997,#fab005,#f03e3e)}
-#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);max-width:min(720px,94vw);padding:11px 18px;border-radius:14px;color:#fff;font-weight:600;font-size:clamp(13px,1.9vw,16px);box-shadow:0 6px 20px #0006;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center}
+/* Messages : toujours en BAS de l'écran, jamais sur la question */
+#toast{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);max-width:min(720px,94vw);padding:11px 18px;border-radius:14px;color:#fff;font-weight:600;font-size:clamp(13px,1.9vw,16px);box-shadow:0 6px 20px #0006;opacity:0;transition:opacity .25s;pointer-events:none;text-align:center;z-index:20}
 #toast.bad{background:#c92a2af0}#toast.good{background:#2b8a3ef0}#toast.info{background:#1864abf0}
-.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#0b2a4a99,#020a14d0);backdrop-filter:blur(4px);padding:14px}
+body.running #toast{bottom:70px}
+/* Pendant une question : message compact sur une seule ligne */
+body.quizzing #toast{font-size:13px;padding:6px 12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;background:radial-gradient(circle at 50% 40%,#0b2a4a99,#020a14d0);backdrop-filter:blur(4px);padding:14px;z-index:50}
 .card{background:#fff;border-radius:20px;max-width:660px;width:100%;max-height:92vh;overflow:auto;padding:26px 28px;box-shadow:0 24px 60px #000b;color:#10263d}
 .card h1{font-size:clamp(30px,6vw,46px);color:#000;margin-bottom:2px}
 .card{border-top:8px solid #FFB500;font-family:Arial,Helvetica,sans-serif}
@@ -47,7 +51,7 @@ table{border-collapse:collapse;width:100%;margin:10px 0;font-size:14px}
 td{padding:6px 8px;border-bottom:1px solid #e3e8ef}
 td:first-child{font-weight:700;white-space:nowrap;color:#1864ab}
 .btn{display:inline-block;margin-top:14px;background:#FFB500;color:#000;border:2px solid #000;border-radius:12px;padding:13px 30px;font-size:18px;font-weight:800;cursor:pointer;box-shadow:0 4px 0 #000;min-height:48px;font-family:Arial,Helvetica,sans-serif}
-.btn:focus-visible,.mini:focus-visible,.speed button:focus-visible{outline:3px solid #000;outline-offset:3px}
+.btn:focus-visible,.mini:focus-visible{outline:3px solid #000;outline-offset:3px}
 .btn:hover{filter:brightness(1.1)}
 .legend{display:flex;gap:8px;flex-wrap:wrap;margin:8px 0;font-size:14px}
 .legend span{background:#eef3f9;border-radius:8px;padding:5px 9px}
@@ -60,18 +64,6 @@ td:first-child{font-weight:700;white-space:nowrap;color:#1864ab}
 .stats b{display:block;font-size:24px;color:#1864ab}
 .card.wide{max-width:900px}
 .btn.ghost{background:#fff;color:#000;border:2px solid #000;box-shadow:none}
-.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0;position:sticky;top:-26px;background:#fff;padding:8px 0;z-index:2}
-.mini{border:1px solid #c5d3e1;background:#f1f6fc;color:#10263d;border-radius:10px;padding:8px 12px;font-weight:700;font-size:14px;cursor:pointer}
-.mini:hover{background:#e3edf8}.mini.warn{color:#c92a2a}.mini.del{color:#c92a2a;padding:4px 10px;font-size:13px}
-.qcard{border:1px solid #dbe4ee;border-radius:14px;padding:12px;margin:10px 0;background:#fafcfe}
-.qtop{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
-.qcard textarea,.qcard input{width:100%;border:1px solid #c5d3e1;border-radius:8px;padding:8px;font:inherit;font-size:15px;margin-top:3px;resize:vertical}
-.qcard label{display:block;font-size:13px;font-weight:700;color:#5b6b7c;margin-top:6px}
-.row3{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
-@media(max-width:640px){.row3{grid-template-columns:1fr}}
-label.good input{border-color:#69db7c;background:#ebfbee}label.good{color:#2b8a3e}
-label.bad input{border-color:#ffa8a8;background:#fff5f5}label.bad{color:#c92a2a}
-.foot{position:sticky;bottom:-26px;background:#fff;padding:6px 0 4px}
 .rec{border-radius:12px;padding:10px 12px;margin:8px 0;font-size:15px;line-height:1.4}
 .rok{background:#ebfbee;border-left:5px solid #2b8a3e}.rko{background:#fff5f5;border-left:5px solid #c92a2a}
 .rq{font-weight:700;margin-bottom:3px}.re{color:#495057;margin-top:4px}
@@ -81,14 +73,10 @@ label.bad input{border-color:#ffa8a8;background:#fff5f5}label.bad{color:#c92a2a}
 .hubpts{font-weight:800;color:#000}
 .cardTop{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-bottom:8px}
 .cardTop img{height:44px;width:auto}
-.speed{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin:10px 0;font-weight:700}
-.speed button{min-height:44px;padding:8px 14px;border:2px solid #000;border-radius:10px;background:#fff;font:800 15px Arial,sans-serif;cursor:pointer}
-.speed button[aria-pressed="true"]{background:#FFB500}
 #runLogo{position:fixed;right:10px;bottom:10px;z-index:40;height:34px;width:auto;opacity:.92;border-radius:4px;pointer-events:none}
 #pauseBtn{position:fixed;left:50%;bottom:12px;transform:translateX(-50%);z-index:45;min-height:44px;padding:8px 18px;border:2px solid #000;border-radius:999px;background:#fff;font:800 15px Arial,sans-serif;cursor:pointer;display:none}
 body.running #pauseBtn{display:block}
 .row2{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
-body.running #toast{bottom:70px}
 #runLogo{display:none}
 body.running #runLogo{display:block}
 /* Écrans tactiles : on n'affiche que les commandes au doigt */
@@ -105,7 +93,8 @@ body.running #runLogo{display:block}
   .btn.ghost{margin-left:4px}
   #runLogo{height:24px;right:6px;bottom:16px}
   #pauseBtn{left:10px;transform:none;bottom:10px}
-  #toast,body.running #toast{top:150px;bottom:auto;font-size:13px;padding:8px 12px;max-width:92vw}
+  /* Message en bas, au-dessus du bouton Pause (plus jamais sur la question) */
+  #toast,body.running #toast{top:auto;bottom:64px;font-size:13px;padding:8px 12px;max-width:92vw}
   .panel{padding:4px 8px 6px}.ptitle{font-size:10px}.bon{font-size:18px}.sbar{width:50px}
   .pill{padding:5px 10px;font-size:12px}
   #quiz{top:108px;padding:10px 12px}
@@ -124,7 +113,7 @@ body.running #runLogo{display:block}
 <canvas id="c"></canvas>
 
 <div id="hud">
-  <div class="hgrp"><span class="pill" id="hScore">Score 0</span><span class="pill" id="hDist">0 m</span><span class="pill" id="hQuiz">Quiz 0/0</span></div>
+  <div class="hgrp"><span class="pill" id="hScore">Points 0</span><span class="pill" id="hDist">0 m</span><span class="pill" id="hQuiz">Quiz 0/0</span></div>
   <div class="hgrp right">
     <div class="panel"><div class="ptitle" data-i18n="lives">VIES</div><div id="hHearts"></div></div>
     <div class="panel"><div class="ptitle">BONUS</div>
@@ -164,8 +153,7 @@ body.running #runLogo{display:block}
     <div class="legend">
       <span data-i18n="l1">🟥 Bac rouge : on l'évite</span><span data-i18n="l2">🟨 Barrière : on saute</span><span data-i18n="l3">🟦 Panneau : on glisse</span><span data-i18n="l4">🛡 Bouclier : protégé 6 s</span><span data-i18n="l5">❤ Cœur : +¼ de vie</span>
     </div>
-    <div class="speed" role="group" aria-labelledby="speedLbl"><span id="speedLbl" data-i18n="speedLbl">Vitesse :</span><button type="button" data-speed="normal" data-i18n="spNormal">Normale</button><button type="button" data-speed="slow" data-i18n="spSlow">Tranquille (plus lente)</button></div>
-    <p class="sub" data-i18n="livesInfo">3 vies ♥ – une mauvaise réponse ou un choc = une vie en moins. La correction complète est donnée à la fin de la partie.</p>
+    <p class="sub" data-i18n="livesInfo">3 vies ♥ – une mauvaise réponse ou un choc = une vie en moins. Plus vous allez loin, plus ça devient difficile. Points : distance + 10 par bonne réponse + 1 par 10 ✔ (max 5 000).</p>
     <p class="sub hubpts" id="bestLine"></p>
     <button class="btn" id="btnStart" disabled>Chargement…</button>
     <a class="btn ghost" href="../../hub.html" data-i18n="hub">Retour au hub</a>
@@ -746,6 +734,276 @@ body.running #runLogo{display:block}
    "Only the quantity"
   ],
   "e": "Before handing over: operations done, checks OK, documents filled in and signed, lot properly identified."
+ },
+ {
+  "q": "What does “CAPA” mean?",
+  "a": [
+   "Corrective And Preventive Action",
+   "Check At Product Arrival",
+   "Capacity Planning"
+  ],
+  "e": "CAPA: we deal with the cause of a problem so it does not come back, and prevent it from appearing elsewhere."
+ },
+ {
+  "q": "Traceability means…",
+  "a": [
+   "Being able to find a product's history",
+   "Drawing lines on the floor",
+   "Tracking operators' working hours"
+  ],
+  "e": "Thanks to lot numbers and records, we know where a product comes from, how it was made and where it was shipped."
+ },
+ {
+  "q": "The batch record is used to…",
+  "a": [
+   "Prove how the lot was made and inspected",
+   "Store invoices",
+   "Record holidays"
+  ],
+  "e": "The batch record gathers manufacturing and inspection records: it is the proof that the lot is conforming."
+ },
+ {
+  "q": "A “TO BE INSPECTED” label is on a bin.",
+  "a": [
+   "I wait for the inspection before using the parts",
+   "I use them if I need them",
+   "I remove the label"
+  ],
+  "e": "Until the inspection is done, the parts' status is unknown: do not use them."
+ },
+ {
+  "q": "I see a colleague skip an inspection step.",
+  "a": [
+   "I talk to them and report it if needed",
+   "I do the same to go faster",
+   "I say nothing"
+  ],
+  "e": "Quality is everyone's business. Talk about it simply, without blaming, to protect the patient."
+ },
+ {
+  "q": "What is a “deviation”?",
+  "a": [
+   "A difference between what is done and what is planned",
+   "A break between two lots",
+   "A gap between two machines"
+  ],
+  "e": "A deviation (from a procedure, a drawing…) must be reported so it can be analysed and handled."
+ },
+ {
+  "q": "A measuring instrument fell on the floor.",
+  "a": [
+   "I have it checked before using it again",
+   "I keep using it",
+   "I put it away without saying anything"
+  ],
+  "e": "A shock can put an instrument out of adjustment. It must be checked before being used again."
+ },
+ {
+  "q": "A part does not meet the drawing on a small detail.",
+  "a": [
+   "It is a non-conformity: I report it",
+   "It doesn't matter, I let it through",
+   "I fix it my own way"
+  ],
+  "e": "Even a small difference from the drawing is a non-conformity. Only Quality can decide what happens next."
+ },
+ {
+  "q": "Process “validation” means…",
+  "a": [
+   "Proving it always gives a good result",
+   "Signing the attendance sheet",
+   "Speeding up production"
+  ],
+  "e": "A validated process produces conforming parts repeatably, within its parameters. That is why settings must not be changed."
+ },
+ {
+  "q": "A part comes out of cleaning with marks on it.",
+  "a": [
+   "I isolate it and report it",
+   "I wipe it with my gown",
+   "I let it through"
+  ],
+  "e": "Marks may be residues or contamination. No improvised cleaning: isolate it and report it."
+ },
+ {
+  "q": "I write a date on a document. Which format?",
+  "a": [
+   "The one defined by the procedure",
+   "The one I prefer",
+   "No need for a date"
+  ],
+  "e": "A single format avoids confusion (03/04: 3 April or 4 March?)."
+ },
+ {
+  "q": "My work document is damaged and illegible.",
+  "a": [
+   "I ask for an official copy",
+   "I rewrite it from memory",
+   "I work without it"
+  ],
+  "e": "Only work with a legible official document. A copy from memory may contain errors."
+ },
+ {
+  "q": "Why do we show the status of parts (good, to inspect, NC)?",
+  "a": [
+   "To know what can be used",
+   "For decoration",
+   "To count the bins"
+  ],
+  "e": "A clear status prevents using a part that is uninspected or non-conforming by mistake."
+ },
+ {
+  "q": "The production area is cluttered with empty boxes.",
+  "a": [
+   "I remove them (5S)",
+   "I leave them there",
+   "I stack them on the line"
+  ],
+  "e": "A cluttered station leads to errors, mix-ups and dust. Keep only what is needed."
+ },
+ {
+  "q": "I see an oil leak on my machine.",
+  "a": [
+   "I call maintenance and isolate doubtful parts",
+   "I put cardboard on it",
+   "I wait for it to dry"
+  ],
+  "e": "Oil can contaminate parts. Report it and check the parts produced."
+ },
+ {
+  "q": "Can I use my personal tool at the station?",
+  "a": [
+   "No, only the specified tools",
+   "Yes, if it's better",
+   "Yes, if it's clean"
+  ],
+  "e": "Station tools are defined and controlled. A personal tool is neither checked nor controlled."
+ },
+ {
+  "q": "A visitor enters the production area without the gown.",
+  "a": [
+   "I stop them politely and report it",
+   "I say nothing",
+   "I let them look around"
+  ],
+  "e": "Gowning rules apply to everyone, visitors included. Say so politely."
+ },
+ {
+  "q": "What does “out of tolerance” mean?",
+  "a": [
+   "The value is outside the permitted limits",
+   "The part is perfect",
+   "Inspection is optional"
+  ],
+  "e": "An out-of-tolerance value = a non-conforming part. Record the real value and report it."
+ },
+ {
+  "q": "A part needs rework. What is required?",
+  "a": [
+   "An authorized and recorded rework",
+   "Nothing special",
+   "Just telling a colleague"
+  ],
+  "e": "Rework is only done if it is planned or authorized, and it must be recorded."
+ },
+ {
+  "q": "Why must a signature be dated?",
+  "a": [
+   "To know when the operation was done",
+   "To decorate",
+   "It isn't useful"
+  ],
+  "e": "The date is part of the proof: it shows the record was made at the right time."
+ },
+ {
+  "q": "The label on a finished pack is crooked and half peeled off.",
+  "a": [
+   "I isolate it and report it",
+   "I stick it back with tape",
+   "I let it ship"
+  ],
+  "e": "A badly applied label can become illegible or get lost. The product must be isolated."
+ },
+ {
+  "q": "An inspection “sample” is…",
+  "a": [
+   "Parts taken according to the plan to judge the lot",
+   "A gift for the customer",
+   "A demonstration part"
+  ],
+  "e": "Parts are taken as the plan requires (number, timing) so the inspection is representative."
+ },
+ {
+  "q": "A material arrives on my line without its “accepted” status.",
+  "a": [
+   "I don't use it and I report it",
+   "I use it anyway",
+   "I give it a status myself"
+  ],
+  "e": "Only material accepted at goods-in can be used in production."
+ },
+ {
+  "q": "I see an insect in the cleanroom.",
+  "a": [
+   "I report it immediately",
+   "I ignore it",
+   "I chase it with my batch record"
+  ],
+  "e": "An insect is a source of contamination. Report it so the area can be treated."
+ },
+ {
+  "q": "Why do we clean the station at the end of a lot?",
+  "a": [
+   "To prevent mix-ups and contamination",
+   "To pass the time",
+   "Only for the audit"
+  ],
+  "e": "A clean station at the end of a lot prevents a part or residue from passing into the next lot."
+ },
+ {
+  "q": "What is priority no. 1 for a medical device?",
+  "a": [
+   "Patient safety",
+   "The lowest price",
+   "Fast delivery"
+  ],
+  "e": "Quality comes before speed: a medical device must first of all be safe for the patient."
+ },
+ {
+  "q": "I find a defect on a lot that has already moved to the next step.",
+  "a": [
+   "I report it immediately so the lot can be blocked",
+   "I don't mention it",
+   "I wait for the next lot"
+  ],
+  "e": "The sooner you report it, the sooner the lot can be blocked before it goes further."
+ },
+ {
+  "q": "A quality indicator (KPI) is…",
+  "a": [
+   "A figure used to track performance",
+   "A light on the machine",
+   "A quality inspector"
+  ],
+  "e": "Indicators (scrap, NCs, complaints…) show whether we are improving and where to act."
+ },
+ {
+  "q": "Why respect the specified times (drying, cleaning…)?",
+  "a": [
+   "They are validated to get a good result",
+   "To slow production down",
+   "They are optional"
+  ],
+  "e": "Shortening a validated time can give a product that is badly cleaned, badly dried or non-conforming."
+ },
+ {
+  "q": "I receive a new version of an instruction. What about the old one?",
+  "a": [
+   "I remove it from the station according to the rule",
+   "I keep both",
+   "I keep the old one, I know it"
+  ],
+  "e": "Two versions at the station means a risk of error. Only the current version stays available."
  }
 ]
 </script>
@@ -1308,6 +1566,276 @@ body.running #runLogo{display:block}
    "Seulement la quantité"
   ],
   "e": "Avant de passer le relais : opérations faites, contrôles OK, documents remplis et signés, lot bien identifié."
+ },
+ {
+  "q": "Que veut dire « CAPA » ?",
+  "a": [
+   "Action corrective et préventive",
+   "Contrôle à l'arrivée",
+   "Capacité de production"
+  ],
+  "e": "CAPA (Corrective And Preventive Action) : on traite la cause d'un problème pour qu'il ne revienne pas, et on évite qu'il apparaisse ailleurs."
+ },
+ {
+  "q": "La traçabilité, c'est…",
+  "a": [
+   "Pouvoir retrouver l'historique d'un produit",
+   "Tracer des lignes au sol",
+   "Suivre les horaires des opérateurs"
+  ],
+  "e": "Grâce aux numéros de lot et aux enregistrements, on sait d'où vient un produit, comment il a été fait et où il est parti."
+ },
+ {
+  "q": "Le dossier de lot sert à…",
+  "a": [
+   "Prouver comment le lot a été fabriqué et contrôlé",
+   "Ranger les factures",
+   "Noter les congés"
+  ],
+  "e": "Le dossier de lot rassemble les enregistrements de fabrication et de contrôle : c'est la preuve que le lot est conforme."
+ },
+ {
+  "q": "Une étiquette « À CONTRÔLER » est posée sur un bac.",
+  "a": [
+   "J'attends le contrôle avant d'utiliser les pièces",
+   "Je les utilise si j'en ai besoin",
+   "Je retire l'étiquette"
+  ],
+  "e": "Tant que le contrôle n'est pas fait, le statut des pièces n'est pas connu : on ne les utilise pas."
+ },
+ {
+  "q": "Je vois un collègue sauter une étape de contrôle.",
+  "a": [
+   "Je lui en parle et je préviens si besoin",
+   "Je fais pareil pour aller plus vite",
+   "Je ne dis rien"
+  ],
+  "e": "La qualité est l'affaire de tous. On en parle simplement, sans accuser, pour protéger le patient."
+ },
+ {
+  "q": "Qu'est-ce qu'un « écart » ?",
+  "a": [
+   "Une différence entre ce qui est fait et ce qui est prévu",
+   "Une pause entre deux lots",
+   "Un espace entre deux machines"
+  ],
+  "e": "Un écart (à une procédure, à un plan…) doit être signalé pour être analysé et traité."
+ },
+ {
+  "q": "Un instrument de mesure est tombé par terre.",
+  "a": [
+   "Je le fais vérifier avant de le réutiliser",
+   "Je continue à l'utiliser",
+   "Je le range sans rien dire"
+  ],
+  "e": "Un choc peut dérégler un instrument. Il doit être vérifié avant de servir à nouveau."
+ },
+ {
+  "q": "Une pièce ne respecte pas le plan sur un petit détail.",
+  "a": [
+   "C'est une non-conformité : je préviens",
+   "Ce n'est pas grave, je laisse passer",
+   "Je la corrige à ma façon"
+  ],
+  "e": "Même un petit écart au plan est une non-conformité. Seule la Qualité peut décider de la suite."
+ },
+ {
+  "q": "La « validation » d'un procédé, c'est…",
+  "a": [
+   "Prouver qu'il donne toujours un bon résultat",
+   "Signer la feuille de présence",
+   "Accélérer la production"
+  ],
+  "e": "Un procédé validé produit des pièces conformes de façon répétable, dans ses paramètres. C'est pour ça qu'on ne change pas les réglages."
+ },
+ {
+  "q": "Une pièce sort du nettoyage avec des traces.",
+  "a": [
+   "Je l'isole et je préviens",
+   "Je l'essuie avec ma blouse",
+   "Je la laisse passer"
+  ],
+  "e": "Des traces peuvent être des résidus ou une contamination. On ne fait pas de nettoyage improvisé : on isole et on prévient."
+ },
+ {
+  "q": "J'écris une date sur un document. Quel format ?",
+  "a": [
+   "Celui défini par la procédure",
+   "Celui que je préfère",
+   "Pas besoin de date"
+  ],
+  "e": "Un format unique évite les confusions (03/04 : 3 avril ou 4 mars ?)."
+ },
+ {
+  "q": "Mon document de travail est abîmé et illisible.",
+  "a": [
+   "Je demande une copie officielle",
+   "Je le recopie de mémoire",
+   "Je travaille sans"
+  ],
+  "e": "On travaille uniquement avec un document officiel lisible. Une copie de mémoire peut contenir des erreurs."
+ },
+ {
+  "q": "Pourquoi indique-t-on le statut des pièces (bon, à contrôler, NC) ?",
+  "a": [
+   "Pour savoir ce qu'on peut utiliser",
+   "Pour la décoration",
+   "Pour compter les bacs"
+  ],
+  "e": "Un statut clair empêche d'utiliser par erreur une pièce non contrôlée ou non conforme."
+ },
+ {
+  "q": "La zone de production est encombrée de cartons vides.",
+  "a": [
+   "Je les évacue (5S)",
+   "Je les laisse là",
+   "Je les empile sur la ligne"
+  ],
+  "e": "Un poste encombré favorise les erreurs, les mélanges et la poussière. On garde seulement ce qui sert."
+ },
+ {
+  "q": "Je vois une fuite d'huile sur ma machine.",
+  "a": [
+   "Je préviens la maintenance et j'isole les pièces douteuses",
+   "Je mets un carton dessus",
+   "J'attends que ça sèche"
+  ],
+  "e": "L'huile peut contaminer les pièces. On prévient et on vérifie les pièces produites."
+ },
+ {
+  "q": "Puis-je utiliser mon outil personnel sur le poste ?",
+  "a": [
+   "Non, seulement les outils prévus",
+   "Oui s'il est meilleur",
+   "Oui s'il est propre"
+  ],
+  "e": "Les outils du poste sont définis et suivis. Un outil personnel n'est ni vérifié ni maîtrisé."
+ },
+ {
+  "q": "Un visiteur entre en zone de production sans la tenue.",
+  "a": [
+   "Je l'arrête poliment et je préviens",
+   "Je ne dis rien",
+   "Je le laisse faire le tour"
+  ],
+  "e": "Les règles d'habillage s'appliquent à tous, visiteurs compris. On le dit poliment."
+ },
+ {
+  "q": "Que veut dire « hors tolérance » ?",
+  "a": [
+   "La valeur sort des limites autorisées",
+   "La pièce est parfaite",
+   "Le contrôle est facultatif"
+  ],
+  "e": "Une valeur hors tolérance = pièce non conforme. On note la vraie valeur et on prévient."
+ },
+ {
+  "q": "Une pièce doit être retouchée. Il faut…",
+  "a": [
+   "Une retouche autorisée et enregistrée",
+   "Rien de spécial",
+   "Juste prévenir un collègue"
+  ],
+  "e": "Une retouche se fait seulement si elle est prévue ou autorisée, et elle doit être enregistrée."
+ },
+ {
+  "q": "Pourquoi une signature doit-elle être datée ?",
+  "a": [
+   "Pour savoir quand l'opération a été faite",
+   "Pour décorer",
+   "Ce n'est pas utile"
+  ],
+  "e": "La date fait partie de la preuve : elle montre que l'enregistrement a été fait au bon moment."
+ },
+ {
+  "q": "L'étiquette d'un emballage fini est de travers et à moitié décollée.",
+  "a": [
+   "Je l'isole et je préviens",
+   "Je la recolle au scotch",
+   "Je laisse partir"
+  ],
+  "e": "Une étiquette mal posée peut devenir illisible ou se perdre. Le produit doit être isolé."
+ },
+ {
+  "q": "Un « échantillon » de contrôle, c'est…",
+  "a": [
+   "Des pièces prélevées selon le plan pour juger le lot",
+   "Un cadeau pour le client",
+   "Une pièce de démonstration"
+  ],
+  "e": "On prélève les pièces comme le plan le demande (nombre, moment) pour que le contrôle soit représentatif."
+ },
+ {
+  "q": "Une matière arrive sur ma ligne sans son statut « accepté ».",
+  "a": [
+   "Je ne l'utilise pas et je préviens",
+   "Je l'utilise quand même",
+   "Je lui donne un statut moi-même"
+  ],
+  "e": "Seule une matière acceptée à la réception peut être utilisée en production."
+ },
+ {
+  "q": "Je vois un insecte en salle propre.",
+  "a": [
+   "Je le signale tout de suite",
+   "Je l'ignore",
+   "Je le chasse avec mon dossier de lot"
+  ],
+  "e": "Un insecte est une source de contamination. On le signale pour que la zone soit traitée."
+ },
+ {
+  "q": "Pourquoi nettoie-t-on le poste en fin de lot ?",
+  "a": [
+   "Pour éviter les mélanges et la contamination",
+   "Pour passer le temps",
+   "Seulement pour l'audit"
+  ],
+  "e": "Un poste propre en fin de lot évite qu'une pièce ou un résidu passe dans le lot suivant."
+ },
+ {
+  "q": "Quelle est la priorité n°1 pour un dispositif médical ?",
+  "a": [
+   "La sécurité du patient",
+   "Le prix le plus bas",
+   "La rapidité de livraison"
+  ],
+  "e": "La qualité passe avant la vitesse : un dispositif médical doit d'abord être sûr pour le patient."
+ },
+ {
+  "q": "Je découvre un défaut sur un lot déjà parti à l'étape suivante.",
+  "a": [
+   "Je préviens tout de suite pour bloquer le lot",
+   "Je n'en parle pas",
+   "J'attends le prochain lot"
+  ],
+  "e": "Plus on prévient vite, plus on peut bloquer le lot avant qu'il n'aille plus loin."
+ },
+ {
+  "q": "Un indicateur qualité (KPI), c'est…",
+  "a": [
+   "Un chiffre pour suivre la performance",
+   "Un voyant sur la machine",
+   "Un contrôleur qualité"
+  ],
+  "e": "Les indicateurs (rebuts, NC, réclamations…) montrent si on progresse et où agir."
+ },
+ {
+  "q": "Pourquoi respecter les temps indiqués (séchage, nettoyage…) ?",
+  "a": [
+   "Ils sont validés pour obtenir un bon résultat",
+   "Pour ralentir la production",
+   "Ils sont facultatifs"
+  ],
+  "e": "Raccourcir un temps validé peut donner un produit mal nettoyé, mal séché ou non conforme."
+ },
+ {
+  "q": "Je reçois une nouvelle version d'instruction. Que faire de l'ancienne ?",
+  "a": [
+   "Je la retire du poste selon la règle",
+   "Je garde les deux",
+   "Je garde l'ancienne, je la connais"
+  ],
+  "e": "Deux versions au poste, c'est un risque de se tromper. Seule la version en vigueur reste disponible."
  }
 ]
 </script>
@@ -1320,13 +1848,14 @@ const TR={
   intro:"Vous êtes opérateur / opératrice dans notre atelier. Courez le plus loin possible, <b>évitez les problèmes qualité</b>, ramassez les <b>✔</b> et répondez aux <b>questions</b> en passant par la bonne porte A, B ou C.",
   k1:"⬅ ➡ (ou Q / D)",k2:"⬆ (ou Z / Espace)",k3:"⬇ (ou S)",c1:"Changer de couloir",c2:"Sauter par-dessus les barrières jaunes",c3:"Glisser sous les panneaux bleus",c4:"📱 Téléphone",c5:"Glisser le doigt gauche / droite / haut / bas",c6:"Pause",
   l1:"🟥 Bac rouge : on l'évite",l2:"🟨 Barrière : on saute",l3:"🟦 Panneau : on glisse",l4:"🛡 Bouclier : protégé 6 s",l5:"❤ Cœur : +¼ de vie",
-  livesInfo:"3 vies ♥ – une mauvaise réponse ou un choc = une vie en moins. La correction complète est donnée à la fin de la partie.",
-  speedLbl:"Vitesse :",spNormal:"Normale",spSlow:"Tranquille (plus lente)",pauseBtn:"⏸ Pause",
+  livesInfo:"3 vies ♥ – une mauvaise réponse ou un choc = une vie en moins. Plus vous allez loin, plus ça devient difficile. Points : distance + 10 par bonne réponse + 1 par 10 ✔ (max 5 000).",
+  pauseBtn:"⏸ Pause",
   hub:"Retour au hub",pauseTxt:"Appuyez sur P ou sur le bouton pour reprendre.",resume:"Reprendre ▶",over:"🏁 Fin de la partie !",restart:"Rejouer ↻",
   go:"C'est parti ▶",loading:"Chargement…",na:"Service indisponible",naShort:"Indisponible",reload:"Rechargez la page.",
-  bestLine:"Vos points hub : {h} (meilleure course ÷ 5, max 5 000)",good:"✅ Bonne réponse ! +250",bad:"❌ Mauvaise réponse – l'explication sera donnée à la fin",
+  bestLine:"Vos points hub : {h} / 5 000",good:"✅ Bonne réponse ! +10 pts",bad:"❌ Mauvaise réponse – l'explication sera donnée à la fin",
   startToast:"Évitez les problèmes qualité et ramassez les ✔ !",shield:"🛡 Bouclier : « {l} » évité !",heart:"❤ +¼ de vie !",shieldOn:"🛡 Bouclier ! Protégé pendant 6 s",
-  sScore:"Score",sHub:"Points hub",sRecord:"Record (hub)",sDist:"Distance",sOk:"Bonnes réponses",sCoins:"✔ ramassés",sHits:"Chocs",
+  level:"🔥 Niveau {n} : ça accélère !",maxPts:"🏆 5 000 points atteints !",
+  sHub:"Points hub",sRecord:"Record (hub)",sDist:"Distance",sOk:"Bonnes réponses",sCoins:"✔ ramassés",sHits:"Chocs",
   noQ:"Aucune question rencontrée pendant cette partie. Courez plus longtemps pour en voir !",corr:"📚 Correction des questions",perfect:"Parfait : aucune erreur ! 🏆",
   yours:"Votre réponse",right:"Bonne réponse",saveNA:"Score non enregistré : service de scores indisponible.",saving:"Enregistrement du score…",
   saved:"Points hub enregistrés : {n}",saveErr:"Enregistrement non confirmé : il sera renvoyé automatiquement à la prochaine ouverture du jeu."},
@@ -1334,13 +1863,14 @@ const TR={
   intro:"You are an operator in our workshop. Run as far as you can, <b>avoid quality issues</b>, pick up the <b>✔</b> and answer the <b>questions</b> by going through the right door A, B or C.",
   k1:"⬅ ➡ (or A / D)",k2:"⬆ (or W / Space)",k3:"⬇ (or S)",c1:"Change lane",c2:"Jump over the yellow barriers",c3:"Slide under the blue signs",c4:"📱 Phone",c5:"Swipe left / right / up / down",c6:"Pause",
   l1:"🟥 Red bin: avoid it",l2:"🟨 Barrier: jump",l3:"🟦 Sign: slide",l4:"🛡 Shield: protected for 6 s",l5:"❤ Heart: +¼ life",
-  livesInfo:"3 lives ♥ – a wrong answer or a crash = one life lost. The full answers are shown at the end of the game.",
-  speedLbl:"Speed:",spNormal:"Normal",spSlow:"Relaxed (slower)",pauseBtn:"⏸ Pause",
+  livesInfo:"3 lives ♥ – a wrong answer or a crash = one life lost. The further you go, the harder it gets. Points: distance + 10 per correct answer + 1 per 10 ✔ (max 5,000).",
+  pauseBtn:"⏸ Pause",
   hub:"Back to hub",pauseTxt:"Press P or the button to resume.",resume:"Resume ▶",over:"🏁 Game over!",restart:"Play again ↻",
   go:"Let's go ▶",loading:"Loading…",na:"Service unavailable",naShort:"Unavailable",reload:"Reload the page.",
-  bestLine:"Your hub points: {h} (best run ÷ 5, max 5,000)",good:"✅ Correct! +250",bad:"❌ Wrong answer – the explanation will be shown at the end",
+  bestLine:"Your hub points: {h} / 5,000",good:"✅ Correct! +10 pts",bad:"❌ Wrong answer – the explanation will be shown at the end",
   startToast:"Avoid quality issues and pick up the ✔!",shield:"🛡 Shield: “{l}” avoided!",heart:"❤ +¼ life!",shieldOn:"🛡 Shield! Protected for 6 s",
-  sScore:"Score",sHub:"Hub points",sRecord:"Best (hub)",sDist:"Distance",sOk:"Correct answers",sCoins:"✔ collected",sHits:"Crashes",
+  level:"🔥 Level {n}: speeding up!",maxPts:"🏆 5,000 points reached!",
+  sHub:"Hub points",sRecord:"Best (hub)",sDist:"Distance",sOk:"Correct answers",sCoins:"✔ collected",sHits:"Crashes",
   noQ:"No questions came up during this run. Run longer to see some!",corr:"📚 Answers",perfect:"Perfect: no mistakes! 🏆",
   yours:"Your answer",right:"Correct answer",saveNA:"Score not saved: score service unavailable.",saving:"Saving score…",
   saved:"Hub points saved: {n}",saveErr:"Save not confirmed: it will be resent automatically the next time you open the game."}
@@ -1350,13 +1880,24 @@ window.QWI18N.apply(TR);
 document.title='Quality Run | Quality Week 2026';
 window.QWI18N.mount(document.getElementById('langSlot'));
 const QUESTIONS=JSON.parse(document.getElementById(LANG==='en'?'qdata-en':'qdata').textContent);
-/* Barème commun : points hub = meilleure course ÷ 3, plafonnés à 5 000 */
-const toHub=raw=>Math.min(5000,Math.floor(Math.max(0,raw)/5));
-/* Vitesse « tranquille » : accessible à tous (moins de réflexes nécessaires) */
-let SLOW=false;try{SLOW=localStorage.getItem('qw-run-slow')==='1';}catch(e){}
-function renderSpeed(){document.querySelectorAll('.speed button').forEach(b=>b.setAttribute('aria-pressed',String((b.dataset.speed==='slow')===SLOW)));}
-document.querySelectorAll('.speed button').forEach(b=>b.addEventListener('click',()=>{SLOW=b.dataset.speed==='slow';try{localStorage.setItem('qw-run-slow',SLOW?'1':'0');}catch(e){}renderSpeed();}));
-renderSpeed();
+
+/* ===================== POINTS HUB : COURBE LOGARITHMIQUE =====================
+   Points hub = points distance + 10 par bonne réponse + 1 par 10 ✔ ramassés, plafonnés à 5 000.
+   Points distance : courbe logarithmique, beaucoup de points au début puis de moins en moins.
+   0 m -> 0 pt ... 100 000 m -> 5 000 pts.
+   CURVE règle la forme : 3.4 => environ 1 750 pts à 20 000 m (plus grand = plus de points au début). */
+const MAX_DIST=100000, MAX_HUB=5000, CURVE=3.4, PTS_GOOD=10, PTS_COIN=0.1; /* 1 point pour 10 ✔ */
+function distPts(d){
+  if(d>=MAX_DIST)return MAX_HUB;
+  const x=Math.max(0,d)/MAX_DIST;
+  return Math.floor(MAX_HUB*Math.log(1+CURVE*x)/Math.log(1+CURVE));
+}
+function hubPoints(){return Math.min(MAX_HUB,distPts(dist)+PTS_GOOD*stats.ok+Math.floor(PTS_COIN*coins));}
+/* ===================== DIFFICULTÉ : 0 au départ -> 1 à 100 000 m ===================== */
+function hardLevel(){return Math.min(1,Math.max(0,dist/MAX_DIST));}
+/* Pendant une question, les obstacles disparaissent pour laisser lire.
+   Délai avant disparition : 0 s au départ, jusqu'à CLEAR_DELAY_MAX s à 100 000 m. */
+const CLEAR_DELAY_MAX=5;
 let qHist=[];
 
 /* Obstacles (texte simple) */
@@ -1444,7 +1985,7 @@ function beep(f,d=0.12,type='sine',v=0.07){
   g.gain.exponentialRampToValueAtTime(0.0001,t+d);
   o.connect(g);g.connect(AC.destination);o.start(t);o.stop(t+d);
 }
-  
+
 /* Particules */
 let parts=[];
 function burst(x,y,color,n=14,spd=220){for(let i=0;i<n;i++){const a=Math.random()*Math.PI*2,v=rand(spd*.3,spd);parts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-80,life:rand(.4,.8),max:.8,color,r:rand(2,5)});}}
@@ -1453,40 +1994,58 @@ function drawParts(){for(const p of parts){ctx.globalAlpha=clamp(p.life/p.max,0,
 
 /* État */
 let state='start',objs,player,speed,dist,elapsed,coins,lives,inv,shield,nextRowAt,quizTimer,quiz,stats,missed,qOrder,qIdx,shake=0,flash=0,flashCol='#fff',last=performance.now();
-let best=0,hubBest=0,ready=false,scores=null,saving=false;
+let best=0,hubBest=0,ready=false,scores=null,saving=false,level=1,maxAnnounced=false;
 
 function reset(){
   player={lane:0,x:0,y:0,vy:0,slide:0,run:0,tilt:0};
   speed=15;dist=0;elapsed=0;coins=0;lives=3;lastLives=-1;inv=0;shield=0;parts=[];
   nextRowAt=30;quizTimer=0;quiz=null;stats={ok:0,ko:0,hits:0};missed=[];qHist=[];objs=[];
+  level=1;maxAnnounced=false;document.body.classList.remove('quizzing');
   qOrder=shuffle([...QUESTIONS.keys()]);qIdx=0;
 }
 
 function addObst(type,lane,z){const d=pick(OBST[type]);objs.push({type,lane,z,l:d.l,i:d.i,t:d.t});}
-function spawnRow(){
+/* hk = difficulté (0 -> 1) : plus de rangées à 2-3 obstacles, moins de bonus */
+function spawnRow(hk=0){
   const z=ZFAR,lanes=shuffle([-1,0,1]),r=Math.random(),types=['block','low','high'];let free=[];
-  if(r<0.45){addObst(pick(types),lanes[0],z);free=[lanes[1],lanes[2]];}
-  else if(r<0.82){addObst(pick(types),lanes[0],z);addObst(pick(types),lanes[1],z);free=[lanes[2]];}
+  if(r<0.45-0.25*hk){addObst(pick(types),lanes[0],z);free=[lanes[1],lanes[2]];}
+  else if(r<0.82-0.10*hk){addObst(pick(types),lanes[0],z);addObst(pick(types),lanes[1],z);free=[lanes[2]];}
   else{addObst('block',lanes[0],z);addObst(pick(['low','high']),lanes[1],z);addObst(pick(['low','high']),lanes[2],z);}
   if(free.length&&Math.random()<0.8){const fl=pick(free);for(let k=0;k<5;k++)objs.push({type:'coin',lane:fl,z:z-4+k*2.2});}
-  if(free.length&&Math.random()<0.07&&shield<=0)objs.push({type:'shield',lane:pick(free),z:z+6});
-  else if(free.length&&lives<3&&Math.random()<0.09)objs.push({type:'heart',lane:pick(free),z:z+6});
+  if(free.length&&Math.random()<0.07*(1-0.5*hk)&&shield<=0)objs.push({type:'shield',lane:pick(free),z:z+6});
+  else if(free.length&&lives<3&&Math.random()<0.09*(1-0.6*hk))objs.push({type:'heart',lane:pick(free),z:z+6});
 }
 
 function startQuiz(){
   if(qIdx>=qOrder.length){qOrder=shuffle([...QUESTIONS.keys()]);qIdx=0;}
   const q=QUESTIONS[qOrder[qIdx++]],order=shuffle([0,1,2]);
-  quiz={q,order,correct:order.indexOf(0)};
+  /* clearT : temps avant la disparition des obstacles (augmente avec la distance) */
+  quiz={q,order,correct:order.indexOf(0),clearT:CLEAR_DELAY_MAX*hardLevel(),cleared:false};
   const gz=Math.max(ZFAR+20,...objs.filter(o=>o.type!=='coin').map(o=>o.z+18));
   objs.push({type:'gate',lane:0,z:gz,z0:gz});quizTimer=0;
   document.getElementById('qtext').textContent=q.q;
-  for(let i=0;i<3;i++)document.getElementById('o'+i).textContent=q.a[order[i]];
+  for(let i=0;i<3;i++)document.getElementById('o'+i).textContent=q.a[quiz.order[i]];
   document.getElementById('quiz').style.display='block';
+  document.body.classList.add('quizzing');
   beep(660,.15,'triangle');setTimeout(()=>beep(880,.15,'triangle'),140);
+  if(quiz.clearT<=0.05)clearObstacles();
+}
+/* Fait disparaître les obstacles devant le joueur pour laisser lire la question */
+function clearObstacles(){
+  if(!quiz)return;
+  for(const o of objs){
+    if((o.type==='block'||o.type==='low'||o.type==='high')&&!o.done&&o.z>1){
+      o.gone=true;
+      if(o.z<ZFAR){const p=proj(o.lane,o.z,0.6);burst(p.x,p.y,'#e9ecef',8,60+160*p.s);}
+    }
+  }
+  objs=objs.filter(o=>!o.gone);
+  quiz.clearT=0;quiz.cleared=true;
 }
 function answerQuiz(laneIdx){
   const ok=laneIdx===quiz.correct,q=quiz.q,pp=proj(player.x,0,1);
   qHist.push({q,ok,chosen:q.a[quiz.order[laneIdx]]});
+  document.body.classList.remove('quizzing');
   if(ok){stats.ok++;burst(pp.x,pp.y,'#51cf66',40,380);burst(pp.x,pp.y,'#ffd43b',25,300);flash=.5;flashCol='#69db7c';beep(880,.12,'triangle');setTimeout(()=>beep(1175,.2,'triangle'),110);toast(tr('good'),'good');}
   else{stats.ko++;lives=Math.max(0,lives-1);shake=.4;flash=.5;flashCol='#ff6b6b';beep(160,.35,'sawtooth',.09);toast(tr('bad'),'bad');}
   document.getElementById('quiz').style.display='none';
@@ -1526,11 +2085,11 @@ function startGame(){
   state='run';document.body.classList.add('running');last=performance.now();toast(tr('startToast'),'info');
 }
 function gameOver(){
-  if(state==='over')return;state='over';document.body.classList.remove('running');document.getElementById('quiz').style.display='none';
-  const score=calcScore();if(score>best)best=score;saveRemote(toHub(score));
+  if(state==='over')return;state='over';document.body.classList.remove('running','quizzing');document.getElementById('quiz').style.display='none';
+  const hub=hubPoints();if(hub>best)best=hub;saveRemote(hub);
   const tot=stats.ok+stats.ko;
   document.getElementById('overStats').innerHTML=
-   `<div><b>${score}</b>${tr('sScore')}</div><div><b>${toHub(score)}</b>${tr('sHub')}</div><div><b id="bestValue">${Math.max(hubBest,toHub(score))}</b>${tr('sRecord')}</div><div><b>${Math.floor(dist)} m</b>${tr('sDist')}</div>
+   `<div><b>${hub}</b>${tr('sHub')}</div><div><b id="bestValue">${Math.max(hubBest,hub)}</b>${tr('sRecord')}</div><div><b>${Math.floor(dist).toLocaleString(LANG)} m</b>${tr('sDist')}</div>
     <div><b>${stats.ok}/${tot}</b>${tr('sOk')}</div><div><b>${coins}</b>${tr('sCoins')}</div><div><b>${stats.hits}</b>${tr('sHits')}</div>`;
   let html='';
   if(!tot)html='<p class="sub">'+tr('noQ')+'</p>';
@@ -1561,12 +2120,11 @@ document.getElementById('btnResume').onclick=togglePause;
 
 let toastTimer;
 function toast(msg,cls){const t=document.getElementById('toast');t.textContent=msg;t.className=cls;t.style.opacity=1;clearTimeout(toastTimer);toastTimer=setTimeout(()=>t.style.opacity=0,3200);}
-function calcScore(){return Math.floor(dist)+coins*10+stats.ok*250;}
 const HEART='M12 21.3s-7.6-4.7-10.1-9.4C.1 8.1 2.1 3.6 6.3 3.6c2.4 0 4 1.4 5.7 3.5 1.7-2.1 3.3-3.5 5.7-3.5 4.2 0 6.2 4.5 4.4 8.3C19.6 16.6 12 21.3 12 21.3z';
 let lastLives=-1;
 function updateHUD(){
-  document.getElementById('hScore').textContent='Score '+calcScore();
-  document.getElementById('hDist').textContent=Math.floor(dist)+' m';
+  document.getElementById('hScore').textContent='Points '+hubPoints();
+  document.getElementById('hDist').textContent=Math.floor(dist).toLocaleString(LANG)+' m';
   document.getElementById('hCoins').textContent=coins;
   document.getElementById('hQuiz').textContent='Quiz '+stats.ok+'/'+(stats.ok+stats.ko);
   document.getElementById('hShield').style.width=(shield/6*100)+'%';
@@ -1586,30 +2144,43 @@ function hit(o){
   if(shield>0){toast(tr('shield',{l:o.l}),'info');burst(pp.x,pp.y,'#66d9e8',20);beep(700,.08);return;}
   if(inv>0)return;
   lives=Math.max(0,lives-1);stats.hits++;inv=1.6;shake=.35;flash=.4;flashCol='#ff6b6b';burst(pp.x,pp.y,'#ff8787',24,300);
-  toast(o.i+' '+o.l+' — '+o.t,'bad');beep(140,.3,'sawtooth',.09);
+  /* Pendant une question : message court pour ne rien masquer */
+  toast(quiz?o.i+' '+o.l:o.i+' '+o.l+' — '+o.t,'bad');beep(140,.3,'sawtooth',.09);
   if(lives<=0.01)setTimeout(gameOver,350);
 }
 function update(dt){
   updParts(dt);flash=Math.max(0,flash-dt*1.5);
   if(state!=='run')return;
   elapsed+=dt;
-  const target=SLOW?(quiz?9:Math.min(22,12+elapsed*0.12)):(quiz?11:Math.min(40,16+elapsed*0.25));
+  const hk=hardLevel();
+  const calm=quiz&&quiz.cleared; /* question affichée et obstacles retirés : on ralentit */
+  /* Vitesse : montée sur ~96 s jusqu'à 40, puis +15 progressivement jusqu'à 55 à 100 000 m */
+  const target=calm?11+5*hk:Math.min(40,16+elapsed*0.25)+15*hk;
   speed+=(target-speed)*Math.min(1,dt*1.5);
-  const dz=speed*dt;dist+=dz;for(const o of objs)o.z-=dz;
+  const dz=speed*dt;dist+=dz;
+  /* La porte reste au loin tant que les obstacles n'ont pas disparu */
+  for(const o of objs){if(o.type==='gate'&&quiz&&!quiz.cleared)continue;o.z-=dz;}
   const px=player.x;player.x+=(player.lane-player.x)*Math.min(1,dt*14);player.tilt=(player.x-px)/Math.max(dt,1e-3)*0.06;
   if(player.y>0||player.vy>0){player.vy-=GRAV*dt;player.y+=player.vy*dt;if(player.y<=0){player.y=0;player.vy=0;}}
   if(player.slide>0)player.slide-=dt;
   player.run+=dt*speed*0.55;
   inv=Math.max(0,inv-dt);shield=Math.max(0,shield-dt);shake=Math.max(0,shake-dt);
-  if(!quiz){quizTimer+=dt;
-    if(dist>=nextRowAt){spawnRow();nextRowAt=dist+11+speed*0.18+rand(0,5);}
-    if(quizTimer>=QUIZ_EVERY)startQuiz();}
+  /* Paliers de difficulté annoncés tous les 10 000 m */
+  const lvl=Math.min(10,1+Math.floor(dist/10000));
+  if(lvl>level){level=lvl;toast(tr('level',{n:lvl}),'info');beep(990,.15,'triangle');}
+  if(!maxAnnounced&&hubPoints()>=MAX_HUB){maxAnnounced=true;toast(tr('maxPts'),'good');}
+  /* Question : compte à rebours avant disparition des obstacles */
+  if(quiz&&!quiz.cleared){quiz.clearT-=dt;if(quiz.clearT<=0)clearObstacles();}
+  if(!quiz)quizTimer+=dt;
+  if((!quiz||!quiz.cleared)&&dist>=nextRowAt){spawnRow(hk);nextRowAt=dist+(11+speed*0.18+rand(0,5))*(1-0.2*hk);}
+  if(!quiz&&quizTimer>=QUIZ_EVERY)startQuiz();
   const pl=Math.round(player.x);
   for(const o of objs){
     if(o.done)continue;
     if(o.type==='gate'){document.getElementById('qbar').style.width=Math.min(100,100*(1-o.z/o.z0))+'%';
       if(o.z<=0.4){o.done=true;answerQuiz(pl+1);return;}continue;}
-    if(Math.abs(o.z)>0.6||o.lane!==pl)continue;
+    /* Test de collision fiable même à grande vitesse : l'objet a-t-il traversé la zone pendant cette image ? */
+    if(o.z>0.6||o.z+dz<-0.6||o.lane!==pl)continue;
     if(o.type==='coin'){o.done=true;coins++;const p=proj(o.lane,0,0.6);burst(p.x,p.y,'#69db7c',10,180);beep(1000+Math.random()*200,.06,'sine',.045);continue;}
     if(o.type==='heart'){o.done=true;lives=Math.min(3,lives+0.25);const p=proj(o.lane,0,0.8);burst(p.x,p.y,'#ff8787',30,300);burst(p.x,p.y,'#fff',12,200);flash=.3;flashCol='#ffa8a8';toast(tr('heart'),'good');beep(784,.12,'triangle');setTimeout(()=>beep(1047,.18,'triangle'),100);continue;}
     if(o.type==='shield'){o.done=true;shield=6;const p=proj(o.lane,0,0.7);burst(p.x,p.y,'#66d9e8',30,300);toast(tr('shieldOn'),'good');beep(900,.25,'triangle');continue;}
@@ -1721,7 +2292,6 @@ function propBins(sd,z){
 }
 function wallDetails(sd,z,k){
   const X=sd*(WALL-0.02);
-  // tuyauteries colorées le long du mur
   // armoire électrique
   if(hash(k*11+sd)>0.5){const e=sideRect(X,z+6.3,z+7.3,0.4,2.2,'#adb5bd','#6c757d',2);
     if(e){sideRect(X,z+6.75,z+6.85,1.2,1.5,'#495057');const y=proj(X,z+6.5,1.95);ctx.fillStyle='#ffd43b';ctx.beginPath();ctx.moveTo(y.x,y.y-8*y.s*3);ctx.lineTo(y.x+7*y.s*3,y.y+5*y.s*3);ctx.lineTo(y.x-7*y.s*3,y.y+5*y.s*3);ctx.closePath();ctx.fill();}}
@@ -1750,7 +2320,7 @@ function drawScene(){
     g=ctx.createLinearGradient(sd<0?0:W,0,sd<0?tl.x:tr.x,0);g.addColorStop(0,'#aeb8c1');g.addColorStop(1,'#e4e9ed');
     sideRect(X,zN,Z,1.3,CEIL,g);
     sideRect(X,zN,Z,0,1.3,'#4f6577');sideRect(X,zN,Z,1.25,1.36,'#ffd43b');
-    const wb=sideRect(X,zN,Z,3.9,4.7,'#9fcbe8');
+    sideRect(X,zN,Z,3.9,4.7,'#9fcbe8');
   }
   // mur du fond + porte sectionnelle
   poly([bl,br,tr,tl],'#d3dae0');
