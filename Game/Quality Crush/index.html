@@ -817,7 +817,7 @@ function renderHome() {
     <div class="row between"><h2>${t("route")}</h2><small>${t("routeLegend")}</small></div>
     <p class="unlockInfo">${unlockedCount() >= MAX_LEVEL ? t("allUnlocked") : t("unlockInfo", { u: unlockedCount(), n: MAX_LEVEL, s: totalStars(), next: unlockedCount() + 1, need: starsNeeded(unlockedCount() + 1) })}</p>
     <div class="map">${nodes}</div>
-    <div class="row between" style="margin-top:12px"><small>${t("routeHelp")}</small><button class="btn" type="button" data-action="reset">${t("reset")}</button></div>
+    <div class="row between" style="margin-top:12px"><small>${t("routeHelp")}</small></div>
   </section>`;
 }
 
@@ -1247,7 +1247,7 @@ document.addEventListener("click", e => {
   if (a === "next") { startLevel(def.n + 1); return; }
   if (a === "restart") { if (busy && !ended) return; if (screen === "game" && !ended && !confirm(t("confirmRestart"))) return; startLevel(def.n); return; }
   if (a === "home") { if (busy && !ended) return; if (screen === "game" && !ended && !confirm(t("confirmQuit"))) return; closeModal(); renderHome(); return; }
-  if (a === "reset") { if (confirm(t("confirmReset"))) { P = DEFAULT_P(); newUnlock = -1; saveLocal(); renderHome(); } }
+  /* Bouton « Réinitialiser » supprimé : la progression ne peut plus être effacée par le joueur. */
 });
 function alertLocked(n) {
   let tip = document.getElementById("lockTip");
