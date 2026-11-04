@@ -1886,7 +1886,7 @@ const QUESTIONS=JSON.parse(document.getElementById(LANG==='en'?'qdata-en':'qdata
    Points distance : courbe logarithmique, beaucoup de points au début puis de moins en moins.
    0 m -> 0 pt ... 100 000 m -> 5 000 pts.
    CURVE règle la forme : 3.4 => environ 1 750 pts à 20 000 m (plus grand = plus de points au début). */
-const MAX_DIST=100000, MAX_HUB=5000, CURVE=3.4, PTS_GOOD=10, PTS_COIN=0.1; /* 1 point pour 10 ✔ */
+const MAX_DIST=100000, MAX_HUB=5000, CURVE=4.0, PTS_GOOD=10, PTS_COIN=0.1; /* 1 point pour 10 ✔ */
 function distPts(d){
   if(d>=MAX_DIST)return MAX_HUB;
   const x=Math.max(0,d)/MAX_DIST;
