@@ -17,7 +17,7 @@ const T = {
     sScen: "Jusqu’à 166 points par dossier, 30 dossiers",
     boardEyebrow: "CLASSEMENT GÉNÉRAL", boardTitle: "Les meilleurs scores cumulés",
     tagline: "La qualité se joue ensemble.", top: "Retour en haut ↑",
-    available: "Disponible", soon: "Bientôt disponible", play: "Jouer →",
+    available: "Disponible", soon: "Disponible le 09 Novembre", play: "Jouer →",
     best: "Vos points : {n}", noScore: "Aucun score enregistré", scoreNA: "Score indisponible",
     noBoard: "Aucun score pour le moment.",
     errScores: "Vos scores sont temporairement indisponibles.", errBoardList: "Classement temporairement indisponible.",
