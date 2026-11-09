@@ -24,7 +24,7 @@
 (() => {
   "use strict";
   /* Passer à true le jour du lancement : les jeux deviennent accessibles à tous. */
-  const GAMES_OPEN = false;
+  const GAMES_OPEN = true;
 
   /* ---------- Mode test ---------- */
   const TEST_FLAG = "qw-test", TEST_PREFIX = "qw-test:";
